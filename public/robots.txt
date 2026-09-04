@@ -1,0 +1,7 @@
+# robots.txt for AI Build Studio
+User-agent: *
+Allow: /
+Disallow: /admin
+
+# Host and Sitemap
+Sitemap: https://ai.build/sitemap.xml

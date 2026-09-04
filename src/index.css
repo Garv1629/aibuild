@@ -1,0 +1,398 @@
+@import "tailwindcss";
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    background-color: #FFFFFF;
+    color: #202526;
+    min-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: #FFFFFF;
+    color: #202526;
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    min-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Prevent media or SVGs from exceeding viewport width */
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+
+  ::selection {
+    background-color: #D8A9A8;
+    color: #202526;
+  }
+
+  /* 
+   * EXACT SPECIFICATION TYPOGRAPHY SYSTEM:
+   * Logo / AI.BUILD: BEZORIA (Regular)
+   * Hero headline: BEZORIA (Regular)
+   * Hero italic/emphasis: ELEGANT (Italic/Regular)
+   * Section headings: ELEGANT (Regular)
+   * Project names: PRAISE (Regular)
+   * Project category / metadata: STRONG (Regular)
+   * Navigation: Clean sans-serif (Medium)
+   * Buttons: Clean sans-serif (Medium)
+   * Body text: Clean sans-serif (Regular)
+   * Numbers / stats: STRONG (Regular)
+   * Small labels: Clean sans-serif (Medium + letter spacing)
+   */
+
+  /* 1. BEZORIA - Logo & Hero Headline (Regular) */
+  .font-bezoria {
+    font-family: 'Bezoria', 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', 'Didot', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+  }
+
+  /* 2. ELEGANT - Section Headings & Hero Italic/Emphasis (Regular/Italic) */
+  .font-elegant {
+    font-family: 'Elegant', 'Instrument Serif', 'Newsreader', 'Bodoni Moda', 'Cormorant Garamond', 'Libre Bodoni', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  /* 3. PRAISE - Project Names (Regular) */
+  .font-praise {
+    font-family: 'Praise', 'Prata', 'Playfair Display', 'Bodoni Moda', 'Cinzel', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+
+  /* 4. STRONG - Project Category / Metadata & Numbers / Stats (Regular) */
+  .font-strong {
+    font-family: 'Strong', 'Space Grotesk', 'Syne', 'JetBrains Mono', 'Neue Haas Grotesk Display Pro', -apple-system, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* 5. Clean Sans-Serif - Navigation, Buttons, Body, Small Labels */
+  .font-sans-clean {
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .font-nav {
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  .font-btn {
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  .font-label-small {
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .font-display {
+    font-family: 'Bezoria', 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', 'Didot', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+  }
+
+  .font-heading {
+    font-family: 'Elegant', 'Instrument Serif', 'Newsreader', 'Bodoni Moda', 'Cormorant Garamond', 'Libre Bodoni', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .font-editorial {
+    font-family: 'Elegant', 'Instrument Serif', 'Newsreader', 'Bodoni Moda', 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .font-grotesk {
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .font-body {
+    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 400;
+  }
+}
+
+.hero-heading {
+  font-family: 'Bezoria', 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', 'Didot', Georgia, serif;
+  color: #202526;
+  letter-spacing: -0.03em;
+  font-weight: 400;
+}
+
+/* Material Surfaces */
+.surface-porcelain {
+  background-color: #FFFFFF;
+  border: 1px solid #DDDCD7;
+}
+
+.surface-mist {
+  background-color: #F7F8F7;
+  border: 1px solid #E7E9E8;
+}
+
+.surface-sage {
+  background-color: #E7E9E8;
+  border: 1px solid #DDDCD7;
+}
+
+.surface-rose {
+  background-color: #D8A9A8;
+  border: 1px solid #DDDCD7;
+}
+
+.surface-slate {
+  background-color: #596769;
+  border: 1px solid #202526;
+}
+
+.surface-mushroom {
+  background-color: #F5F2EC;
+  border: 1px solid #DDDCD7;
+}
+
+/* Soft material scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F8F7;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDDCD7;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C9C8C3;
+}
+
+/* Glassmorphism Surface Classes with Frosted Noise Grain */
+.glass-panel {
+  position: relative;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+}
+
+.glass-panel-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(200, 205, 210, 0.9);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 2px 6px 0 rgba(0, 0, 0, 0.03);
+}
+
+.glass-pill {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.glass-card-dark {
+  position: relative;
+  background: rgba(32, 37, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.3);
+}
+
+/* Tactile Frosted Modal Dialog Glass */
+.frosted-modal-glass {
+  position: relative;
+  background: rgba(245, 248, 247, 0.96);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.frosted-modal-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 140px 140px;
+  z-index: 1;
+}
+
+/* Frosted Modal Backdrop Blur & Grain */
+.frosted-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 28, 29, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+.frosted-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
+/* Frosted Floating Speech & Dialogue Bubble */
+.frosted-dialogue-bubble {
+  position: relative;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.frosted-dialogue-bubble::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 140px 140px;
+  z-index: 1;
+}
+
+/* Sticky Executive Header */
+.frosted-header-bar {
+  position: relative;
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.85);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* Tactile Dusty Material Film Noise / Grain Texture Overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.038;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
+
+/* Soft Shimmer Animation for Skeleton States */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  content: '';
+  pointer-events: none;
+}
+
+/* Lenis Virtual Momentum Smooth Scroll System */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Mobile & Touch Device Optimizations */
+@media (max-width: 767px) {
+  html, body, #root {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Prevent text clipping and enforce fluid word breaking on small mobile screens */
+  h1, h2, h3, h4, h5, h6, p, span {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Prevent iOS Safari from auto-zooming on focus while preserving elegant styling */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+
+
+

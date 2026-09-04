@@ -1,0 +1,6 @@
+{
+  "name": "AI Build — Digital Products & AI Experiences",
+  "description": "AI Build (ai.build_) is an AI-first digital product studio engineering intelligent web experiences, SaaS products, and autonomous workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
