@@ -7,6 +7,9 @@ export default defineConfig(({ command }) => {
   return {
     base: command === 'serve' ? '/' : '/aibuild/',
     plugins: [react(), tailwindcss()],
+    build: {
+      emptyOutDir: false,
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
