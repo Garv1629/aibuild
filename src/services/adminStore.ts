@@ -20,12 +20,117 @@ import {
 } from './security';
 import { DEFAULT_LIGHTING_PRESET } from '../utils/lightingPresets';
 
+export const normalizeProjectCategory = (
+  category: string
+): 'UGC ADS' | 'AI VIDEOS' | 'WEBSITE BUILDING' | 'AUTOMATION' => {
+  const c = (category || '').trim().toUpperCase();
+  if (c.includes('UGC') || c.includes('CREATOR') || (c.includes('AD') && !c.includes('SQUAD'))) return 'UGC ADS';
+  if (c.includes('VIDEO') || c.includes('FILM') || c.includes('CINEMA') || c.includes('MOTION')) return 'AI VIDEOS';
+  if (c.includes('AUTO') || c.includes('AGENT') || c.includes('BOT') || c.includes('WORKFLOW') || c.includes('PIPELINE')) return 'AUTOMATION';
+  return 'WEBSITE BUILDING';
+};
+
 export const initialProjects: ProjectItem[] = [
+  // 01: UGC ADS
   {
-    id: '01',
+    id: 'ugc-01',
     number: '01',
-    title: 'TrustAI India',
-    category: 'AI Platform',
+    title: 'GlowLab Direct UGC',
+    category: 'UGC ADS',
+    tagline: 'High-converting TikTok & Instagram Reels UGC campaign with 8 dynamic hook variations and creator-led storytelling.',
+    col1Image1: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
+    mediaType: 'video',
+    liveUrl: 'https://instagram.com',
+    techStack: ['9:16 Vertical', '8 Hook Variations', '4.8x ROAS', 'Direct-Response Creative'],
+    featured: true,
+  },
+  {
+    id: 'ugc-02',
+    number: '02',
+    title: 'Apex Fit Creator Series',
+    category: 'UGC ADS',
+    tagline: 'Viral fitness & supplement UGC creator ad package engineered for Meta and TikTok paid performance channels.',
+    col1Image1: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
+    mediaType: 'video',
+    liveUrl: 'https://tiktok.com',
+    techStack: ['Creator Production', 'TikTok Ads', 'Meta Reels', 'Ad-Ready Exports'],
+    featured: true,
+  },
+  {
+    id: 'ugc-03',
+    number: '03',
+    title: 'Velox Hydration Direct UGC',
+    category: 'UGC ADS',
+    tagline: 'High-velocity beverage & wellness TikTok UGC with multiple creator perspectives and direct conversion hooks.',
+    col1Image1: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
+    mediaType: 'video',
+    liveUrl: 'https://tiktok.com',
+    techStack: ['9:16 Creator Video', 'Meta Ad Export', 'Direct Response', 'A/B Hook Variations'],
+    featured: true,
+  },
+  {
+    id: 'ugc-04',
+    number: '04',
+    title: 'Lumora Beauty Creator Ads',
+    category: 'UGC ADS',
+    tagline: 'Viral unboxing, before/after demonstration & creator testimonial package built for TikTok Spark Ads.',
+    col1Image1: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
+    mediaType: 'video',
+    liveUrl: 'https://instagram.com',
+    techStack: ['TikTok Spark Ads', 'Reels Hook Engine', 'Creator Network', 'UGC Scaling'],
+    featured: true,
+  },
+
+  // 02: AI VIDEOS
+  {
+    id: 'aiv-01',
+    number: '03',
+    title: 'Aura Chrono AI Commercial',
+    category: 'AI VIDEOS',
+    tagline: 'Cinematic luxury timepiece commercial generated end-to-end with generative AI visual models and spatial audio.',
+    col1Image1: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
+    mediaType: 'video',
+    liveUrl: 'https://vimeo.com',
+    techStack: ['Gen-3 Visuals', '4K Master', 'Cinematic Sound Design', 'AI Commercial'],
+    featured: true,
+  },
+  {
+    id: 'aiv-02',
+    number: '04',
+    title: 'NeoCyber Spatial Film',
+    category: 'AI VIDEOS',
+    tagline: 'Photorealistic AI automotive & concept reveal film crafted with custom diffusion pipelines and hyper-real texturing.',
+    col1Image1: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
+    mediaType: 'video',
+    liveUrl: 'https://youtube.com',
+    techStack: ['Diffusion VFX', '16:9 & 9:16', 'Custom LoRA', 'Virtual Production'],
+    featured: true,
+  },
+
+  // 03: WEBSITE BUILDING
+  {
+    id: 'web-01',
+    number: '05',
+    title: 'TrustAI Verification Hub',
+    category: 'WEBSITE BUILDING',
     tagline: 'AI trust & verification platform engineered for high-security compliance and intelligent verification.',
     col1Image1: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1000&q=85',
     col1Image2: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=85',
@@ -37,25 +142,42 @@ export const initialProjects: ProjectItem[] = [
     featured: true,
   },
   {
-    id: '02',
-    number: '02',
-    title: 'RentOS AI',
-    category: 'SaaS Product',
+    id: 'web-02',
+    number: '06',
+    title: 'Luminex 3D Studio',
+    category: 'WEBSITE BUILDING',
+    tagline: 'Award-winning interactive brand experience with 3D WebGL scenes, fluid Lenis motion, and responsive performance.',
+    col1Image1: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=85',
+    col2Image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
+    mediaType: 'image',
+    liveUrl: 'https://motionsites.ai',
+    techStack: ['Three.js', 'Next.js', 'Framer Motion', 'Sub-second CDN'],
+    featured: true,
+  },
+
+  // 04: AUTOMATION
+  {
+    id: 'aut-01',
+    number: '07',
+    title: 'RentOS AI Autonomous Flow',
+    category: 'AUTOMATION',
     tagline: 'AI-powered rental management platform with automated lease processing and tenant intelligence.',
     col1Image1: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=85',
     col1Image2: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1000&q=85',
     col2Image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=85',
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-    mediaType: 'image',
+    mediaType: 'video',
     liveUrl: 'https://app.rentos.cloud',
     techStack: ['Full-Stack', 'Node.js', 'Vite', 'Agentic Automation'],
     featured: true,
   },
   {
-    id: '03',
-    number: '03',
-    title: 'GovtJob Engine',
-    category: 'Automation',
+    id: 'aut-02',
+    number: '08',
+    title: 'GovtJob Discovery Engine',
+    category: 'AUTOMATION',
     tagline: 'Automated government-job discovery, eligibility analysis & intelligent application pipeline.',
     col1Image1: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=85',
     col1Image2: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1000&q=85',
@@ -516,8 +638,32 @@ class AdminDataStore {
 
   private loadFromStorage() {
     try {
-      const storedProjects = localStorage.getItem('ai_build_projects_v2');
-      this.projects = storedProjects ? JSON.parse(storedProjects) : initialProjects;
+      const storedProjects =
+        localStorage.getItem('ai_build_projects_v3') ||
+        localStorage.getItem('ai_build_projects_v2');
+      if (storedProjects) {
+        try {
+          const parsed = JSON.parse(storedProjects) as ProjectItem[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const normalized = parsed.map((p) => ({
+              ...p,
+              category: normalizeProjectCategory(p.category),
+            }));
+
+            // Guarantee every single default project from initialProjects exists
+            const existingIds = new Set(normalized.map((p) => p.id));
+            const missingDefaults = initialProjects.filter((p) => !existingIds.has(p.id));
+
+            this.projects = [...normalized, ...missingDefaults];
+          } else {
+            this.projects = initialProjects;
+          }
+        } catch {
+          this.projects = initialProjects;
+        }
+      } else {
+        this.projects = initialProjects;
+      }
 
       const storedContent = localStorage.getItem('ai_build_content_v2');
       if (storedContent) {
@@ -540,6 +686,26 @@ class AdminDataStore {
         this.websiteContent = {
           ...initialWebsiteContent,
           ...parsed,
+          hero: {
+            ...initialWebsiteContent.hero,
+            ...(parsed.hero || {}),
+          },
+          about: {
+            ...initialWebsiteContent.about,
+            ...(parsed.about || {}),
+          },
+          contact: {
+            ...initialWebsiteContent.contact,
+            ...(parsed.contact || {}),
+          },
+          marquee: {
+            ...initialWebsiteContent.marquee,
+            ...(parsed.marquee || {}),
+          },
+          characterLighting: {
+            ...initialWebsiteContent.characterLighting!,
+            ...(parsed.characterLighting || {}),
+          },
           services: {
             heading: parsed.services?.heading || initialWebsiteContent.services.heading,
             subheading: parsed.services?.subheading || initialWebsiteContent.services.subheading,
@@ -595,6 +761,7 @@ class AdminDataStore {
 
   private saveToStorage() {
     try {
+      localStorage.setItem('ai_build_projects_v3', JSON.stringify(this.projects));
       localStorage.setItem('ai_build_projects_v2', JSON.stringify(this.projects));
       localStorage.setItem('ai_build_content_v2', JSON.stringify(this.websiteContent));
       localStorage.setItem('ai_build_reviews_v2', JSON.stringify(this.reviews));

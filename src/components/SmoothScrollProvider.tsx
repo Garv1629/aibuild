@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
 
 interface SmoothScrollContextType {
@@ -23,6 +23,7 @@ export const getGlobalLenis = () => globalLenis;
 
 export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const lenisRef = useRef<Lenis | null>(null);
+  const [lenisState, setLenisState] = useState<Lenis | null>(null);
 
   useEffect(() => {
     const isTouchOrMobile =
@@ -43,6 +44,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     lenisRef.current = lenis;
     globalLenis = lenis;
+    setLenisState(lenis);
 
     // 2. RequestAnimationFrame Render Loop
     let animationFrameId: number;
@@ -86,6 +88,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       lenis.destroy();
       lenisRef.current = null;
       globalLenis = null;
+      setLenisState(null);
     };
   }, []);
 
@@ -113,7 +116,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <SmoothScrollContext.Provider
       value={{
-        lenis: lenisRef.current,
+        lenis: lenisState,
         scrollTo,
         stop,
         start,

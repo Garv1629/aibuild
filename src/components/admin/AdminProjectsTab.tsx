@@ -63,7 +63,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
   const [formData, setFormData] = useState<Omit<ProjectItem, 'id'>>({
     number: '01',
     title: '',
-    category: 'AI Platform',
+    category: 'UGC ADS',
     tagline: '',
     col1Image1: '',
     col1Image2: '',
@@ -83,7 +83,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
     setFormData({
       number: nextNum,
       title: '',
-      category: 'AI Platform',
+      category: 'UGC ADS',
       tagline: 'AI-assisted architecture, fluid web experience, and production-grade interface systems.',
       col1Image1: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1000&q=85',
       col1Image2: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=85',
@@ -432,12 +432,10 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm text-[#202526] focus:border-[#D8A9A8] focus:bg-white focus:outline-none transition-colors cursor-pointer"
                   >
-                    <option value="AI Platform">AI Platform</option>
-                    <option value="SaaS Product">SaaS Product</option>
-                    <option value="Automation">Intelligent Automation</option>
-                    <option value="Spatial AI">Spatial AI &amp; 3D</option>
-                    <option value="Digital Experience">Digital Experience</option>
-                    <option value="Design System">Design System</option>
+                    <option value="UGC ADS">01 - UGC ADS</option>
+                    <option value="AI VIDEOS">02 - AI VIDEOS</option>
+                    <option value="WEBSITE BUILDING">03 - WEBSITE BUILDING</option>
+                    <option value="AUTOMATION">04 - AUTOMATION</option>
                   </select>
                 </div>
                 <div>
