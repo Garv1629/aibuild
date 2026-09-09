@@ -1,17 +1,7 @@
 @echo off
-echo ========================================================
-echo Pushing changes to GitHub repository (origin main)...
-echo ========================================================
-
+echo Starting GitHub Commit and Deployment...
 git add .
-git commit -m "feat: enable continuous zero-cut multiple videos and images with media replacement in projects"
+git commit -m "Update site showcase and config"
 git push origin main
-
-echo ========================================================
-echo Deploying to GitHub Pages...
-echo ========================================================
 npm run deploy
-
-echo ========================================================
-echo Deployment completed successfully!
-echo ========================================================
+echo Finished Deployment!
