@@ -11,16 +11,9 @@ function get(url) {
 }
 
 async function main() {
-  console.log('Testing http://localhost:3000/ ...');
-  const res1 = await get('http://localhost:3000/');
+  console.log('Testing http://localhost:5173/ ...');
+  const res1 = await get('http://localhost:5173/');
   console.log('Status /:', res1.status);
-  
-  console.log('Testing http://localhost:3000/src/main.tsx ...');
-  const res2 = await get('http://localhost:3000/src/main.tsx');
-  console.log('Status /src/main.tsx:', res2.status);
-  if (res2.status !== 200) {
-    console.log('Body:', res2.body.slice(0, 500));
-  }
 }
 
 main().catch(console.error);

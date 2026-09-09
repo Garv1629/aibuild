@@ -5,7 +5,7 @@
   "type": "module",
   "homepage": "https://garv1629.github.io/aibuild",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build && vite build --outDir docs",
     "docs": "vite build --outDir docs",
     "build:docs": "vite build --outDir docs",
@@ -13,7 +13,7 @@
     "predeploy": "npm run build",
     "deploy": "npx gh-pages -d dist",
     "clean": "rm -rf dist server.js",
-    "lint": "node push_changes.cjs"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

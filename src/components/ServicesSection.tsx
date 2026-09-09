@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { FadeIn } from './FadeIn';
 import { ServiceItem } from '../types';
+import { SeamlessMediaShowcase } from './SeamlessMediaShowcase';
 import {
   ArrowUpRight,
   ArrowRight,
@@ -37,6 +38,29 @@ const defaultServicesData: ServiceItem[] = [
       'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
     videoPoster:
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    mediaItems: [
+      {
+        id: 'm-ugc-1',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        title: 'Creator Product Demonstration',
+      },
+      {
+        id: 'm-ugc-2',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+        title: 'Dynamic Social Hook Creative',
+      },
+      {
+        id: 'm-ugc-3',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+        title: 'High-Conversion Ad Reel',
+      },
+    ],
     weCreate: [
       'Product UGC',
       'Creator-style ads',
@@ -71,6 +95,29 @@ const defaultServicesData: ServiceItem[] = [
       'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
     videoPoster:
       'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
+    mediaItems: [
+      {
+        id: 'm-ai-1',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
+        title: 'AI Neural Pulse Cinema',
+      },
+      {
+        id: 'm-ai-2',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=80',
+        title: 'Hyperspeed Latent Space Tunnel',
+      },
+      {
+        id: 'm-ai-3',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
+        title: 'Generative Sci-Fi Sequences',
+      },
+    ],
     weCreate: [
       'Product films',
       'Cinematic ads',
@@ -106,6 +153,29 @@ const defaultServicesData: ServiceItem[] = [
       'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
     videoPoster:
       'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80',
+    mediaItems: [
+      {
+        id: 'm-web-1',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80',
+        title: 'Interactive Web Dashboard',
+      },
+      {
+        id: 'm-web-2',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=80',
+        title: 'Cloud Edge Infrastructure',
+      },
+      {
+        id: 'm-web-3',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80',
+        title: 'Responsive 3D Motion Prototype',
+      },
+    ],
     weCreate: [
       'Conversion landing pages',
       'Interactive Web3/AI web apps',
@@ -140,6 +210,29 @@ const defaultServicesData: ServiceItem[] = [
       'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
     videoPoster:
       'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
+    mediaItems: [
+      {
+        id: 'm-auto-1',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
+        title: 'Distributed Compute Pipeline',
+      },
+      {
+        id: 'm-auto-2',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=80',
+        title: 'Autonomous Event Routing & Webhooks',
+      },
+      {
+        id: 'm-auto-3',
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
+        title: '24/7 Agent Telemetry & Self-Healing',
+      },
+    ],
     weCreate: [
       'Autonomous agent workflows',
       'CRM & pipeline synchronization',
@@ -286,118 +379,7 @@ const disciplineStyles: Record<string, DisciplineStyle> = {
   },
 };
 
-// Video preview card component inside dusted material frame
-const ServiceVideoCard: React.FC<{
-  service: ServiceItem;
-  badgeLabel: string;
-  style: DisciplineStyle;
-  onOpenDetails: () => void;
-}> = ({ service, badgeLabel, style, onOpenDetails }) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
 
-  const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      videoRef.current.play();
-      setIsPlaying(true);
-    }
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
-
-  return (
-    <div
-      onClick={onOpenDetails}
-      className={`group/video relative w-full h-[240px] sm:h-[280px] md:h-[320px] rounded-3xl overflow-hidden bg-[#202526] border ${style.border} shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01]`}
-    >
-      {/* Video Element */}
-      {service.videoUrl && service.videoUrl.trim() ? (
-        <video
-          ref={videoRef}
-          src={service.videoUrl}
-          poster={service.videoPoster && service.videoPoster.trim() ? service.videoPoster : undefined}
-          autoPlay
-          muted={isMuted}
-          loop
-          playsInline
-          className="w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105"
-        />
-      ) : service.videoPoster && service.videoPoster.trim() ? (
-        <img
-          src={service.videoPoster}
-          alt={service.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105"
-        />
-      ) : (
-        <div className="w-full h-full bg-[#202526] flex items-center justify-center text-[#596769] text-xs font-mono">
-          {service.title}
-        </div>
-      )}
-
-      {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#202526]/80 via-transparent to-[#202526]/30 pointer-events-none" />
-
-      {/* Top Header Badge */}
-      <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E7EBE9]/90 backdrop-blur-md border border-[#B8C1C0] text-[11px] font-mono font-bold tracking-[0.08em] text-[#202526] uppercase shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" />
-          <span>{badgeLabel}</span>
-        </div>
-
-        <div className="pointer-events-auto flex items-center gap-2">
-          {service.videoUrl && (
-            <>
-              <button
-                type="button"
-                onClick={togglePlay}
-                className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-[#202526]/80 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/30 shadow-sm"
-                title={isPlaying ? 'Pause Preview' : 'Play Preview'}
-              >
-                {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-[#E7EBE9]" />}
-              </button>
-              <button
-                type="button"
-                onClick={toggleMute}
-                className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-[#202526]/80 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/30 shadow-sm"
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom Information Pill */}
-      <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-end justify-between gap-3 text-[#E7EBE9] pointer-events-none">
-        <div>
-          <span className="text-[10px] font-mono uppercase tracking-[0.08em] text-[#CBDCDE] block font-semibold">
-            {service.turnaround ? `Turnaround: ${service.turnaround}` : 'Production Ready'}
-          </span>
-          <p className="text-xs sm:text-sm font-semibold tracking-wide text-[#E7EBE9]">
-            {service.title} Showcase
-          </p>
-        </div>
-
-        <div className="pointer-events-auto px-3.5 py-1.5 rounded-full bg-[#E7EBE9] hover:bg-[#CBDCDE] text-[#202526] border border-[#B8C1C0] text-[11px] font-mono font-bold tracking-[0.08em] uppercase flex items-center gap-1 transition-all shadow-sm">
-          <span>Specs</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export const ServicesSection: React.FC<ServicesSectionProps> = ({
   content,
@@ -565,9 +547,9 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Right Column: [VIDEO] Showcase Card */}
+                  {/* Right Column: Seamless Multi-Media Continuous Showcase */}
                   <div className="lg:col-span-6">
-                    <ServiceVideoCard
+                    <SeamlessMediaShowcase
                       service={service}
                       style={style}
                       badgeLabel={getVideoBadgeLabel(service.number)}

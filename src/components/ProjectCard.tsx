@@ -2,7 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'motion/react';
 import { ProjectItem } from '../types';
 import { LiveProjectButton } from './LiveProjectButton';
-import { Play, Video, Sparkles } from 'lucide-react';
+import { ProjectSeamlessShowcase } from './ProjectSeamlessShowcase';
+import { Video, Sparkles, Repeat } from 'lucide-react';
+import { isVideoMedia } from '../utils/mediaUpload';
 
 export interface ProjectCardProps {
   project: ProjectItem;
@@ -36,7 +38,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isVideo = project.mediaType === 'video' && Boolean(project.videoUrl);
+  const totalVideos = (project.mediaItems || []).filter((m) => m.type === 'video').length || (project.videoUrl ? 1 : 0);
+  const totalMedia = project.mediaItems && project.mediaItems.length > 0 ? project.mediaItems.length : 1;
 
   return (
     <div
@@ -99,9 +102,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
                 {project.category}
               </span>
-              {isVideo && (
+              {totalVideos > 0 && (
                 <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-strong uppercase text-[#596769] bg-[#F4F5F4] border border-[#E5E7EB] flex items-center gap-1">
-                  <Video className="w-2.5 h-2.5 text-[#596769]" /> Video Demo
+                  <Video className="w-2.5 h-2.5 text-[#596769]" />
+                  {totalVideos > 1 ? `${totalVideos} Videos` : 'Video Demo'}
+                </span>
+              )}
+              {totalMedia > 1 && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-strong uppercase text-[#202526] bg-[#E7EBE9] border border-[#B8C1C0] hidden xs:inline-flex items-center gap-1">
+                  <Repeat className="w-2.5 h-2.5 text-[#D8A9A8]" />
+                  Continuous
                 </span>
               )}
               {project.featured && (
@@ -131,66 +141,63 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className="md:col-span-5 grid grid-cols-2 md:grid-cols-1 gap-2.5 sm:gap-3.5 h-full order-2 md:order-1">
           <div className="w-full flex-1 overflow-hidden rounded-[16px] sm:rounded-[24px] md:rounded-[32px] bg-[#202526] border border-[#E5E7EB] group shadow-xs relative min-h-[90px] sm:min-h-[130px]">
             {project.col1Image1 && project.col1Image1.trim() ? (
-              <img
-                src={project.col1Image1}
-                alt={`${project.title} detail 1`}
-                className="w-full h-full object-cover rounded-[16px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
-                loading="lazy"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
+              isVideoMedia(project.col1Image1) ? (
+                <video
+                  src={project.col1Image1}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover rounded-[16px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
+                />
+              ) : (
+                <img
+                  src={project.col1Image1}
+                  alt={`${project.title} detail 1`}
+                  className="w-full h-full object-cover rounded-[16px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
+              )
             ) : (
               <div className="w-full h-full bg-[#202526] rounded-[16px] sm:rounded-[24px] md:rounded-[32px]" />
             )}
           </div>
           <div className="w-full flex-1 overflow-hidden rounded-[16px] sm:rounded-[24px] md:rounded-[32px] bg-[#202526] border border-[#E5E7EB] group shadow-xs relative min-h-[90px] sm:min-h-[140px]">
             {project.col1Image2 && project.col1Image2.trim() ? (
-              <img
-                src={project.col1Image2}
-                alt={`${project.title} detail 2`}
-                className="w-full h-full object-cover rounded-[16px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
-                loading="lazy"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
+              isVideoMedia(project.col1Image2) ? (
+                <video
+                  src={project.col1Image2}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover rounded-[16px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
+                />
+              ) : (
+                <img
+                  src={project.col1Image2}
+                  alt={`${project.title} detail 2`}
+                  className="w-full h-full object-cover rounded-[16px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
+              )
             ) : (
               <div className="w-full h-full bg-[#202526] rounded-[16px] sm:rounded-[24px] md:rounded-[32px]" />
             )}
           </div>
         </div>
 
-        {/* Right Column (7 cols) - Video or High-Res Showcase */}
-        <div className="md:col-span-7 h-full flex min-h-[170px] sm:min-h-[220px] md:min-h-[250px] order-1 md:order-2">
-          <div className="w-full h-full overflow-hidden rounded-[20px] sm:rounded-[24px] md:rounded-[32px] bg-[#202526] border border-[#E5E7EB] group shadow-xs relative">
-            {isVideo && project.videoUrl && project.videoUrl.trim() ? (
-              <div className="w-full h-full relative">
-                <video
-                  src={project.videoUrl}
-                  poster={project.col2Image && project.col2Image.trim() ? project.col2Image : undefined}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-full object-cover rounded-[20px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-103 transition-transform duration-700 ease-out"
-                />
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase text-[#202526] bg-white/90 border border-[#E5E7EB] flex items-center gap-1.5 z-20 shadow-xs backdrop-blur-xs">
-                  <Play className="w-2.5 h-2.5 text-[#202526] fill-[#202526]" /> Loop
-                </div>
-              </div>
-            ) : project.col2Image && project.col2Image.trim() ? (
-              <img
-                src={project.col2Image}
-                alt={`${project.title} showcase`}
-                className="w-full h-full object-cover rounded-[20px] sm:rounded-[24px] md:rounded-[32px] group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none select-none"
-                loading="lazy"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-full h-full bg-[#202526] rounded-[20px] sm:rounded-[24px] md:rounded-[32px]" />
-            )}
-          </div>
+        {/* Right Column (7 cols) - Seamless Continuous Multi-Media Showcase */}
+        <div className="md:col-span-7 h-full flex min-h-[180px] sm:min-h-[220px] md:min-h-[270px] order-1 md:order-2">
+          <ProjectSeamlessShowcase
+            project={project}
+            onOpenDetails={() => onSelectProject && onSelectProject(project)}
+            className="w-full h-full"
+          />
         </div>
       </div>
       </motion.div>

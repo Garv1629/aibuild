@@ -1,3 +1,12 @@
+export interface ServiceMediaItem {
+  id: string;
+  url: string;
+  type: 'video' | 'image';
+  poster?: string;
+  title?: string;
+  duration?: number; // duration in seconds for photos (default: 4s)
+}
+
 export interface ServiceItem {
   number: string;
   title: string;
@@ -5,6 +14,7 @@ export interface ServiceItem {
   tagline?: string;
   videoUrl?: string;
   videoPoster?: string;
+  mediaItems?: ServiceMediaItem[];
   weCreate?: string[];
   process?: string[];
   turnaround?: string;
@@ -22,6 +32,7 @@ export interface ProjectItem {
   col2Image: string;
   videoUrl?: string;
   mediaType?: 'image' | 'video';
+  mediaItems?: ServiceMediaItem[];
   liveUrl?: string;
   techStack?: string[];
   featured?: boolean;

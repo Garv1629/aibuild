@@ -3,6 +3,7 @@ import { WebsiteContent } from '../../types';
 import { adminStore } from '../../services/adminStore';
 import { MediaUploader } from './MediaUploader';
 import { MultiMediaUploader } from './MultiMediaUploader';
+import { ServiceMediaManager } from './ServiceMediaManager';
 import { CharacterLightingStudio } from './CharacterLightingStudio';
 import { LIGHTING_PRESET_LIST, DEFAULT_LIGHTING_PRESET } from '../../utils/lightingPresets';
 import {
@@ -20,6 +21,7 @@ import {
   Layers,
   Sun,
   Zap,
+  X,
 } from 'lucide-react';
 
 const PORTRAIT_PRESETS = [
@@ -43,6 +45,7 @@ interface AdminContentTabProps {
 
 export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => {
   const [formData, setFormDataState] = useState<WebsiteContent>(content);
+  const [isSaving, setIsSaving] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
   const [activeSubSection, setActiveSubSection] = useState<
     'hero' | 'lighting' | 'about' | 'services' | 'marquee' | 'contact'
@@ -65,11 +68,15 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    adminStore.updateWebsiteContent(formData);
+  const handleSave = (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    setIsSaving(true);
+    adminStore.saveWebsiteContent(formData);
     setSavedToast(true);
-    setTimeout(() => setSavedToast(false), 2500);
+    setTimeout(() => setIsSaving(false), 500);
+    setTimeout(() => setSavedToast(false), 3500);
   };
 
   const handleResetDefaults = () => {
@@ -143,10 +150,15 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
           <button
             type="button"
             onClick={handleSave}
-            className="px-6 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+            disabled={isSaving}
+            className={`px-6 py-3 rounded-full text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+              savedToast
+                ? 'bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-400'
+                : 'bg-[#202526] hover:bg-[#111314] text-white'
+            }`}
           >
-            <Check className="w-4 h-4" />
-            Save Live Changes
+            <Check className={`w-4 h-4 ${savedToast ? 'text-white stroke-[3]' : 'text-[#D8A9A8]'}`} />
+            <span>{savedToast ? 'Saved Live! ✓' : isSaving ? 'Saving Changes...' : 'Save Live Changes'}</span>
           </button>
         </div>
       </div>
@@ -732,6 +744,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
                     tagline: 'High impact tagline for this discipline.',
                     videoUrl: '',
                     videoPoster: '',
+                    mediaItems: [],
                     weCreate: ['Feature 1', 'Feature 2'],
                     process: ['Discovery', 'Execution', 'Delivery'],
                     turnaround: '3–7 days',
@@ -1058,48 +1071,30 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
                       </div>
                     </div>
 
-                    {/* Direct Media Uploaders for Discipline Video Showcase & Poster */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#E5E7EB]">
-                      <MediaUploader
-                        label="Discipline Showcase Video (.mp4 / .webm)"
-                        acceptType="video"
-                        value={item.videoUrl || ''}
-                        onChange={(val) => {
-                          const updated = [...(formData.services?.items || [])];
-                          updated[idx] = { ...updated[idx], videoUrl: val };
-                          setFormData({
-                            ...formData,
-                            services: {
-                              heading: formData.services?.heading || 'WHAT WE DO',
-                              subheading: formData.services?.subheading || '',
-                              items: updated,
-                            },
-                          });
-                        }}
-                        helperText="Upload or link a showcase video for this discipline."
-                        previewHeight="h-28"
-                      />
-
-                      <MediaUploader
-                        label="Video Poster Image Thumbnail"
-                        acceptType="image"
-                        value={item.videoPoster || ''}
-                        onChange={(val) => {
-                          const updated = [...(formData.services?.items || [])];
-                          updated[idx] = { ...updated[idx], videoPoster: val };
-                          setFormData({
-                            ...formData,
-                            services: {
-                              heading: formData.services?.heading || 'WHAT WE DO',
-                              subheading: formData.services?.subheading || '',
-                              items: updated,
-                            },
-                          });
-                        }}
-                        helperText="Thumbnail photo displayed before video plays."
-                        previewHeight="h-28"
-                      />
-                    </div>
+                    {/* Multi-Media Continuous Reel Manager (Videos & Photos with zero-cut playback) */}
+                    <ServiceMediaManager
+                      disciplineTitle={item.title || 'Discipline'}
+                      items={item.mediaItems || (item.videoUrl ? [{ id: `init-${idx}`, url: item.videoUrl, type: 'video', poster: item.videoPoster, title: item.title }] : [])}
+                      onChange={(mediaList) => {
+                        const updated = [...(formData.services?.items || [])];
+                        const firstVid = mediaList.find((m) => m.type === 'video');
+                        const firstImg = mediaList.find((m) => m.type === 'image');
+                        updated[idx] = {
+                          ...updated[idx],
+                          mediaItems: mediaList,
+                          videoUrl: firstVid ? firstVid.url : (mediaList[0]?.url || ''),
+                          videoPoster: firstImg ? firstImg.url : (firstVid?.poster || updated[idx].videoPoster || ''),
+                        };
+                        setFormData({
+                          ...formData,
+                          services: {
+                            heading: formData.services?.heading || 'WHAT WE DO',
+                            subheading: formData.services?.subheading || '',
+                            items: updated,
+                          },
+                        });
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -1197,13 +1192,44 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
         {/* Bottom Save Bar */}
         <div className="flex items-center justify-end gap-3 pt-4">
           <button
-            type="submit"
-            className="px-6 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className={`px-7 py-3.5 rounded-full text-xs font-btn font-bold uppercase tracking-wider flex items-center gap-2.5 shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+              savedToast
+                ? 'bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-400'
+                : 'bg-[#202526] hover:bg-[#111314] text-white'
+            }`}
           >
-            <Check className="w-4 h-4" /> Save All Content Changes
+            <Check className={`w-4 h-4 ${savedToast ? 'text-white stroke-[3]' : 'text-[#D8A9A8]'}`} />
+            <span>{savedToast ? 'Saved Successfully to Live Site! ✓' : isSaving ? 'Saving Changes...' : 'Save All Content Changes'}</span>
           </button>
         </div>
       </form>
+
+      {/* Global Fixed Floating Notification - Always visible regardless of scroll position */}
+      {savedToast && (
+        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm sm:max-w-md p-4 rounded-2xl bg-[#202526] text-white border-2 border-emerald-500/60 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 pointer-events-auto">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40">
+            <Check className="w-5 h-5 stroke-[2.5]" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-white">
+              Changes Saved Live!
+            </p>
+            <p className="text-[11px] text-[#CBDCDE] font-sans-clean mt-0.5">
+              All website content, videos &amp; settings permanently stored.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSavedToast(false)}
+            className="text-[#CBDCDE] hover:text-white p-1 cursor-pointer transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

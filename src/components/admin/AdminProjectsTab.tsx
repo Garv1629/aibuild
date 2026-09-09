@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { ProjectItem } from '../../types';
+import { ProjectItem, ServiceMediaItem } from '../../types';
 import { adminStore } from '../../services/adminStore';
 import { MediaUploader } from './MediaUploader';
+import { ProjectMediaManager } from './ProjectMediaManager';
+import { ProjectSeamlessShowcase } from '../ProjectSeamlessShowcase';
+import { isVideoMedia } from '../../utils/mediaUpload';
 import {
   Plus,
   Edit2,
@@ -17,6 +20,7 @@ import {
   ArrowUp,
   ArrowDown,
   Upload,
+  Repeat,
 } from 'lucide-react';
 
 // Curated high-res media presets to quickly test/apply
@@ -36,17 +40,17 @@ const PRESET_MEDIA = [
     col1Image2: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1000&q=85',
   },
   {
-    name: 'Quantum Circuits (Glowing Logic)',
-    col2Image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-    col1Image1: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1000&q=85',
+    name: 'Direct UGC Hook (Mobile 9:16)',
+    col2Image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
+    col1Image1: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85',
+    col1Image2: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85',
   },
   {
-    name: 'Spatial Neural Mesh (Abstract Gradient)',
+    name: 'Aesthetic Spatial (Luxury Film)',
     col2Image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
-    col1Image1: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=85',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
+    col1Image1: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85',
     col1Image2: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=85',
   },
 ];
@@ -59,6 +63,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [previewProject, setPreviewProject] = useState<ProjectItem | null>(null);
+  const [saveToast, setSaveToast] = useState(false);
+  const [savedProjectName, setSavedProjectName] = useState('');
 
   const [formData, setFormData] = useState<Omit<ProjectItem, 'id'>>({
     number: '01',
@@ -70,6 +76,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
     col2Image: '',
     videoUrl: '',
     mediaType: 'image',
+    mediaItems: [],
     liveUrl: '',
     techStack: ['React', 'TypeScript', 'Tailwind', 'AI API'],
     featured: true,
@@ -90,6 +97,15 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       col2Image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1400&q=85',
       videoUrl: '',
       mediaType: 'image',
+      mediaItems: [
+        {
+          id: `pimg-new-1`,
+          type: 'image',
+          url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1400&q=85',
+          title: 'Initial Showcase Visual',
+          duration: 4,
+        },
+      ],
       liveUrl: 'https://aibuild.studio',
       techStack: ['React', 'TypeScript', 'Tailwind', 'Agentic AI'],
       featured: true,
@@ -100,6 +116,58 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
 
   const openEditProject = (project: ProjectItem) => {
     setEditingProject(project);
+
+    // Pre-populate playlist with existing media if project.mediaItems is empty
+    const initialItems: ServiceMediaItem[] =
+      project.mediaItems && project.mediaItems.length > 0
+        ? project.mediaItems
+        : [
+            ...(project.videoUrl && project.videoUrl.trim()
+              ? [
+                  {
+                    id: `pvid-${project.id}-1`,
+                    type: 'video' as const,
+                    url: project.videoUrl.trim(),
+                    poster: project.col2Image?.trim(),
+                    title: `${project.title} Video Clip`,
+                  },
+                ]
+              : []),
+            ...(project.col2Image && project.col2Image.trim()
+              ? [
+                  {
+                    id: `pimg-${project.id}-1`,
+                    type: 'image' as const,
+                    url: project.col2Image.trim(),
+                    title: `${project.title} Main Visual`,
+                    duration: 4,
+                  },
+                ]
+              : []),
+            ...(project.col1Image1 && project.col1Image1.trim()
+              ? [
+                  {
+                    id: `pimg-${project.id}-2`,
+                    type: 'image' as const,
+                    url: project.col1Image1.trim(),
+                    title: `${project.title} Detail Photo 1`,
+                    duration: 4,
+                  },
+                ]
+              : []),
+            ...(project.col1Image2 && project.col1Image2.trim()
+              ? [
+                  {
+                    id: `pimg-${project.id}-3`,
+                    type: 'image' as const,
+                    url: project.col1Image2.trim(),
+                    title: `${project.title} Detail Photo 2`,
+                    duration: 4,
+                  },
+                ]
+              : []),
+          ];
+
     setFormData({
       number: project.number,
       title: project.title,
@@ -110,6 +178,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       col2Image: project.col2Image,
       videoUrl: project.videoUrl || '',
       mediaType: project.mediaType || (project.videoUrl ? 'video' : 'image'),
+      mediaItems: initialItems,
       liveUrl: project.liveUrl || '',
       techStack: project.techStack || ['React', 'TypeScript', 'Tailwind'],
       featured: project.featured ?? true,
@@ -125,8 +194,15 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       .map((t) => t.trim())
       .filter(Boolean);
 
-    const projectPayload = {
+    const firstVideo = (formData.mediaItems || []).find((m) => m.type === 'video');
+    const firstImage = (formData.mediaItems || []).find((m) => m.type === 'image');
+
+    const projectPayload: Omit<ProjectItem, 'id'> = {
       ...formData,
+      mediaItems: formData.mediaItems || [],
+      videoUrl: firstVideo ? firstVideo.url : formData.videoUrl,
+      col2Image: firstImage ? firstImage.url : (firstVideo?.poster || formData.col2Image),
+      mediaType: firstVideo ? 'video' : (formData.mediaType || 'image'),
       techStack: parsedTech.length > 0 ? parsedTech : ['React', 'TypeScript', 'Tailwind'],
     };
 
@@ -135,7 +211,11 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
     } else {
       adminStore.addProject(projectPayload);
     }
+
+    setSavedProjectName(formData.title || 'Project');
+    setSaveToast(true);
     setIsEditorOpen(false);
+    setTimeout(() => setSaveToast(false), 4000);
   };
 
   const handleDelete = (id: string, title: string) => {
@@ -155,6 +235,35 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
   };
 
   const applyPreset = (preset: (typeof PRESET_MEDIA)[0]) => {
+    const presetMediaItems: ServiceMediaItem[] = [];
+    if (preset.videoUrl) {
+      presetMediaItems.push({
+        id: `m-prev-${Date.now()}-1`,
+        type: 'video',
+        url: preset.videoUrl,
+        poster: preset.col2Image,
+        title: `${preset.name} Video Clip`,
+      });
+    }
+    if (preset.col2Image) {
+      presetMediaItems.push({
+        id: `m-preimg-${Date.now()}-2`,
+        type: 'image',
+        url: preset.col2Image,
+        title: `${preset.name} Main Showcase`,
+        duration: 4,
+      });
+    }
+    if (preset.col1Image1) {
+      presetMediaItems.push({
+        id: `m-preimg-${Date.now()}-3`,
+        type: 'image',
+        url: preset.col1Image1,
+        title: `${preset.name} Detail Visual`,
+        duration: 4,
+      });
+    }
+
     setFormData({
       ...formData,
       col2Image: preset.col2Image,
@@ -162,6 +271,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       col1Image2: preset.col1Image2,
       videoUrl: preset.videoUrl,
       mediaType: preset.videoUrl ? 'video' : 'image',
+      mediaItems: presetMediaItems,
     });
   };
 
@@ -247,6 +357,12 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                     {project.videoUrl && (
                       <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider text-[#202526] bg-[#D8A9A8]/20 border border-[#D8A9A8]/40 flex items-center gap-1">
                         <Video className="w-2.5 h-2.5 text-[#D8A9A8]" /> Motion Enabled
+                      </span>
+                    )}
+                    {project.mediaItems && project.mediaItems.length > 1 && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider text-[#202526] bg-[#E7EBE9] border border-[#B8C1C0] flex items-center gap-1">
+                        <Repeat className="w-2.5 h-2.5 text-[#D8A9A8]" />
+                        {project.mediaItems.length} Clips Continuous
                       </span>
                     )}
                     {project.liveUrl && (
@@ -465,85 +581,50 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                 />
               </div>
 
-              {/* MEDIA UPLOAD SECTION */}
-              <div className="p-6 rounded-2xl bg-[#F8F9FA] border border-[#E5E7EB] space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E7EB] pb-3">
-                  <div>
-                    <span className="text-sm font-label-small font-medium uppercase tracking-wider text-[#202526] flex items-center gap-2">
-                      <Upload className="w-4 h-4 text-[#D8A9A8]" />
-                      Direct Media Upload (Photos &amp; Videos)
-                    </span>
-                    <p className="text-xs text-[#596769] mt-0.5">
-                      Upload video clips and high-resolution photos directly from your local computer.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs text-[#202526] font-label-small flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mediaType"
-                        checked={formData.mediaType === 'image'}
-                        onChange={() => setFormData({ ...formData, mediaType: 'image' })}
-                      />
-                      Photo Mode
-                    </label>
-                    <label className="text-xs text-[#202526] font-label-small flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="mediaType"
-                        checked={formData.mediaType === 'video'}
-                        onChange={() => setFormData({ ...formData, mediaType: 'video' })}
-                      />
-                      Video Mode
-                    </label>
-                  </div>
+              {/* CONTINUOUS MULTI-MEDIA ZERO-CUT PLAYLIST MANAGER */}
+              <ProjectMediaManager
+                projectTitle={formData.title}
+                items={formData.mediaItems || []}
+                onChange={(newItems) => {
+                  const firstVideo = newItems.find((m) => m.type === 'video');
+                  const firstImage = newItems.find((m) => m.type === 'image');
+                  setFormData({
+                    ...formData,
+                    mediaItems: newItems,
+                    videoUrl: firstVideo ? firstVideo.url : formData.videoUrl,
+                    col2Image: firstImage ? firstImage.url : (firstVideo?.poster || formData.col2Image),
+                    mediaType: firstVideo ? 'video' : 'image',
+                  });
+                }}
+              />
+
+              {/* Supporting Detail Images */}
+              <div className="p-6 rounded-2xl bg-[#F8F9FA] border border-[#E5E7EB] space-y-4">
+                <div className="border-b border-[#E5E7EB] pb-3">
+                  <span className="text-sm font-label-small font-medium uppercase tracking-wider text-[#202526] flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#D8A9A8]" />
+                    Supporting Detail Views (Left Column in Card)
+                  </span>
+                  <p className="text-xs text-[#596769] mt-0.5">
+                    Upload detail shots for the two smaller companion boxes on the left side of the project card.
+                  </p>
                 </div>
 
-                {/* Main Showcase Media (Col 2) */}
-                {formData.mediaType === 'video' ? (
-                  <div className="space-y-4">
-                    <MediaUploader
-                      label="Upload Showcase Video Clip (Right Column Large Box)"
-                      acceptType="video"
-                      value={formData.videoUrl || ''}
-                      onChange={(val) => setFormData({ ...formData, videoUrl: val, mediaType: 'video' })}
-                      helperText="Drag & drop or browse MP4/WebM video from your device to auto-play in the card"
-                    />
-
-                    <MediaUploader
-                      label="Upload Video Fallback / Poster Photo"
-                      acceptType="image"
-                      value={formData.col2Image}
-                      onChange={(val) => setFormData({ ...formData, col2Image: val })}
-                      helperText="Displays before video loads or on low-power devices"
-                    />
-                  </div>
-                ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <MediaUploader
-                    label="Upload Main Showcase Photo (Right Column Large Box)"
-                    acceptType="image"
-                    value={formData.col2Image}
-                    onChange={(val) => setFormData({ ...formData, col2Image: val, mediaType: 'image' })}
-                    helperText="Drag & drop or choose high-res PNG, JPG, or WebP photo from your device"
-                  />
-                )}
-
-                {/* Left Detail Images 1 and 2 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#E5E7EB]">
-                  <MediaUploader
-                    label="Detail Photo 1 (Top Left)"
-                    acceptType="image"
+                    label="Detail Media 1 (Video or Image - Top Left)"
+                    acceptType="both"
                     value={formData.col1Image1}
                     onChange={(val) => setFormData({ ...formData, col1Image1: val })}
-                    helperText="Upload supporting project detail photo"
+                    helperText="Upload video (MP4/WebM) or image. You can replace images with videos and vice versa."
                   />
 
                   <MediaUploader
-                    label="Detail Photo 2 (Bottom Left)"
-                    acceptType="image"
+                    label="Detail Media 2 (Video or Image - Bottom Left)"
+                    acceptType="both"
                     value={formData.col1Image2}
                     onChange={(val) => setFormData({ ...formData, col1Image2: val })}
-                    helperText="Upload secondary layout photo"
+                    helperText="Upload video (MP4/WebM) or image. You can replace images with videos and vice versa."
                   />
                 </div>
               </div>
@@ -574,8 +655,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                   type="submit"
                   className="px-6 py-2.5 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
                 >
-                  <Check className="w-4 h-4" />
-                  {editingProject ? 'Update Case Study' : 'Publish Case Study'}
+                  <Check className="w-4 h-4 text-[#D8A9A8]" />
+                  {editingProject ? 'Update & Save Case Study Live' : 'Publish Case Study Live'}
                 </button>
               </div>
             </form>
@@ -612,49 +693,80 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="md:col-span-5 flex flex-col gap-4">
                 {previewProject.col1Image1 && previewProject.col1Image1.trim() ? (
-                  <img
-                    src={previewProject.col1Image1}
-                    alt="1"
-                    className="w-full h-36 object-cover rounded-2xl border border-[#E5E7EB]"
-                  />
+                  isVideoMedia(previewProject.col1Image1) ? (
+                    <video
+                      src={previewProject.col1Image1}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full h-36 object-cover rounded-2xl border border-[#E5E7EB]"
+                    />
+                  ) : (
+                    <img
+                      src={previewProject.col1Image1}
+                      alt="1"
+                      className="w-full h-36 object-cover rounded-2xl border border-[#E5E7EB]"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-36 bg-[#F3F4F6] rounded-2xl border border-[#E5E7EB]" />
                 )}
                 {previewProject.col1Image2 && previewProject.col1Image2.trim() ? (
-                  <img
-                    src={previewProject.col1Image2}
-                    alt="2"
-                    className="w-full h-44 object-cover rounded-2xl border border-[#E5E7EB]"
-                  />
+                  isVideoMedia(previewProject.col1Image2) ? (
+                    <video
+                      src={previewProject.col1Image2}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full h-44 object-cover rounded-2xl border border-[#E5E7EB]"
+                    />
+                  ) : (
+                    <img
+                      src={previewProject.col1Image2}
+                      alt="2"
+                      className="w-full h-44 object-cover rounded-2xl border border-[#E5E7EB]"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-44 bg-[#F3F4F6] rounded-2xl border border-[#E5E7EB]" />
                 )}
               </div>
               <div className="md:col-span-7">
-                {previewProject.videoUrl && previewProject.videoUrl.trim() && previewProject.mediaType === 'video' ? (
-                  <video
-                    src={previewProject.videoUrl}
-                    controls
-                    autoPlay
-                    loop
-                    className="w-full h-[336px] object-cover rounded-2xl border border-[#E5E7EB]"
-                  />
-                ) : previewProject.col2Image && previewProject.col2Image.trim() ? (
-                  <img
-                    src={previewProject.col2Image}
-                    alt="showcase"
-                    className="w-full h-[336px] object-cover rounded-2xl border border-[#E5E7EB]"
-                  />
-                ) : (
-                  <div className="w-full h-[336px] bg-[#F3F4F6] rounded-2xl border border-[#E5E7EB] flex items-center justify-center text-xs text-[#71717A]">
-                    No Media
-                  </div>
-                )}
+                <ProjectSeamlessShowcase
+                  project={previewProject}
+                  className="w-full h-[336px] rounded-2xl"
+                />
               </div>
             </div>
 
             <p className="text-xs sm:text-[13px] text-[#596769] mt-4 leading-relaxed">{previewProject.tagline}</p>
           </div>
+        </div>
+      )}
+
+      {/* Global Fixed Floating Notification for Project Save */}
+      {saveToast && (
+        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm sm:max-w-md p-4 rounded-2xl bg-[#202526] text-white border-2 border-emerald-500/60 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 pointer-events-auto">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40">
+            <Check className="w-5 h-5 stroke-[2.5]" />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-white">
+              Project Saved Live! ✓
+            </p>
+            <p className="text-[11px] text-[#CBDCDE] font-sans-clean mt-0.5">
+              &quot;{savedProjectName}&quot; media playlist &amp; continuous playback updated.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSaveToast(false)}
+            className="text-[#CBDCDE] hover:text-white p-1 cursor-pointer transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>

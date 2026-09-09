@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Layers, Monitor, Cpu, ExternalLink, Video } from 'lucide-react';
 import { ProjectItem } from '../types';
 import { ContactButton } from './ContactButton';
+import { ProjectSeamlessShowcase } from './ProjectSeamlessShowcase';
+import { isVideoMedia } from '../utils/mediaUpload';
 
 interface ProjectModalProps {
   project: ProjectItem | null;
@@ -112,53 +114,58 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 
           {/* Video or Image Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 mb-8 relative z-10">
-            {/* Main Primary Media */}
-            <div className="md:col-span-7 rounded-[28px] overflow-hidden bg-[#CBDCDE] border border-[#AFC7C5] shadow-md relative min-h-[300px]">
-              {isVideo && project.videoUrl && project.videoUrl.trim() ? (
-                <video
-                  src={project.videoUrl}
-                  poster={project.col2Image && project.col2Image.trim() ? project.col2Image : undefined}
-                  controls
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover rounded-[28px]"
-                />
-              ) : project.col2Image && project.col2Image.trim() ? (
-                <img
-                  src={project.col2Image}
-                  alt={`${project.title} master showcase`}
-                  className="w-full h-[320px] sm:h-[420px] object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="w-full h-[320px] sm:h-[420px] bg-[#CBDCDE] flex items-center justify-center text-[#596769]" />
-              )}
+            {/* Main Primary Media - Seamless Continuous Showcase */}
+            <div className="md:col-span-7 rounded-[28px] overflow-hidden bg-[#CBDCDE] border border-[#AFC7C5] shadow-md relative min-h-[320px] sm:min-h-[420px]">
+              <ProjectSeamlessShowcase
+                project={project}
+                className="w-full h-full min-h-[320px] sm:min-h-[420px] rounded-[28px]"
+              />
             </div>
 
             {/* Secondary Media Column */}
             <div className="md:col-span-5 flex flex-col gap-4">
               <div className="rounded-[28px] overflow-hidden bg-[#CBDCDE] border border-[#AFC7C5] shadow-md flex-1 min-h-[150px]">
                 {project.col1Image1 && project.col1Image1.trim() ? (
-                  <img
-                    src={project.col1Image1}
-                    alt={`${project.title} view 1`}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+                  isVideoMedia(project.col1Image1) ? (
+                    <video
+                      src={project.col1Image1}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={project.col1Image1}
+                      alt={`${project.title} view 1`}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full bg-[#CBDCDE]" />
                 )}
               </div>
               <div className="rounded-[28px] overflow-hidden bg-[#CBDCDE] border border-[#AFC7C5] shadow-md flex-1 min-h-[150px]">
                 {project.col1Image2 && project.col1Image2.trim() ? (
-                  <img
-                    src={project.col1Image2}
-                    alt={`${project.title} view 2`}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+                  isVideoMedia(project.col1Image2) ? (
+                    <video
+                      src={project.col1Image2}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={project.col1Image2}
+                      alt={`${project.title} view 2`}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full bg-[#CBDCDE]" />
                 )}

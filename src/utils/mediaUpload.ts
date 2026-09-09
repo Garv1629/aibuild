@@ -91,3 +91,24 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
+
+/**
+ * Checks whether a given media URL or Data URL represents a video
+ */
+export function isVideoMedia(url: string | undefined | null): boolean {
+  if (!url) return false;
+  const clean = url.trim().toLowerCase();
+  return (
+    clean.startsWith('data:video') ||
+    clean.endsWith('.mp4') ||
+    clean.endsWith('.webm') ||
+    clean.endsWith('.mov') ||
+    clean.endsWith('.ogg') ||
+    clean.includes('.mp4?') ||
+    clean.includes('.webm?') ||
+    clean.includes('.mov?') ||
+    clean.includes('mixkit.co/videos') ||
+    clean.includes('/videos/') ||
+    clean.includes('video/')
+  );
+}
