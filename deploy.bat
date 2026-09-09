@@ -1,12 +1,7 @@
 @echo off
-echo ===================================================
-echo Verifying and Pushing all updates to GitHub...
-echo ===================================================
+echo Starting GitHub Commit and Deployment...
 git add .
-git commit -m "feat: complete project multi-media zero-cut playback and interchange"
+git commit -m "Update site showcase and config"
 git push origin main
-echo.
-echo ===================================================
-echo Current Git Status:
-echo ===================================================
-git status
+npm run deploy
+echo Finished Deployment!
