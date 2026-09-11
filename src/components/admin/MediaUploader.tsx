@@ -156,9 +156,15 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       {showUrlInput ? (
         <div className="flex items-center gap-2">
           <input
-            type="url"
+            type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
             placeholder={placeholderText || 'https://images.unsplash.com/... or https://...'}
             className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-xs text-[#202526] font-sans-clean focus:outline-none focus:border-[#D8A9A8] focus:bg-white"
           />

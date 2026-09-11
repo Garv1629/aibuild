@@ -34,11 +34,59 @@ export default function App() {
   const [contactInitialMessage, setContactInitialMessage] = useState<string>('');
 
   // Admin CMS state
-  const [isAdminViewOpen, setIsAdminViewOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdminViewOpen, setIsAdminViewOpen] = useState<boolean>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const hasAdminHash = window.location.hash === '#admin' || window.location.hash === '#owner';
+        const hasAdminQuery = window.location.search.includes('admin') || window.location.search.includes('owner');
+        const isStored = (
+          window.sessionStorage?.getItem('ai_build_admin_view') === 'true' ||
+          window.localStorage?.getItem('ai_build_admin_view') === 'true'
+        );
+        return (hasAdminHash || hasAdminQuery || isStored) && isSessionActive();
+      }
+    } catch {}
+    return false;
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const hasAdminHash = window.location.hash === '#admin' || window.location.hash === '#owner';
+        const hasAdminQuery = window.location.search.includes('admin') || window.location.search.includes('owner');
+        return (hasAdminHash || hasAdminQuery) && !isSessionActive();
+      }
+    } catch {}
+    return false;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return typeof window !== 'undefined' && isSessionActive();
+    } catch {
+      return false;
+    }
+  });
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [storeState, setStoreState] = useState<AdminStoreState>(adminStore.getState());
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        if (isAdminViewOpen) {
+          window.sessionStorage?.setItem('ai_build_admin_view', 'true');
+          window.localStorage?.setItem('ai_build_admin_view', 'true');
+          if (window.location.hash !== '#admin') {
+            window.location.hash = '#admin';
+          }
+        } else {
+          window.sessionStorage?.removeItem('ai_build_admin_view');
+          window.localStorage?.removeItem('ai_build_admin_view');
+          if (window.location.hash === '#admin' || window.location.hash === '#owner') {
+            window.history.replaceState({}, document.title || '', window.location.pathname);
+          }
+        }
+      }
+    } catch {}
+  }, [isAdminViewOpen]);
 
   const typedBufferRef = useRef<string>('');
 
@@ -52,27 +100,34 @@ export default function App() {
       setStoreState(state);
     });
 
-    // Check URL parameters for owner direct trigger: ?admin, ?owner, #admin
+    // Check URL parameters / hash for owner direct trigger
     try {
       if (typeof window !== 'undefined' && window.location) {
         const urlParams = new URLSearchParams(window.location.search);
         const hasAdminQuery = urlParams.has('admin') || urlParams.has('owner');
         const hasAdminHash = window.location.hash === '#admin' || window.location.hash === '#owner';
         if (hasAdminQuery || hasAdminHash) {
-          // Scrub URL parameters for security
-          try {
-            if (window.history && window.history.replaceState) {
-              window.history.replaceState({}, document.title || '', window.location.pathname);
-            }
-          } catch {
-            // Ignored in restricted iframes
+          if (isSessionActive()) {
+            setIsAuthenticated(true);
+            setIsAdminViewOpen(true);
+          } else {
+            handleTriggerAdmin();
           }
+        }
+      }
+    } catch {}
+
+    const handleHashChange = () => {
+      if (window.location.hash === '#admin' || window.location.hash === '#owner') {
+        if (isSessionActive()) {
+          setIsAuthenticated(true);
+          setIsAdminViewOpen(true);
+        } else {
           handleTriggerAdmin();
         }
       }
-    } catch {
-      // Ignored in non-standard browsers
-    }
+    };
+    window.addEventListener('hashchange', handleHashChange);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing inside an input, textarea, or contentEditable
@@ -105,6 +160,7 @@ export default function App() {
       clearTimeout(timer);
       unsub();
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, [isAuthenticated]);
 
@@ -162,6 +218,11 @@ export default function App() {
 
   const handleExitAdmin = () => {
     setIsAdminViewOpen(false);
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('ai_build_admin_view');
+      }
+    } catch {}
     if (!isSessionActive()) {
       setIsAuthenticated(false);
     }

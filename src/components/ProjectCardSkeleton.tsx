@@ -5,16 +5,10 @@ interface ProjectCardSkeletonProps {
   totalCards?: number;
 }
 
-export const ProjectCardSkeleton: React.FC<ProjectCardSkeletonProps> = ({
-  index = 0,
-}) => {
+export const ProjectCardSkeleton: React.FC<ProjectCardSkeletonProps> = () => {
   return (
     <div
-      style={{
-        top: `calc(5.5rem + ${index * 14}px)`,
-        zIndex: 10 + index,
-      }}
-      className="sticky w-full max-w-6xl mx-auto min-h-[540px] sm:min-h-[580px] md:min-h-[620px] flex items-center justify-center p-0 mb-8 sm:mb-24 md:mb-32"
+      className="w-full max-w-6xl mx-auto min-h-[540px] sm:min-h-[580px] md:min-h-[620px] flex items-center justify-center p-0"
     >
       <div className="w-full h-full rounded-[28px] sm:rounded-[40px] md:rounded-[48px] border border-[#E5E7EB] bg-white p-5 sm:p-7 md:p-9 flex flex-col justify-between shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
         {/* Top Header Row Skeleton */}

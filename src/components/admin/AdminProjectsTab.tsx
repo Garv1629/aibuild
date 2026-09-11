@@ -80,6 +80,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
     liveUrl: '',
     techStack: ['React', 'TypeScript', 'Tailwind', 'AI API'],
     featured: true,
+    aspectRatio: 'auto',
   });
 
   const [techInput, setTechInput] = useState('');
@@ -109,6 +110,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       liveUrl: 'https://aibuild.studio',
       techStack: ['React', 'TypeScript', 'Tailwind', 'Agentic AI'],
       featured: true,
+      aspectRatio: 'auto',
     });
     setTechInput('React, TypeScript, Tailwind, Agentic AI');
     setIsEditorOpen(true);
@@ -182,13 +184,21 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       liveUrl: project.liveUrl || '',
       techStack: project.techStack || ['React', 'TypeScript', 'Tailwind'],
       featured: project.featured ?? true,
+      aspectRatio: project.aspectRatio || 'auto',
     });
     setTechInput((project.techStack || ['React', 'TypeScript', 'Tailwind']).join(', '));
     setIsEditorOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (!formData.title.trim()) {
+      alert('Please enter a project title before saving.');
+      return;
+    }
     const parsedTech = techInput
       .split(',')
       .map((t) => t.trim())
@@ -200,9 +210,9 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
     const projectPayload: Omit<ProjectItem, 'id'> = {
       ...formData,
       mediaItems: formData.mediaItems || [],
-      videoUrl: firstVideo ? firstVideo.url : formData.videoUrl,
+      videoUrl: firstVideo ? firstVideo.url : '',
       col2Image: firstImage ? firstImage.url : (firstVideo?.poster || formData.col2Image),
-      mediaType: firstVideo ? 'video' : (formData.mediaType || 'image'),
+      mediaType: firstVideo ? 'video' : 'image',
       techStack: parsedTech.length > 0 ? parsedTech : ['React', 'TypeScript', 'Tailwind'],
     };
 
@@ -508,7 +518,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
               </div>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-6">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1.5">
@@ -538,7 +548,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1.5">
                     Category
@@ -556,12 +566,26 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                 </div>
                 <div>
                   <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1.5">
+                    Aspect Ratio
+                  </label>
+                  <select
+                    value={formData.aspectRatio || 'auto'}
+                    onChange={(e) => setFormData({ ...formData, aspectRatio: e.target.value as 'auto' | '16:9' | '9:16' })}
+                    className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm text-[#202526] focus:border-[#D8A9A8] focus:bg-white focus:outline-none transition-colors cursor-pointer"
+                  >
+                    <option value="auto">Auto (Match Media)</option>
+                    <option value="9:16">9:16 Vertical (TikTok/Reels)</option>
+                    <option value="16:9">16:9 Cinema (Landscape)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1.5">
                     Live Demo Link (Optional)
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.liveUrl}
-                    onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, liveUrl: e.target.value }))}
                     placeholder="https://example.com"
                     className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-sm text-[#202526] font-sans-clean focus:border-[#D8A9A8] focus:bg-white focus:outline-none transition-colors"
                   />
@@ -588,13 +612,13 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                 onChange={(newItems) => {
                   const firstVideo = newItems.find((m) => m.type === 'video');
                   const firstImage = newItems.find((m) => m.type === 'image');
-                  setFormData({
-                    ...formData,
+                  setFormData((prev) => ({
+                    ...prev,
                     mediaItems: newItems,
-                    videoUrl: firstVideo ? firstVideo.url : formData.videoUrl,
-                    col2Image: firstImage ? firstImage.url : (firstVideo?.poster || formData.col2Image),
+                    videoUrl: firstVideo ? firstVideo.url : '',
+                    col2Image: firstImage ? firstImage.url : (firstVideo?.poster || prev.col2Image),
                     mediaType: firstVideo ? 'video' : 'image',
-                  });
+                  }));
                 }}
               />
 
@@ -652,14 +676,15 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSave}
                   className="px-6 py-2.5 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
                 >
                   <Check className="w-4 h-4 text-[#D8A9A8]" />
                   {editingProject ? 'Update & Save Case Study Live' : 'Publish Case Study Live'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -736,7 +761,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
               <div className="md:col-span-7">
                 <ProjectSeamlessShowcase
                   project={previewProject}
-                  className="w-full h-[336px] rounded-2xl"
+                  className="w-full rounded-2xl"
                 />
               </div>
             </div>

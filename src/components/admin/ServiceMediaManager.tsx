@@ -15,7 +15,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { processImageUpload, processVideoUpload } from '../../utils/mediaUpload';
+import { processImageUpload, processVideoUpload, isVideoMedia } from '../../utils/mediaUpload';
 
 interface ServiceMediaManagerProps {
   disciplineTitle: string;
@@ -141,16 +141,29 @@ export const ServiceMediaManager: React.FC<ServiceMediaManagerProps> = ({
   };
 
   // Manual URL submission
-  const handleAddUrl = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!urlInput.trim()) return;
+  const handleAddUrl = (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const raw = urlInput.trim();
+    if (!raw) {
+      setErrorMessage('Please enter a valid web URL.');
+      return;
+    }
+
+    const url = !raw.startsWith('http://') && !raw.startsWith('https://') && !raw.startsWith('data:') && !raw.startsWith('/')
+      ? `https://${raw}`
+      : raw;
+
+    const resolvedType = isVideoMedia(url) ? 'video' : urlType;
 
     const newItem: ServiceMediaItem = {
       id: `url-${Date.now()}`,
-      type: urlType,
-      url: urlInput.trim(),
-      title: urlTitle.trim() || `${disciplineTitle} ${urlType === 'video' ? 'Clip' : 'Visual'}`,
-      duration: urlType === 'image' ? Number(urlDuration) || 4 : undefined,
+      type: resolvedType,
+      url,
+      title: urlTitle.trim() || `${disciplineTitle} ${resolvedType === 'video' ? 'Clip' : 'Visual'}`,
+      duration: resolvedType === 'image' ? Number(urlDuration) || 4 : undefined,
     };
 
     addItems([newItem]);
@@ -309,10 +322,7 @@ export const ServiceMediaManager: React.FC<ServiceMediaManagerProps> = ({
 
       {/* Direct URL Form Drawer */}
       {isUrlModalOpen && (
-        <form
-          onSubmit={handleAddUrl}
-          className="p-4 rounded-2xl bg-white border border-[#D8A9A8]/40 shadow-sm space-y-3"
-        >
+        <div className="p-4 rounded-2xl bg-white border border-[#D8A9A8]/40 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#202526] flex items-center gap-1.5">
               <LinkIcon className="w-3.5 h-3.5 text-[#D8A9A8]" />
@@ -351,6 +361,12 @@ export const ServiceMediaManager: React.FC<ServiceMediaManagerProps> = ({
                 required
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddUrl(e);
+                  }
+                }}
                 placeholder="https://example.com/asset.mp4"
                 className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] focus:outline-none focus:border-[#D8A9A8]"
               />
@@ -377,6 +393,12 @@ export const ServiceMediaManager: React.FC<ServiceMediaManagerProps> = ({
                   type="text"
                   value={urlTitle}
                   onChange={(e) => setUrlTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddUrl(e);
+                    }
+                  }}
                   placeholder="Showcase Clip"
                   className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] focus:outline-none focus:border-[#D8A9A8]"
                 />
@@ -393,13 +415,14 @@ export const ServiceMediaManager: React.FC<ServiceMediaManagerProps> = ({
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleAddUrl}
               className="px-4 py-1.5 rounded-lg bg-[#202526] hover:bg-[#111314] text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
             >
               Add to Playlist
             </button>
           </div>
-        </form>
+        </div>
       )}
 
       {/* Drag & Drop Upload Zone */}

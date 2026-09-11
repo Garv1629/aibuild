@@ -197,24 +197,30 @@ export function recordSuccessfulLogin(): void {
 }
 
 /**
- * Session Governance - Creates a 30-minute authenticated session
+ * Session Governance - Creates an authenticated session (persisted in both sessionStorage and localStorage)
  */
 export function createSessionToken(): string {
   const token = `tok_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  const expiresAt = Date.now() + 30 * 60 * 1000; // 30 mins
+  const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
   try {
     sessionStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, token);
     sessionStorage.setItem(STORAGE_KEYS.SESSION_EXPIRES, expiresAt.toString());
-  } catch {
-    // Fallback
-  }
+  } catch {}
+  try {
+    localStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, token);
+    localStorage.setItem(STORAGE_KEYS.SESSION_EXPIRES, expiresAt.toString());
+  } catch {}
   return token;
 }
 
 export function isSessionActive(): boolean {
   try {
-    const token = sessionStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
-    const expiresAt = Number(sessionStorage.getItem(STORAGE_KEYS.SESSION_EXPIRES) || '0');
+    const token = sessionStorage.getItem(STORAGE_KEYS.SESSION_TOKEN) || localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
+    const expiresAt = Number(
+      sessionStorage.getItem(STORAGE_KEYS.SESSION_EXPIRES) ||
+      localStorage.getItem(STORAGE_KEYS.SESSION_EXPIRES) ||
+      '0'
+    );
     if (!token || !expiresAt) return false;
     return Date.now() < expiresAt;
   } catch {
@@ -224,9 +230,14 @@ export function isSessionActive(): boolean {
 
 export function refreshSession(): void {
   try {
-    if (sessionStorage.getItem(STORAGE_KEYS.SESSION_TOKEN)) {
-      const expiresAt = Date.now() + 30 * 60 * 1000;
-      sessionStorage.setItem(STORAGE_KEYS.SESSION_EXPIRES, expiresAt.toString());
+    const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+    if (sessionStorage.getItem(STORAGE_KEYS.SESSION_TOKEN) || localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN)) {
+      try {
+        sessionStorage.setItem(STORAGE_KEYS.SESSION_EXPIRES, expiresAt.toString());
+      } catch {}
+      try {
+        localStorage.setItem(STORAGE_KEYS.SESSION_EXPIRES, expiresAt.toString());
+      } catch {}
     }
   } catch {
     // Ignored
@@ -237,6 +248,8 @@ export function terminateSession(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
     sessionStorage.removeItem(STORAGE_KEYS.SESSION_EXPIRES);
+    localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.SESSION_EXPIRES);
     addAuditLog('SESSION_LOCKED', 'Owner session locked / signed out', 'info');
   } catch {
     // Ignored

@@ -169,11 +169,21 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
   };
 
   // Add from URL
-  const handleAddUrl = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!urlInput.trim()) return;
+  const handleAddUrl = (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const raw = urlInput.trim();
+    if (!raw) {
+      setErrorMessage('Please enter a valid web URL.');
+      return;
+    }
 
-    const url = urlInput.trim();
+    const url = !raw.startsWith('http://') && !raw.startsWith('https://') && !raw.startsWith('data:') && !raw.startsWith('/')
+      ? `https://${raw}`
+      : raw;
+
     const resolvedType = isVideoMedia(url) ? 'video' : urlType;
 
     const newItem: ServiceMediaItem = {
@@ -317,11 +327,21 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
     setIsReplaceModalOpen(true);
   };
 
-  const handleReplaceSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (replacingIndex === null || !replaceUrl.trim()) return;
+  const handleReplaceSubmit = (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const raw = replaceUrl.trim();
+    if (replacingIndex === null || !raw) {
+      setErrorMessage('Please enter a replacement media URL.');
+      return;
+    }
 
-    const url = replaceUrl.trim();
+    const url = !raw.startsWith('http://') && !raw.startsWith('https://') && !raw.startsWith('data:') && !raw.startsWith('/')
+      ? `https://${raw}`
+      : raw;
+
     const resolvedType = isVideoMedia(url) ? 'video' : replaceType;
 
     const updated = [...items];
@@ -752,7 +772,7 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleAddUrl} className="space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1">
                   Media Type
@@ -784,10 +804,16 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
                   Direct Web URL
                 </label>
                 <input
-                  type="url"
-                  required
+                  type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleAddUrl(e);
+                    }
+                  }}
                   placeholder="https://assets.mixkit.co/videos/preview/example.mp4"
                   className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-xs text-[#202526] focus:border-[#D8A9A8] focus:bg-white focus:outline-none"
                 />
@@ -801,6 +827,13 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
                   type="text"
                   value={urlTitle}
                   onChange={(e) => setUrlTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleAddUrl(e);
+                    }
+                  }}
                   placeholder="e.g. Hero Dynamic Motion"
                   className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-xs text-[#202526] focus:border-[#D8A9A8] focus:bg-white focus:outline-none"
                 />
@@ -834,13 +867,14 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleAddUrl}
                   className="px-5 py-2 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn uppercase tracking-wider cursor-pointer shadow-sm"
                 >
                   Add to Playlist
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -904,7 +938,7 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
               <div className="flex-grow border-t border-[#E5E7EB]" />
             </div>
 
-            <form onSubmit={handleReplaceSubmit} className="space-y-3.5">
+            <div className="space-y-3.5">
               <div>
                 <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1">
                   Target Format
@@ -936,10 +970,16 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
                   Replacement Media URL
                 </label>
                 <input
-                  type="url"
-                  required
+                  type="text"
                   value={replaceUrl}
                   onChange={(e) => setReplaceUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleReplaceSubmit(e);
+                    }
+                  }}
                   placeholder="https://...mp4 or https://...jpg"
                   className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-xs text-[#202526] focus:border-[#D8A9A8] focus:bg-white focus:outline-none"
                 />
@@ -953,6 +993,13 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
                   type="text"
                   value={replaceTitle}
                   onChange={(e) => setReplaceTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleReplaceSubmit(e);
+                    }
+                  }}
                   placeholder="New clip title..."
                   className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3.5 py-2 text-xs text-[#202526] focus:border-[#D8A9A8] focus:bg-white focus:outline-none"
                 />
@@ -986,13 +1033,14 @@ export const ProjectMediaManager: React.FC<ProjectMediaManagerProps> = ({
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleReplaceSubmit}
                   className="px-5 py-2 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn uppercase tracking-wider cursor-pointer shadow-sm"
                 >
                   Confirm Replace
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

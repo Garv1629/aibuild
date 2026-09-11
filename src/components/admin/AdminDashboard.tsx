@@ -35,8 +35,18 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('content');
-  const [lastEditorTab, setLastEditorTab] = useState<AdminTab>('content');
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const saved = window.sessionStorage.getItem('ai_build_admin_tab') as AdminTab;
+        if (saved && ['content', 'projects', 'reviews', 'messages', 'estimator', 'security', 'preview'].includes(saved)) {
+          return saved;
+        }
+      }
+    } catch {}
+    return 'projects';
+  });
+  const [lastEditorTab, setLastEditorTab] = useState<AdminTab>('projects');
   const [splitView, setSplitView] = useState<boolean>(false);
   const [splitRatio, setSplitRatio] = useState<number>(50); // percentage for left editor pane
   const [storeState, setStoreState] = useState<AdminStoreState>(adminStore.getState());
@@ -58,6 +68,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
   }, []);
 
   const handleSelectTab = (tab: AdminTab) => {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem('ai_build_admin_tab', tab);
+      }
+    } catch {}
     if (tab !== 'preview') {
       setLastEditorTab(tab);
       setActiveTab(tab);
@@ -139,20 +154,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
       refreshSession();
     };
 
-    // Check session validity periodically (every 10 seconds)
-    const sessionCheck = setInterval(() => {
-      if (!isSessionActive()) {
-        onExit();
-      }
-    }, 10000);
-
     window.addEventListener('mousemove', handleActivity);
     window.addEventListener('keydown', handleActivity);
     window.addEventListener('click', handleActivity);
 
     return () => {
       unsub();
-      clearInterval(sessionCheck);
       window.removeEventListener('mousemove', handleActivity);
       window.removeEventListener('keydown', handleActivity);
       window.removeEventListener('click', handleActivity);

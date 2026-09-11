@@ -5,6 +5,7 @@ export interface ServiceMediaItem {
   poster?: string;
   title?: string;
   duration?: number; // duration in seconds for photos (default: 4s)
+  aspectRatio?: 'auto' | '16:9' | '9:16';
 }
 
 export interface ServiceItem {
@@ -36,6 +37,7 @@ export interface ProjectItem {
   liveUrl?: string;
   techStack?: string[];
   featured?: boolean;
+  aspectRatio?: 'auto' | '16:9' | '9:16';
 }
 
 export interface WebsiteContent {

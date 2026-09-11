@@ -160,7 +160,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               PROJECTS
             </h2>
             <p className="text-[#596769] text-xs sm:text-sm mt-1 max-w-lg font-sans-clean font-normal">
-              Scroll down to explore case studies. Each project seamlessly stacks and overlaps as you scroll.
+              Explore our selected client case studies, live productions, and digital deployments.
             </p>
           </div>
 
@@ -213,10 +213,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         </div>
       </div>
 
-      {/* Cards Deck Stack Container: Fluid 120 FPS hardware-accelerated stacking */}
-      <div className="relative w-full max-w-6xl mx-auto flex flex-col pt-2 sm:pt-4">
+      {/* Projects Cards List */}
+      <div className="relative w-full max-w-6xl mx-auto flex flex-col gap-8 sm:gap-12 md:gap-16 pt-2 sm:pt-4">
         {isLoading ? (
-          <div>
+          <div className="flex flex-col gap-8 sm:gap-12 md:gap-16">
             {[0, 1, 2].map((idx) => (
               <ProjectCardSkeleton key={idx} index={idx} totalCards={3} />
             ))}

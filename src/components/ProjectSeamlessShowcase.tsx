@@ -11,12 +11,14 @@ import {
   Repeat,
 } from 'lucide-react';
 import { isVideoMedia } from '../utils/mediaUpload';
+import { resolveProjectAspectRatio } from '../services/adminStore';
 
 interface ProjectSeamlessShowcaseProps {
   project: ProjectItem;
   onOpenDetails?: () => void;
   className?: string;
   showControls?: boolean;
+  onRatioChange?: (ratio: '16:9' | '9:16') => void;
 }
 
 interface SlotState {
@@ -29,6 +31,7 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
   onOpenDetails,
   className = '',
   showControls = true,
+  onRatioChange,
 }) => {
   // Normalize media items: prioritize project.mediaItems, or build fallback playlist from legacy fields
   const mediaList: ServiceMediaItem[] = useMemo(() => {
@@ -117,6 +120,37 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
   const photoStartTimeRef = useRef<number>(0);
   const isHandoffInProgressRef = useRef<boolean>(false);
 
+  // Detected aspect ratios for loaded media items
+  const [detectedRatios, setDetectedRatios] = useState<Record<string, '16:9' | '9:16'>>({});
+
+  const projectDefaultRatio = useMemo(() => resolveProjectAspectRatio(project), [project]);
+
+  const getItemRatio = useCallback((item: ServiceMediaItem | null): '16:9' | '9:16' => {
+    if (!item) return projectDefaultRatio;
+    if (detectedRatios[item.url]) return detectedRatios[item.url];
+    if (item.aspectRatio && (item.aspectRatio === '9:16' || item.aspectRatio === '16:9')) {
+      return item.aspectRatio;
+    }
+    const urlLower = (item.url || '').toLowerCase();
+    if (
+      urlLower.includes('vertical') ||
+      urlLower.includes('reel') ||
+      urlLower.includes('tiktok') ||
+      urlLower.includes('shorts')
+    ) {
+      return '9:16';
+    }
+    return projectDefaultRatio;
+  }, [detectedRatios, projectDefaultRatio]);
+
+  const handleMediaMetadata = useCallback((url: string, w: number, h: number) => {
+    if (w > 0 && h > 0) {
+      const isVertical = h > w * 1.05;
+      const detected = isVertical ? '9:16' : '16:9';
+      setDetectedRatios((prev) => (prev[url] === detected ? prev : { ...prev, [url]: detected }));
+    }
+  }, []);
+
   // Synchronize when project or media list changes
   useEffect(() => {
     setCurrentIndex(0);
@@ -125,6 +159,15 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
     setSlot0({ item: mediaList[0] || null, index: 0 });
     setSlot1({ item: mediaList[1] || mediaList[0] || null, index: totalItems > 1 ? 1 : 0 });
   }, [mediaList, totalItems]);
+
+  // Synchronize activeRatio to parent callback whenever current media ratio is resolved
+  const currentMedia = mediaList[currentIndex];
+  const activeRatio = getItemRatio(currentMedia);
+  const isVertical = activeRatio === '9:16';
+
+  useEffect(() => {
+    onRatioChange?.(activeRatio);
+  }, [activeRatio, onRatioChange]);
 
   // Viewport Intersection Observer: Pause heavy playback when outside screen
   useEffect(() => {
@@ -234,12 +277,14 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
   // Video playback listeners
   useEffect(() => {
     const activeVideo = activeSlot === 0 ? videoRef0.current : videoRef1.current;
-    if (!activeVideo) return;
+    const inactiveVideo = activeSlot === 0 ? videoRef1.current : videoRef0.current;
 
     if (isPlaying && isInView) {
-      activeVideo.play().catch(() => {});
+      inactiveVideo?.pause();
+      activeVideo?.play().catch(() => {});
     } else {
-      activeVideo.pause();
+      activeVideo?.pause();
+      inactiveVideo?.pause();
     }
   }, [isPlaying, isInView, activeSlot]);
 
@@ -338,13 +383,37 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
   ) => {
     if (!slot.item) return null;
     const isActive = activeSlot === slotNum;
+    const ratio = getItemRatio(slot.item);
+    const isVertical = ratio === '9:16';
 
     return (
       <div
-        className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
+        className={`absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden transition-opacity duration-700 ease-in-out ${
           isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
         }`}
       >
+        {/* Ambient blurred backdrop for 9:16 vertical media so widescreen canvas glows with matching colors without cropping */}
+        {isVertical && (
+          <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none -z-0">
+            {slot.item.type === 'video' ? (
+              <video
+                src={slot.item.url}
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover blur-2xl opacity-35 scale-115 pointer-events-none"
+              />
+            ) : (
+              <img
+                src={slot.item.url}
+                alt=""
+                className="w-full h-full object-cover blur-2xl opacity-35 scale-115 pointer-events-none"
+              />
+            )}
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
+        )}
+
         {slot.item.type === 'video' ? (
           <video
             ref={ref}
@@ -355,18 +424,32 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
             loop={totalItems === 1}
             playsInline
             preload="auto"
+            onLoadedMetadata={(e) => {
+              handleMediaMetadata(slot.item?.url || '', e.currentTarget.videoWidth, e.currentTarget.videoHeight);
+            }}
             onTimeUpdate={handleTimeUpdate(slotNum)}
             onEnded={handleVideoEnded(slotNum)}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-102"
+            className={`transition-transform duration-700 relative z-10 group-hover/card:scale-[1.02] ${
+              isVertical
+                ? 'h-full max-h-full aspect-[9/16] object-contain rounded-[18px] sm:rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 mx-auto'
+                : 'w-full h-full object-cover'
+            }`}
           />
         ) : (
-          <div className="w-full h-full overflow-hidden">
+          <div className={`relative z-10 ${isVertical ? 'h-full flex items-center justify-center' : 'w-full h-full overflow-hidden'}`}>
             <img
               src={slot.item.url}
               alt={slot.item.title || project.title}
-              className={`w-full h-full object-cover transition-transform ${
+              onLoad={(e) => {
+                handleMediaMetadata(slot.item?.url || '', e.currentTarget.naturalWidth, e.currentTarget.naturalHeight);
+              }}
+              className={`transition-transform ${
                 isActive ? 'duration-[6000ms] scale-105' : 'duration-700 scale-100'
-              } group-hover/card:scale-105 ease-out`}
+              } group-hover/card:scale-105 ease-out ${
+                isVertical
+                  ? 'h-full max-h-full aspect-[9/16] object-contain rounded-[18px] sm:rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 mx-auto'
+                  : 'w-full h-full object-cover'
+              }`}
               loading="lazy"
               decoding="async"
               referrerPolicy="no-referrer"
@@ -377,13 +460,15 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
     );
   };
 
-  const currentMedia = mediaList[currentIndex];
-
   return (
     <div
       ref={containerRef}
       onClick={onOpenDetails}
-      className={`group/showcase relative w-full h-full min-h-[180px] sm:min-h-[240px] md:min-h-[270px] rounded-[20px] sm:rounded-[24px] md:rounded-[32px] overflow-hidden bg-[#181C1D] border border-[#E5E7EB] shadow-xs cursor-pointer select-none ${className}`}
+      className={`group/showcase relative w-full ${
+        isVertical
+          ? 'aspect-[9/16] max-h-[580px] min-h-[360px] sm:min-h-[440px] md:min-h-[500px] mx-auto'
+          : 'aspect-[16/9] min-h-[220px] sm:min-h-[280px] md:min-h-[340px]'
+      } rounded-[20px] sm:rounded-[24px] md:rounded-[32px] overflow-hidden bg-[#181C1D] border border-[#E5E7EB] shadow-xs cursor-pointer select-none ${className}`}
     >
       {/* Empty State */}
       {totalItems === 0 && (
@@ -396,6 +481,12 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
       {/* Dual Layer A/B Zero-Cut Video & Image Decks */}
       {renderSlot(slot0, 0, videoRef0)}
       {renderSlot(slot1, 1, videoRef1)}
+
+      {/* Aspect Ratio Badge */}
+      <div className="absolute bottom-2.5 left-3.5 z-30 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium text-white/90 bg-black/60 backdrop-blur-md border border-white/15 flex items-center gap-1 shadow-xs pointer-events-none">
+        <span className={`w-1.5 h-1.5 rounded-full ${isVertical ? 'bg-[#D8A9A8]' : 'bg-[#AFC7C5]'}`} />
+        <span>{isVertical ? '9:16 Vertical' : '16:9 Cinema'}</span>
+      </div>
 
       {/* Vignette Subtle Gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#181C1D]/80 via-transparent to-[#181C1D]/40 pointer-events-none z-20" />

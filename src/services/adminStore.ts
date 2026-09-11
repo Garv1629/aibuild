@@ -21,6 +21,7 @@ import {
 } from './security';
 import { DEFAULT_LIGHTING_PRESET } from '../utils/lightingPresets';
 import { setIndexedDbItem, getIndexedDbItem } from './indexedDbStore';
+import { isVideoMedia } from '../utils/mediaUpload';
 
 export const normalizeProjectCategory = (
   category: string
@@ -30,6 +31,68 @@ export const normalizeProjectCategory = (
   if (c.includes('VIDEO') || c.includes('FILM') || c.includes('CINEMA') || c.includes('MOTION')) return 'AI VIDEOS';
   if (c.includes('AUTO') || c.includes('AGENT') || c.includes('BOT') || c.includes('WORKFLOW') || c.includes('PIPELINE')) return 'AUTOMATION';
   return 'WEBSITE BUILDING';
+};
+
+export const resolveProjectAspectRatio = (project: Partial<ProjectItem>): '16:9' | '9:16' => {
+  // 1. Explicit user override from Admin Settings
+  if (project.aspectRatio === '9:16') return '9:16';
+  if (project.aspectRatio === '16:9') return '16:9';
+
+  // 2. Check active primary media item or videoUrl
+  const firstMedia = (project.mediaItems || []).find((m) => m && m.url && m.url.trim().length > 0);
+  if (firstMedia?.aspectRatio === '9:16') return '9:16';
+  if (firstMedia?.aspectRatio === '16:9') return '16:9';
+
+  const primaryUrl = (firstMedia?.url || project.videoUrl || project.col2Image || '').toLowerCase();
+  const primaryTitle = (firstMedia?.title || '').toLowerCase();
+
+  // Explicit vertical markers in media URL or title
+  if (
+    primaryUrl.includes('vertical') ||
+    primaryUrl.includes('reel') ||
+    primaryUrl.includes('tiktok') ||
+    primaryUrl.includes('shorts') ||
+    primaryUrl.includes('9:16') ||
+    primaryUrl.includes('9-16') ||
+    primaryTitle.includes('vertical') ||
+    primaryTitle.includes('9:16') ||
+    primaryUrl.includes('43666') ||
+    primaryUrl.includes('41566')
+  ) {
+    return '9:16';
+  }
+
+  // Explicit 16:9 / cinema / landscape markers in media URL or title
+  if (
+    primaryUrl.includes('16:9') ||
+    primaryUrl.includes('16-9') ||
+    primaryUrl.includes('cinema') ||
+    primaryUrl.includes('widescreen') ||
+    primaryUrl.includes('landscape') ||
+    primaryUrl.includes('horizontal') ||
+    primaryTitle.includes('16:9') ||
+    primaryTitle.includes('cinema') ||
+    primaryTitle.includes('landscape') ||
+    primaryUrl.includes('31910') ||
+    primaryUrl.includes('31518') ||
+    primaryUrl.includes('31911') ||
+    primaryUrl.includes('41584')
+  ) {
+    return '16:9';
+  }
+
+  // If a video URL exists and is not marked vertical, it's standard 16:9
+  if (primaryUrl && isVideoMedia(primaryUrl)) {
+    return '16:9';
+  }
+
+  // 3. Fallback for unconfigured initial UGC ADS items only if no media exists
+  const normCat = normalizeProjectCategory(project.category || '');
+  if (normCat === 'UGC ADS' && !primaryUrl) {
+    return '9:16';
+  }
+
+  return '16:9';
 };
 
 export const initialProjects: ProjectItem[] = [
@@ -69,6 +132,7 @@ export const initialProjects: ProjectItem[] = [
       },
     ],
     liveUrl: 'https://instagram.com',
+    aspectRatio: '9:16',
     techStack: ['9:16 Vertical', '8 Hook Variations', '4.8x ROAS', 'Direct-Response Creative'],
     featured: true,
   },
@@ -77,6 +141,7 @@ export const initialProjects: ProjectItem[] = [
     number: '02',
     title: 'Apex Fit Creator Series',
     category: 'UGC ADS',
+    aspectRatio: '9:16',
     tagline: 'Viral fitness & supplement UGC creator ad package engineered for Meta and TikTok paid performance channels.',
     col1Image1: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85',
     col1Image2: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?auto=format&fit=crop&w=1000&q=85',
@@ -962,7 +1027,20 @@ class AdminDataStore {
 
   private loadFromStorage() {
     try {
+      // Clean up bloated legacy storage keys to maximize available browser storage
+      try {
+        localStorage.removeItem('ai_build_projects_v3');
+        localStorage.removeItem('ai_build_projects_v2');
+        localStorage.removeItem('ai_build_content_v2');
+      } catch {}
+
+      const localProjectsTs = Number(
+        localStorage.getItem('ai_build_projects_v5_ts') ||
+        localStorage.getItem('ai_build_projects_v4_ts') ||
+        '0'
+      );
       const storedProjects =
+        localStorage.getItem('ai_build_projects_v5') ||
         localStorage.getItem('ai_build_projects_v4') ||
         localStorage.getItem('ai_build_projects_v3') ||
         localStorage.getItem('ai_build_projects_v2');
@@ -985,6 +1063,7 @@ class AdminDataStore {
               return {
                 ...p,
                 category: normalizeProjectCategory(p.category),
+                aspectRatio: p.aspectRatio || 'auto',
                 mediaItems,
               };
             });
@@ -1004,7 +1083,15 @@ class AdminDataStore {
         this.projects = initialProjects;
       }
 
-      const storedContent = localStorage.getItem('ai_build_content_v4') || localStorage.getItem('ai_build_content_v2');
+      const localContentTs = Number(
+        localStorage.getItem('ai_build_content_v5_ts') ||
+        localStorage.getItem('ai_build_content_v4_ts') ||
+        '0'
+      );
+      const storedContent =
+        localStorage.getItem('ai_build_content_v5') ||
+        localStorage.getItem('ai_build_content_v4') ||
+        localStorage.getItem('ai_build_content_v2');
       if (storedContent) {
         try {
           const parsed = JSON.parse(storedContent);
@@ -1049,9 +1136,15 @@ class AdminDataStore {
 
       // Check IndexedDB asynchronously for durable media & large payloads
       if (typeof window !== 'undefined') {
-        getIndexedDbItem<WebsiteContent>('ai_build_content_v4')
-          .then((dbContent) => {
+        getIndexedDbItem<{ timestamp?: number; content?: WebsiteContent } | WebsiteContent>('ai_build_content_v5')
+          .then((dbResult) => {
+            if (!dbResult) return;
+            const isWrapped = dbResult && typeof dbResult === 'object' && 'timestamp' in dbResult && 'content' in dbResult;
+            const dbTs = isWrapped ? (dbResult as any).timestamp : 0;
+            const dbContent = isWrapped ? (dbResult as any).content : (dbResult as WebsiteContent);
+
             if (
+              dbTs >= localContentTs &&
               dbContent &&
               dbContent.services &&
               Array.isArray(dbContent.services.items) &&
@@ -1066,9 +1159,14 @@ class AdminDataStore {
           })
           .catch(() => {});
 
-        getIndexedDbItem<ProjectItem[]>('ai_build_projects_v4')
-          .then((dbProjects) => {
-            if (Array.isArray(dbProjects) && dbProjects.length > 0) {
+        getIndexedDbItem<{ timestamp?: number; projects?: ProjectItem[] } | ProjectItem[]>('ai_build_projects_v5')
+          .then((dbResult) => {
+            if (!dbResult) return;
+            const isWrapped = dbResult && typeof dbResult === 'object' && 'timestamp' in dbResult && 'projects' in dbResult;
+            const dbTs = isWrapped ? (dbResult as any).timestamp : 0;
+            const dbProjects = isWrapped ? (dbResult as any).projects : (dbResult as ProjectItem[]);
+
+            if (dbTs >= localProjectsTs && Array.isArray(dbProjects) && dbProjects.length > 0) {
               this.projects = dbProjects;
               this.notifyListenersOnly();
             }
@@ -1120,23 +1218,53 @@ class AdminDataStore {
   }
 
   private saveToStorage() {
+    const now = Date.now();
+
+    // 1. Projects (isolated so content quota doesn't block projects)
     try {
-      localStorage.setItem('ai_build_content_v4', JSON.stringify(this.websiteContent));
-      localStorage.setItem('ai_build_content_v2', JSON.stringify(this.websiteContent));
-      localStorage.setItem('ai_build_projects_v4', JSON.stringify(this.projects));
-      localStorage.setItem('ai_build_projects_v3', JSON.stringify(this.projects));
-      localStorage.setItem('ai_build_projects_v2', JSON.stringify(this.projects));
-      localStorage.setItem('ai_build_reviews_v2', JSON.stringify(this.reviews));
-      localStorage.setItem('ai_build_messages_v2', JSON.stringify(this.messages));
-      localStorage.setItem('ai_build_quotes_v2', JSON.stringify(this.savedQuotes));
-      localStorage.setItem('ai_build_estimator_settings_v2', JSON.stringify(this.estimatorSettings));
+      localStorage.setItem('ai_build_projects_v5', JSON.stringify(this.projects));
+      localStorage.setItem('ai_build_projects_v5_ts', now.toString());
     } catch (err) {
-      console.warn('localStorage save warning (might exceed quota):', err);
+      console.warn('localStorage projects save warning (might exceed quota), storing lightweight fallback:', err);
+      try {
+        // Strip heavy base64 strings (>50KB) from localStorage copy so metadata & URLs always persist
+        const lightweight = this.projects.map((p) => ({
+          ...p,
+          mediaItems: (p.mediaItems || []).map((m) => ({
+            ...m,
+            url: m.url && m.url.startsWith('data:') && m.url.length > 50000 ? '' : m.url,
+          })),
+        }));
+        localStorage.setItem('ai_build_projects_v5', JSON.stringify(lightweight));
+        localStorage.setItem('ai_build_projects_v5_ts', now.toString());
+      } catch (innerErr) {
+        console.warn('Failed to write lightweight projects to localStorage:', innerErr);
+      }
     }
 
-    // Always mirror to IndexedDB for large media support & resilient offline persistence
-    setIndexedDbItem('ai_build_content_v4', this.websiteContent);
-    setIndexedDbItem('ai_build_projects_v4', this.projects);
+    // 2. Website Content
+    try {
+      localStorage.setItem('ai_build_content_v5', JSON.stringify(this.websiteContent));
+      localStorage.setItem('ai_build_content_v5_ts', now.toString());
+    } catch (err) {
+      console.warn('localStorage content save warning (might exceed quota):', err);
+    }
+
+    // 3. Reviews & Messages
+    try {
+      localStorage.setItem('ai_build_reviews_v2', JSON.stringify(this.reviews));
+      localStorage.setItem('ai_build_messages_v2', JSON.stringify(this.messages));
+    } catch {}
+
+    // 4. Quotes & Estimator Settings
+    try {
+      localStorage.setItem('ai_build_quotes_v2', JSON.stringify(this.savedQuotes));
+      localStorage.setItem('ai_build_estimator_settings_v2', JSON.stringify(this.estimatorSettings));
+    } catch {}
+
+    // Always mirror full unpruned datasets to IndexedDB for large media support & resilient offline persistence
+    setIndexedDbItem('ai_build_content_v5', { timestamp: now, content: this.websiteContent }).catch(() => {});
+    setIndexedDbItem('ai_build_projects_v5', { timestamp: now, projects: this.projects }).catch(() => {});
   }
 
   private notifyListenersOnly() {

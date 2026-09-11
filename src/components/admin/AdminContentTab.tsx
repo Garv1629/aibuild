@@ -241,7 +241,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
         </button>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-6 font-sans-clean">
+      <div className="space-y-6 font-sans-clean">
         {/* HERO SECTION */}
         {activeSubSection === 'hero' && (
           <div className="bg-white/85 p-6 sm:p-8 rounded-[32px] border border-[#E5E7EB] backdrop-blur-2xl space-y-6 shadow-sm">
@@ -1205,7 +1205,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
             <span>{savedToast ? 'Saved Successfully to Live Site! ✓' : isSaving ? 'Saving Changes...' : 'Save All Content Changes'}</span>
           </button>
         </div>
-      </form>
+      </div>
 
       {/* Global Fixed Floating Notification - Always visible regardless of scroll position */}
       {savedToast && (
