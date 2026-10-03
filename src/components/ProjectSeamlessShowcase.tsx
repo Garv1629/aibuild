@@ -528,7 +528,7 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
           } left-3.5 right-3.5 z-30 flex items-center justify-between pointer-events-none transition-all`}
         >
           {/* Index & Type Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md border border-[#E5E7EB] text-[10px] font-mono font-bold tracking-[0.08em] text-[#202526] uppercase shadow-xs pointer-events-auto">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md border border-[#E5E7EB] text-xs font-mono font-bold tracking-[0.08em] text-[#202526] uppercase shadow-xs pointer-events-auto">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
             <span>{currentMedia?.type === 'video' ? 'VIDEO' : 'PHOTO'}</span>
             {totalItems > 1 && (
@@ -542,58 +542,62 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
           </div>
 
           {/* Action Buttons: Prev, Next, Play/Pause, Audio */}
-          <div className="pointer-events-auto flex items-center gap-1.5">
+          <div className="pointer-events-auto flex items-center gap-2 sm:gap-2.5">
             {totalItems > 1 && (
               <>
                 <button
                   type="button"
+                  aria-label="Previous slide"
                   onClick={(e) => {
                     e.stopPropagation();
                     handlePrev();
                   }}
-                  className="w-7 h-7 rounded-full bg-white/85 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95"
-                  title="Previous Clip"
+                  className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/90 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/80 focus-visible:ring-offset-1"
+                  title="Previous Slide"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
+                  aria-label="Next slide"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNext();
                   }}
-                  className="w-7 h-7 rounded-full bg-white/85 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95"
-                  title="Next Clip"
+                  className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/90 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/80 focus-visible:ring-offset-1"
+                  title="Next Slide"
                 >
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
                 </button>
               </>
             )}
 
             <button
               type="button"
+              aria-label={isPlaying ? "Pause carousel" : "Play carousel"}
               onClick={togglePlay}
-              className="w-7 h-7 rounded-full bg-white/85 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95"
-              title={isPlaying ? 'Pause' : 'Play'}
+              className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/90 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/80 focus-visible:ring-offset-1"
+              title={isPlaying ? 'Pause Playback' : 'Resume Playback'}
             >
               {isPlaying ? (
-                <Pause className="w-3.5 h-3.5" />
+                <Pause className="w-4 h-4" aria-hidden="true" />
               ) : (
-                <Play className="w-3.5 h-3.5 fill-[#202526]" />
+                <Play className="w-4 h-4 fill-[#202526]" aria-hidden="true" />
               )}
             </button>
 
             {currentMedia?.type === 'video' && (
               <button
                 type="button"
+                aria-label={isMuted ? "Unmute video" : "Mute video"}
                 onClick={toggleMute}
-                className="w-7 h-7 rounded-full bg-white/85 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95"
+                className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-white/90 hover:bg-white text-[#202526] flex items-center justify-center transition-all cursor-pointer border border-[#E5E7EB] shadow-xs hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/80 focus-visible:ring-offset-1"
                 title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
               >
                 {isMuted ? (
-                  <VolumeX className="w-3.5 h-3.5" />
+                  <VolumeX className="w-4 h-4" aria-hidden="true" />
                 ) : (
-                  <Volume2 className="w-3.5 h-3.5" />
+                  <Volume2 className="w-4 h-4" aria-hidden="true" />
                 )}
               </button>
             )}
@@ -604,22 +608,23 @@ export const ProjectSeamlessShowcase: React.FC<ProjectSeamlessShowcaseProps> = (
       {/* Bottom Title & Dot Indicators */}
       {totalItems > 1 && (
         <div className="absolute bottom-3 left-3.5 right-3.5 z-30 flex items-center justify-between pointer-events-none transition-all">
-          <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-sans-clean flex items-center gap-2 pointer-events-auto max-w-[70%] truncate shadow-sm">
+          <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-sans-clean flex items-center gap-2 pointer-events-auto max-w-[70%] truncate shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0 animate-pulse" />
             <span className="truncate">{currentMedia?.title || `${project.title} - Clip ${currentIndex + 1}`}</span>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-full pointer-events-auto shadow-sm">
+          <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-white/20 px-2.5 py-1.5 rounded-full pointer-events-auto shadow-sm">
             {mediaList.map((item, idx) => (
               <button
                 key={item.id || idx}
                 type="button"
+                aria-label={`Jump to slide ${idx + 1}: ${item.title || item.type}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   executeHandoff(idx);
                 }}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  idx === currentIndex ? 'bg-white w-4' : 'bg-white/40 hover:bg-white/70 w-1.5'
+                className={`h-2 rounded-full transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                  idx === currentIndex ? 'bg-white w-5' : 'bg-white/40 hover:bg-white/70 w-2'
                 }`}
                 title={`Clip ${idx + 1}: ${item.title || item.type}`}
               />

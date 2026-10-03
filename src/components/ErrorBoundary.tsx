@@ -55,13 +55,13 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full bg-[#FFFFFF] text-[#202526] flex items-center justify-center p-6 font-['Manrope',sans-serif]">
+        <div className="min-h-screen w-full bg-[#FFFFFF] text-[#202526] flex items-center justify-center p-6 font-body">
           <div className="max-w-lg w-full bg-[#F4F5F4] border border-[#E5E7EB] rounded-3xl p-8 shadow-xl text-center flex flex-col items-center">
             <div className="w-14 h-14 rounded-full bg-[#D8A9A8]/20 flex items-center justify-center text-[#202526] mb-5">
               <span className="w-3 h-3 rounded-full bg-[#D8A9A8] animate-ping" />
             </div>
             
-            <h1 className="text-2xl font-bold text-[#202526] mb-2 font-['Instrument_Sans',sans-serif]">
+            <h1 className="text-2xl font-bold text-[#202526] mb-2 font-sans-clean">
               Studio Application Notice
             </h1>
             
@@ -71,21 +71,23 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {this.state.error && (
               <div className="w-full bg-white/80 border border-[#E5E7EB] rounded-xl p-3.5 mb-6 text-left overflow-x-auto text-xs font-mono text-[#D8A9A8]">
-                <p className="font-semibold text-[#202526] mb-1 font-sans">Error Details:</p>
+                <p className="font-semibold text-[#202526] mb-1 font-sans-clean">Error Details:</p>
                 <code>{this.state.error.toString()}</code>
               </div>
             )}
 
             <div className="flex flex-col sm:flex-row gap-3 w-full">
               <button
+                type="button"
                 onClick={this.handleReload}
-                className="flex-1 px-5 py-3 rounded-full bg-[#202526] text-white text-xs font-semibold uppercase tracking-wider hover:bg-black transition-all cursor-pointer shadow-md"
+                className="btn-primary flex-1"
               >
                 Reload Page
               </button>
               <button
+                type="button"
                 onClick={this.handleResetAndReload}
-                className="flex-1 px-5 py-3 rounded-full bg-white border border-[#E5E7EB] text-[#202526] text-xs font-semibold uppercase tracking-wider hover:bg-neutral-100 transition-all cursor-pointer shadow-xs"
+                className="btn-secondary flex-1"
               >
                 Reset Cache & Reload
               </button>

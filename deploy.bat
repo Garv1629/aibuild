@@ -1,7 +1,5 @@
 @echo off
-echo Starting GitHub Commit and Deployment...
-git add .
-git commit -m "Update site showcase and config"
+git add -A
+git commit -m "feat: complete issues #26-#29 and update docs bundle"
 git push origin main
-npm run deploy
-echo Finished Deployment!
+echo Done!

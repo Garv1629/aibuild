@@ -86,7 +86,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
   return (
     <footer
       id="contact"
-      className="relative w-full bg-transparent text-[#202526] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 md:-mt-14 z-10 pt-14 sm:pt-28 md:pt-36 pb-12 sm:pb-16 px-4 sm:px-8 md:px-12 font-sans-clean overflow-hidden border-t border-[#E5E7EB]"
+      className="relative w-full bg-transparent text-[#202526] rounded-t-3xl -mt-10 sm:-mt-12 md:-mt-14 z-10 pt-14 sm:pt-28 md:pt-36 pb-12 sm:pb-16 px-4 sm:px-8 md:px-12 font-body overflow-hidden border-t border-[#E5E7EB]"
     >
       {/* Background Decorative Lighting Gradients */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -100,7 +100,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 sm:gap-14">
             <div className="space-y-4 sm:space-y-6 max-w-2xl">
               <FadeIn delay={0} y={20}>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-label-small uppercase tracking-[0.08em] text-[#202526] font-medium bg-white/90 border border-[#E5E7EB] shadow-xs backdrop-blur-sm">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono uppercase tracking-[0.08em] text-[#202526] font-medium bg-white/90 border border-[#E5E7EB] shadow-xs backdrop-blur-sm">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D8A9A8] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D8A9A8]" />
@@ -110,25 +110,25 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
               </FadeIn>
 
               <FadeIn delay={0.1} y={30}>
-                <h2 className="font-elegant font-normal uppercase tracking-[-0.02em] text-[#202526] leading-[0.98] text-2xl xs:text-4xl sm:text-6xl md:text-8xl lg:text-[110px] max-w-full break-words">
+                <h2 className="font-heading font-normal uppercase tracking-[-0.02em] text-[#202526] leading-[0.98] text-3xl xs:text-4xl sm:text-6xl md:text-8xl lg:text-[110px] max-w-full break-words">
                   {ctaHeadline}
                 </h2>
               </FadeIn>
 
               <FadeIn delay={0.2} y={20}>
-                <p className="text-xs xs:text-sm sm:text-lg md:text-xl text-[#596769] font-sans-clean font-normal leading-relaxed">
+                <p className="text-xs xs:text-sm sm:text-lg md:text-xl text-[#596769] font-body font-normal leading-relaxed">
                   {ctaSubtext}
                 </p>
               </FadeIn>
             </div>
 
             {/* Right Action Trigger Buttons */}
-            <FadeIn delay={0.25} y={30} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4">
+            <FadeIn delay={0.25} y={30} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5">
               <Magnet strength={15}>
                 <button
                   type="button"
                   onClick={() => onOpenContact && onOpenContact('01 - UGC ADS')}
-                  className="w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-5 rounded-full bg-[#202526] hover:bg-[#111314] text-[#FFFFFF] font-btn font-medium text-xs sm:text-base uppercase tracking-[0.08em] flex items-center justify-center gap-2.5 shadow-[0_10px_30px_rgba(32,37,38,0.2)] transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 group"
+                  className="btn-primary w-full sm:w-auto min-h-[44px] !px-6 !py-3 sm:!px-7 sm:!py-3.5 text-xs sm:text-sm font-semibold rounded-full flex items-center justify-center gap-2.5 group"
                 >
                   <span>Start a Project</span>
                   <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
@@ -139,9 +139,9 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                 <button
                   type="button"
                   onClick={onOpenEstimator}
-                  className="w-full sm:w-auto px-5 py-3.5 sm:px-6 sm:py-5 rounded-full bg-[#D8A9A8] hover:bg-[#E2BEBD] text-[#202526] font-btn font-bold text-xs sm:text-base uppercase tracking-[0.08em] flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 shadow-md"
+                  className="btn-secondary w-full sm:w-auto min-h-[44px] !px-5 !py-3 sm:!px-6 sm:!py-3.5 text-xs sm:text-sm font-semibold rounded-full flex items-center justify-center gap-2"
                 >
-                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#202526]" />
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D8A9A8]" />
                   <span>Cost Estimator</span>
                 </button>
               )}
@@ -150,7 +150,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                 <button
                   type="button"
                   onClick={onOpenPrice}
-                  className="w-full sm:w-auto px-5 py-3.5 sm:px-6 sm:py-5 rounded-full glass-pill hover:bg-white text-[#202526] font-btn font-medium text-xs sm:text-base uppercase tracking-[0.08em] flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 shadow-md"
+                  className="btn-secondary w-full sm:w-auto min-h-[44px] !px-5 !py-3 sm:!px-6 sm:!py-3.5 text-xs sm:text-sm font-semibold rounded-full flex items-center justify-center gap-2"
                 >
                   <span>Pricing &amp; Plans</span>
                 </button>
@@ -161,7 +161,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           {/* Interactive Direct Email Pill & Copy Button */}
           <FadeIn delay={0.3} y={25} className="mt-8 sm:mt-16">
             <div className="inline-flex flex-wrap items-center gap-2 sm:gap-3 p-1.5 sm:p-2.5 rounded-2xl sm:rounded-full glass-pill shadow-lg max-w-full overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-base font-strong text-[#202526]">
+              <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-base font-bold text-[#202526]">
                 <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#596769]" />
                 <span className="select-all tracking-tight font-normal">{email}</span>
               </div>
@@ -169,7 +169,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
               <button
                 type="button"
                 onClick={handleCopyEmail}
-                className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#202526] hover:bg-[#111314] text-[#FFFFFF] text-[11px] sm:text-xs font-btn font-medium uppercase tracking-[0.08em] flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
+                className="btn-primary !px-3.5 !py-1.5 sm:!px-4 sm:!py-2 !rounded-full text-xs flex items-center gap-1.5 sm:gap-2"
               >
                 {copiedEmail ? (
                   <>
@@ -190,17 +190,17 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
         {/* Middle Navigation & Disciplines Directory */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-10 md:gap-12 mb-16 sm:mb-20">
           {/* Col 1: Studio Info */}
-          <FadeIn delay={0.1} y={20} className="space-y-5">
+          <FadeIn delay={0.1} y={20} className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="w-3.5 h-3.5 rounded-full bg-[#D8A9A8] shadow-[0_0_12px_rgba(216,169,168,0.7)] shrink-0" />
               <h3 className="font-bezoria text-2xl sm:text-3xl uppercase tracking-wider text-[#202526] font-normal">
                 ai.build_
               </h3>
             </div>
-            <p className="text-[#596769] text-sm sm:text-[15px] leading-relaxed font-sans-clean font-normal max-w-sm">
+            <p className="text-[#596769] text-sm sm:text-[15px] leading-relaxed font-body font-normal max-w-sm">
               AI-first design, engineering &amp; autonomous workflow studio crafting digital products worldwide.
             </p>
-            <div className="pt-2 flex items-center gap-2.5 text-xs sm:text-sm font-strong text-[#596769]">
+            <div className="pt-2 flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#596769]">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Live Engine: {currentTime}</span>
             </div>
@@ -208,10 +208,10 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
 
           {/* Col 2: Navigation Links */}
           <FadeIn delay={0.15} y={20} className="space-y-4">
-            <h4 className="font-label-small font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] text-[#202526]">
+            <h4 className="font-mono font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] text-[#202526]">
               Navigation
             </h4>
-            <ul className="space-y-2 text-sm sm:text-base font-sans-clean font-normal text-[#596769]">
+            <ul className="space-y-2 text-sm sm:text-base font-body font-normal text-[#596769]">
               {[
                 { id: 'hero', num: '01', label: 'Overview / Hero' },
                 { id: 'about', num: '02', label: 'Studio Mission' },
@@ -235,7 +235,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                     className="w-full text-left py-1.5 px-2 -ml-2 rounded-xl hover:bg-white/80 hover:text-[#202526] transition-all flex items-center justify-between group cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="w-6 h-6 rounded-md bg-[#E7EBE9] group-hover:bg-[#202526] group-hover:text-[#E7EBE9] text-[#596769] font-mono text-[11px] font-semibold flex items-center justify-center transition-all duration-200 shadow-2xs">
+                      <span className="w-6 h-6 rounded-md bg-[#E7EBE9] group-hover:bg-[#202526] group-hover:text-[#E7EBE9] text-[#596769] font-mono text-xs font-semibold flex items-center justify-center transition-all duration-200 shadow-2xs">
                         {item.num}
                       </span>
                       <span className="group-hover:translate-x-0.5 transition-transform text-[#596769] group-hover:text-[#202526]">
@@ -251,10 +251,10 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
 
           {/* Col 3: Disciplines Quick Inquiry */}
           <FadeIn delay={0.2} y={20} className="space-y-4">
-            <h4 className="font-label-small font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] text-[#202526]">
+            <h4 className="font-mono font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] text-[#202526]">
               Disciplines
             </h4>
-            <ul className="space-y-2 text-sm sm:text-base font-sans-clean font-normal text-[#596769]">
+            <ul className="space-y-2 text-sm sm:text-base font-body font-normal text-[#596769]">
               {[
                 { type: '01 - UGC ADS', num: '01', label: 'UGC Ads & Social Creatives' },
                 { type: '02 - AI VIDEOS', num: '02', label: 'AI Video & Cinema' },
@@ -275,7 +275,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                     className="w-full text-left py-1.5 px-2 -ml-2 rounded-xl hover:bg-white/80 hover:text-[#202526] transition-all flex items-center justify-between group cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="w-6 h-6 rounded-md bg-[#E7EBE9] group-hover:bg-[#D8A9A8] group-hover:text-[#202526] text-[#596769] font-mono text-[11px] font-semibold flex items-center justify-center transition-all duration-200 shadow-2xs">
+                      <span className="w-6 h-6 rounded-md bg-[#E7EBE9] group-hover:bg-[#D8A9A8] group-hover:text-[#202526] text-[#596769] font-mono text-xs font-semibold flex items-center justify-center transition-all duration-200 shadow-2xs">
                         {item.num}
                       </span>
                       <span className="group-hover:translate-x-0.5 transition-transform text-[#596769] group-hover:text-[#202526]">
@@ -290,20 +290,18 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           </FadeIn>
 
           {/* Col 4: Platform Security */}
-          <FadeIn delay={0.25} y={20} className="space-y-4 flex flex-col justify-between">
-            <div>
-              <h4 className="font-label-small font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] text-[#202526] mb-3.5">
-                Security &amp; Studio
-              </h4>
-              <div className="p-4 sm:p-5 rounded-2xl bg-white/95 border border-[#E5E7EB] space-y-2.5 shadow-sm">
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-label-small font-semibold text-[#202526]">
-                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#D8A9A8]" />
-                  <span>Production Verified</span>
-                </div>
-                <p className="text-xs sm:text-sm text-[#596769] leading-relaxed font-sans-clean font-normal">
-                  Zero-latency edge CDN with real-time CMS synchronization.
-                </p>
+          <FadeIn delay={0.25} y={20} className="space-y-4">
+            <h4 className="font-mono font-semibold text-xs sm:text-sm uppercase tracking-[0.18em] text-[#202526]">
+              Security &amp; Studio
+            </h4>
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/95 border border-[#E5E7EB] space-y-2.5 shadow-sm">
+              <div className="flex items-center gap-2.5 text-xs sm:text-sm font-mono font-semibold text-[#202526]">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#D8A9A8]" />
+                <span>Production Verified</span>
               </div>
+              <p className="text-xs sm:text-sm text-[#596769] leading-relaxed font-body font-normal">
+                Zero-latency edge CDN with real-time CMS synchronization.
+              </p>
             </div>
           </FadeIn>
         </div>

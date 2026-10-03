@@ -125,12 +125,12 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose }) => 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="relative w-full max-w-lg max-h-[90dvh] overflow-y-auto frosted-modal-glass rounded-[28px] sm:rounded-[36px] p-5 sm:p-8 shadow-2xl text-[#202526] z-10 my-auto font-sans-clean"
+            className="relative w-full max-w-lg max-h-[90dvh] overflow-y-auto frosted-modal-glass rounded-3xl p-5 sm:p-8 shadow-2xl text-[#202526] z-10 my-auto font-sans-clean"
           >
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer z-20"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/40"
             >
               <X className="w-4 h-4" />
             </button>
@@ -178,7 +178,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose }) => 
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-label-small uppercase tracking-wider text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5]">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-label-small uppercase tracking-wider text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5]">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Review Published
                   </span>
@@ -193,7 +193,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose }) => 
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                 <div>
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5] mb-2 shadow-xs">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5] mb-2 shadow-xs">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" /> Client Feedback
                   </span>
                   <h3 className="hero-heading font-black text-2xl sm:text-3xl uppercase tracking-tight text-[#202526]">
@@ -333,15 +333,15 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose }) => 
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2.5 rounded-full border border-[#B8C1C0] text-xs uppercase font-semibold text-[#596769] hover:text-[#202526] hover:bg-[#CBDCDE] cursor-pointer"
+                    className="btn-secondary !px-4 !py-2.5 text-xs uppercase"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`px-6 py-2.5 rounded-full bg-[#202526] hover:bg-[#596769] text-[#E7EBE9] text-xs font-semibold uppercase tracking-[0.08em] flex items-center gap-1.5 shadow-md transition-all ${
-                      isSubmitting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'
+                    className={`btn-primary !px-6 !py-2.5 text-xs ${
+                      isSubmitting ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   >
                     {isSubmitting ? (

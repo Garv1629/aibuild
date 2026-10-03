@@ -145,7 +145,7 @@ const defaultServicesData: ServiceItem[] = [
   },
   {
     number: '03',
-    title: 'WEBSITE BUILDING',
+    title: 'Website Building',
     description: 'Premium websites built to perform.',
     tagline:
       'Websites that make your brand look expensive.',
@@ -202,7 +202,7 @@ const defaultServicesData: ServiceItem[] = [
   },
   {
     number: '04',
-    title: 'AUTOMATIONS',
+    title: 'Automations',
     description: 'Intelligent systems that run the work.',
     tagline:
       'Less repetitive work. More things getting done.',
@@ -418,11 +418,11 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
   return (
     <section
       id="services"
-      className="relative w-full bg-transparent text-[#202526] py-20 sm:py-28 md:py-36 z-10 select-none overflow-hidden font-body"
+      className="relative w-full bg-transparent text-[#202526] py-14 sm:py-20 md:py-24 z-10 select-none overflow-hidden font-body"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-8 md:px-12 relative z-10">
         {/* Top Header Section */}
-        <div className="mb-10 sm:mb-20 md:mb-24">
+        <div className="mb-8 sm:mb-12 md:mb-14">
           <div className="flex items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-[#DDDCD7]">
             <FadeIn delay={0} y={15}>
               <div className="flex items-center gap-2.5 sm:gap-3">
@@ -438,7 +438,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                 <button
                   type="button"
                   onClick={onOpenEstimator}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 hover:bg-[#202526] text-[#202526] hover:text-[#E7EBE9] border border-[#B8C1C0] text-xs font-semibold uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+                  className="hidden sm:inline-flex btn-secondary text-xs sm:text-sm"
                 >
                   <span className="w-2 h-2 rounded-full bg-[#D8A9A8] animate-pulse" />
                   <span>Estimate Project Scope</span>
@@ -448,7 +448,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenContact && onOpenContact('01 - UGC ADS')}
-                className="group flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#202526] text-[#FFFFFF] hover:bg-[#596769] transition-all duration-300 shadow-md hover:scale-105 active:scale-95 cursor-pointer font-btn"
+                className="group flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#202526] text-[#FFFFFF] hover:bg-[#596769] transition-all duration-300 shadow-md hover:scale-105 active:scale-95 cursor-pointer font-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/50 focus-visible:ring-offset-2"
                 title="Start a project / Inquire"
                 aria-label="Inquire about our services"
               >
@@ -459,14 +459,14 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
 
           {/* Subheading Statement */}
           <FadeIn delay={0.1} y={25}>
-            <p className="mt-6 sm:mt-12 text-xl xs:text-2xl sm:text-4xl md:text-5xl font-normal leading-snug text-[#202526] tracking-[-0.02em] font-elegant max-w-4xl">
+            <p className="mt-5 sm:mt-10 text-xl xs:text-2xl sm:text-4xl md:text-5xl font-normal leading-snug text-[#202526] tracking-[-0.02em] font-elegant max-w-4xl">
               We create. We build. We automate.
             </p>
           </FadeIn>
         </div>
 
         {/* 4 Multi-Surface Disciplines Cards */}
-        <div className="space-y-4 sm:space-y-8">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8">
           {services.map((service) => {
             const isExpanded = expandedNumbers.includes(service.number);
             const isHovered = hoveredService === service.number;
@@ -489,7 +489,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                 onMouseEnter={() => setHoveredService(service.number)}
                 onMouseLeave={() => setHoveredService(null)}
-                className={`p-4 xs:p-6 sm:p-9 md:p-12 rounded-[24px] sm:rounded-[40px] ${style.bg} border ${style.border} ${style.text} shadow-md transition-all duration-300 group/item`}
+                className={`p-4 xs:p-6 sm:p-9 md:p-12 rounded-3xl ${style.bg} border ${style.border} ${style.text} shadow-md transition-all duration-300 group/item`}
               >
                 {/* 2-Column Responsive Layout for each Discipline */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 items-center">
@@ -502,8 +502,8 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
 
                       <div className="space-y-1.5 sm:space-y-2.5 flex-1">
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <h3 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-normal uppercase tracking-[-0.02em] font-heading">
-                            {service.title}
+                          <h3 className={`text-xl xs:text-2xl sm:text-3xl md:text-4xl font-normal tracking-[-0.02em] font-heading ${service.number === '03' ? 'normal-case' : 'uppercase'}`}>
+                            {service.number === '03' ? 'Website Building' : service.title}
                           </h3>
                           <span
                             className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${style.accent} transition-all duration-300 ${
@@ -519,23 +519,35 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                     </div>
 
                     {/* Interactive Arrow Button & Specs Trigger */}
-                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pl-0 sm:pl-14">
+                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 pl-0 sm:pl-14">
                       <button
                         type="button"
                         onClick={() =>
                           onOpenContact &&
-                          onOpenContact(`${service.number} - ${service.title}`)
+                          onOpenContact(
+                            service.number === '03'
+                              ? '03 - Website Building'
+                              : service.number === '04'
+                              ? '04 - Automations'
+                              : `${service.number} - ${service.title}`
+                          )
                         }
-                        className={`group/arrow inline-flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full ${style.btnBg} ${style.btnText} ${style.btnHover} text-xs sm:text-sm font-btn font-medium uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer shadow-sm`}
+                        className={`group/arrow inline-flex items-center shrink-0 gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full ${style.btnBg} ${style.btnText} ${style.btnHover} text-xs sm:text-sm font-btn font-medium tracking-[0.04em] transition-all duration-200 cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/50`}
                       >
-                        <span>Start {service.title}</span>
+                        <span>
+                          {service.number === '03'
+                            ? 'Start Website Building'
+                            : service.number === '04'
+                            ? 'Start Automations'
+                            : `Start ${service.title}`}
+                        </span>
                         <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/arrow:translate-x-1" />
                       </button>
 
                       <button
                         type="button"
                         onClick={() => toggleExpand(service.number)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-label-small font-medium ${style.pillBg} ${style.border} border text-[#202526] hover:bg-[#E7EBE9]/90 transition-colors cursor-pointer shadow-sm`}
+                        className={`inline-flex items-center shrink-0 gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full text-xs font-label-small font-medium ${style.pillBg} ${style.border} border text-[#202526] hover:bg-[#E7EBE9]/90 transition-colors cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/40`}
                       >
                         <span>{isExpanded ? 'Hide Specs' : 'View Specs'}</span>
                         {isExpanded ? (
@@ -577,18 +589,18 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                       }}
                       className="overflow-hidden"
                     >
-                      <div className={`${style.specBg} ${style.specText} p-4 sm:p-8 md:p-10 rounded-2xl sm:rounded-[28px] mt-5 sm:mt-8 shadow-lg border ${style.specBorder} relative`}>
+                      <div className={`${style.specBg} ${style.specText} p-4 sm:p-8 md:p-10 rounded-2xl mt-5 sm:mt-8 shadow-lg border ${style.specBorder} relative`}>
                         {/* Top Header & Tagline */}
                         <div className={`pb-4 sm:pb-6 border-b ${style.specBorder} flex flex-col md:flex-row md:items-end justify-between gap-4`}>
                           <div>
                             <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
                               <span className={`w-2 h-2 rounded-full ${style.accent}`} />
-                              <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.08em] font-bold opacity-80">
+                              <span className="font-mono text-xs uppercase tracking-[0.08em] font-bold opacity-80">
                                 Discipline // {service.number}
                               </span>
                             </div>
-                            <h4 className="text-lg xs:text-xl sm:text-3xl font-black uppercase tracking-tight">
-                              {service.title} Specifications
+                            <h4 className={`text-lg xs:text-xl sm:text-3xl font-black tracking-tight ${service.number === '03' ? 'normal-case' : 'uppercase'}`}>
+                              {service.number === '03' ? 'Website Building' : service.title} Specifications
                             </h4>
                             <p className={`mt-1 text-xs sm:text-base ${style.specMuted} font-normal max-w-2xl`}>
                               {service.tagline || service.description}
@@ -599,11 +611,17 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                             type="button"
                             onClick={() =>
                               onOpenContact &&
-                              onOpenContact(`${service.number} - ${service.title}`)
+                              onOpenContact(
+                                service.number === '03'
+                                  ? '03 - Website Building'
+                                  : service.number === '04'
+                                  ? '04 - Automations'
+                                  : `${service.number} - ${service.title}`
+                              )
                             }
-                            className={`px-5 py-2.5 sm:px-6 sm:py-3 rounded-full ${style.btnBg} ${style.btnText} ${style.btnHover} font-bold text-xs uppercase tracking-[0.08em] transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0 hover:scale-105 active:scale-95`}
+                            className={`px-5 py-2.5 sm:px-6 sm:py-3 rounded-full ${style.btnBg} ${style.btnText} ${style.btnHover} font-bold text-xs sm:text-sm tracking-[0.04em] transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/50`}
                           >
-                            <span>Inquire for {service.title}</span>
+                            <span>Inquire for {service.number === '03' ? 'Website Building' : service.number === '04' ? 'Automations' : service.title}</span>
                             <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         </div>
@@ -645,7 +663,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                               {(service.process || []).map((step, idx, arr) => (
                                 <React.Fragment key={idx}>
                                   <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${style.specCardBg} border ${style.specCardBorder} shadow-xs`}>
-                                    <span className="text-[10px] font-mono font-bold opacity-75">
+                                    <span className="text-xs font-mono font-bold opacity-75">
                                       0{idx + 1}
                                     </span>
                                     <span className="text-xs font-semibold">
@@ -666,11 +684,11 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                             <div className={`p-4 rounded-2xl ${style.specCardBg} border ${style.specCardBorder}`}>
                               <div className="flex items-center gap-2 mb-1.5">
                                 <Clock className="w-3.5 h-3.5 opacity-80" />
-                                <h5 className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] opacity-80">
+                                <h5 className="text-xs font-mono font-bold uppercase tracking-[0.15em] opacity-80">
                                   TURNAROUND
                                 </h5>
                               </div>
-                              <p className="text-lg sm:text-xl font-bold font-mono">
+                              <p className="text-base sm:text-lg font-bold font-mono">
                                 {service.turnaround || '3–7 days'}
                               </p>
                             </div>
@@ -679,7 +697,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                             <div className="space-y-2">
                               <div className={`flex items-center gap-2 pb-1.5 border-b ${style.specBorder}`}>
                                 <CheckCircle2 className="w-3.5 h-3.5 text-[#596769]" />
-                                <h5 className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] opacity-80">
+                                <h5 className="text-xs font-mono font-bold uppercase tracking-[0.15em] opacity-80">
                                   DELIVERABLE
                                 </h5>
                               </div>
@@ -716,7 +734,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
           <button
             type="button"
             onClick={() => setIsHowWeWorkOpen(true)}
-            className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-[#202526] text-[#FFFFFF] hover:bg-[#596769] transition-all duration-300 shadow-md hover:scale-105 active:scale-95 cursor-pointer font-bold text-sm sm:text-base uppercase tracking-[0.08em]"
+            className="btn-primary px-8 py-4 text-sm sm:text-base"
           >
             <span>HOW WE WORK</span>
             <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -824,7 +842,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                     setIsHowWeWorkOpen(false);
                     onOpenContact && onOpenContact();
                   }}
-                  className="px-6 py-3 rounded-full bg-[#202526] hover:bg-[#596769] text-[#FFFFFF] font-semibold text-xs uppercase tracking-[0.08em] transition-all duration-300 shadow-md flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+                  className="btn-primary"
                 >
                   <span>Start A Project</span>
                   <ArrowUpRight className="w-4 h-4" />

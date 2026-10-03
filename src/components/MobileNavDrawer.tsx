@@ -193,10 +193,10 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           }
         }}
         whileTap={{ scale: 0.92 }}
-        className="fixed top-3 xs:top-4 right-2.5 xs:right-4 z-40 sm:hidden min-h-[34px] h-[34px] px-2.5 xs:px-3 rounded-full glass-pill flex items-center gap-1.5 cursor-pointer select-none transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.08)] bg-white/90 backdrop-blur-xl border border-[#B8C1C0]/60 active:bg-[#CBDCDE]"
+        className="fixed top-3 xs:top-4 right-2.5 xs:right-4 z-40 sm:hidden min-h-[36px] h-[36px] px-3 rounded-full glass-pill flex items-center gap-1.5 cursor-pointer select-none transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.08)] bg-white/90 backdrop-blur-xl border border-[#B8C1C0]/60 active:bg-[#CBDCDE]"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shadow-[0_0_8px_rgba(216,169,168,0.8)] shrink-0" />
-        <span className="font-btn text-[10px] xs:text-[11px] font-semibold uppercase tracking-wider text-[#202526]">
+        <span className="font-btn text-xs font-semibold uppercase tracking-wider text-[#202526]">
           {isOpen ? 'Close' : 'Menu'}
         </span>
         <div className="w-3.5 h-3.5 flex items-center justify-center text-[#202526] shrink-0">
@@ -250,7 +250,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   <span className="font-bezoria text-sm uppercase tracking-wider text-[#202526]">
                     {badgeText}
                   </span>
-                  <span className="text-[9px] font-mono text-[#596769] bg-[#E7EBE9] px-1.5 py-0.5 rounded-sm">
+                  <span className="text-xs font-mono text-[#596769] bg-[#E7EBE9] px-1.5 py-0.5 rounded-sm">
                     STUDIO
                   </span>
                 </div>
@@ -279,11 +279,11 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D8A9A8] opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D8A9A8]" />
                     </span>
-                    <span className="font-btn text-[10px] uppercase tracking-wider text-[#202526] font-medium">
+                    <span className="font-btn text-xs uppercase tracking-wider text-[#202526] font-medium">
                       Accepting Q2/Q3 Projects
                     </span>
                   </div>
-                  <span className="text-[9px] font-medium text-[#596769] uppercase tracking-wider">
+                  <span className="text-xs font-medium text-[#596769] uppercase tracking-wider">
                     Online
                   </span>
                 </div>
@@ -291,7 +291,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
 
               {/* Primary Navigation Links */}
               <div className="px-3 xs:px-4 py-3 flex-1 flex flex-col gap-1.5 overflow-y-auto">
-                <div className="px-2 pt-1 pb-0.5 text-[9px] uppercase font-bold tracking-[0.1em] text-[#596769]">
+                <div className="px-2 pt-1 pb-0.5 text-xs uppercase font-bold tracking-[0.1em] text-[#596769]">
                   Navigation
                 </div>
 
@@ -318,7 +318,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                           <span className="font-btn text-xs font-semibold uppercase tracking-wider text-[#202526]">
                             {item.label}
                           </span>
-                          <span className="text-[10px] text-[#596769] tracking-normal line-clamp-1">
+                          <span className="text-xs text-[#596769] tracking-normal line-clamp-1">
                             {item.subtitle}
                           </span>
                         </div>
@@ -326,7 +326,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
 
                       <div className="flex items-center gap-1.5 shrink-0">
                         {item.tag && (
-                          <span className="text-[9px] font-medium font-mono uppercase px-1.5 py-0.5 rounded-full bg-[#E7EBE9] text-[#202526]/80">
+                          <span className="text-xs font-medium font-mono uppercase px-1.5 py-0.5 rounded-full bg-[#E7EBE9] text-[#202526]/80">
                             {item.tag}
                           </span>
                         )}
@@ -345,20 +345,20 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   id="mobile-drawer-contact-cta"
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleModalClick(() => onOpenContact?.())}
-                  className="w-full py-3.5 px-4 rounded-full bg-[#202526] hover:bg-[#596769] text-white flex items-center justify-between font-btn font-medium uppercase tracking-wider text-xs shadow-md cursor-pointer transition-colors"
+                  className="btn-primary w-full !py-3.5 !px-4 !rounded-full flex items-center justify-between text-xs"
                 >
                   <span>Start A Project</span>
                   <div className="flex items-center gap-1.5 text-[#D8A9A8]">
-                    <span className="text-[10px] font-mono">Let's Talk</span>
+                    <span className="text-xs font-mono">Let's Talk</span>
                     <ArrowUpRight className="w-4 h-4" />
                   </div>
                 </motion.button>
 
                 {/* Email Quick Action */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-[#E7EBE9]/50 border border-[#B8C1C0]/30 text-[11px]">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-[#E7EBE9]/50 border border-[#B8C1C0]/30 text-xs">
                   <a
                     href="mailto:garvchauhan0161@gmail.com"
-                    className="flex items-center gap-2 text-[#202526] font-sans hover:underline truncate"
+                    className="flex items-center gap-2 text-[#202526] font-body hover:underline truncate"
                   >
                     <Mail className="w-3.5 h-3.5 text-[#596769] shrink-0" />
                     <span className="truncate">garvchauhan0161@gmail.com</span>
@@ -380,7 +380,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                 </div>
 
                 {/* Footer Metadata */}
-                <div className="flex items-center justify-between text-[9px] text-[#596769] uppercase tracking-wider font-mono pt-1">
+                <div className="flex items-center justify-between text-xs text-[#596769] uppercase tracking-wider font-mono pt-1">
                   <span>AI Build Studio • 2026</span>
                   <span>Fast Turnaround</span>
                 </div>

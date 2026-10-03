@@ -135,19 +135,19 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         {/* Upper info row */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-label-small uppercase tracking-[0.08em] text-[#202526] font-medium bg-[#F4F5F4] border border-[#E5E7EB] inline-flex items-center gap-2 shadow-2xs">
+            <div className="px-3.5 py-1.5 rounded-full text-xs font-label-small uppercase tracking-[0.08em] text-[#202526] font-medium bg-[#F4F5F4] border border-[#E5E7EB] inline-flex items-center gap-2 shadow-2xs">
               <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
               <span>Selected Deployments</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-label-small uppercase tracking-[0.08em] text-[#596769] font-medium bg-[#F4F5F4] border border-[#E5E7EB] inline-flex items-center gap-1.5 shadow-2xs">
+            <div className="px-3 py-1.5 rounded-full text-xs font-label-small uppercase tracking-[0.08em] text-[#596769] font-medium bg-[#F4F5F4] border border-[#E5E7EB] inline-flex items-center gap-1.5 shadow-2xs">
               <Layers className="w-3.5 h-3.5 text-[#202526]" />
               <span className="font-strong">{filteredProjects.length}</span>
               <span>Projects</span>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-mono font-medium text-[#596769] bg-[#F4F5F4] border border-[#E5E7EB]">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono font-medium text-[#596769] bg-[#F4F5F4] border border-[#E5E7EB]">
             <span>Active Category:</span>
             <span className="text-[#202526] font-bold">{activeCategory}</span>
           </div>
@@ -165,7 +165,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           </div>
 
           {/* Interactive Category Selector Pill Bar */}
-          <div className="p-1 sm:p-1.5 rounded-[24px] bg-white/95 backdrop-blur-xl border border-[#E5E7EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
+          <div className="p-1 sm:p-1.5 rounded-2xl bg-white/95 backdrop-blur-xl border border-[#E5E7EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
             {DISCIPLINES_DATA.map((disc) => {
               const Icon = disc.icon;
               const isActive = activeCategory === disc.id;
@@ -176,11 +176,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   key={disc.id}
                   type="button"
                   onClick={() => handleSelectCategory(disc.id)}
-                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-[20px] flex items-center gap-2 transition-all duration-300 cursor-pointer shrink-0 text-left group ${
+                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-full flex items-center gap-2 transition-all duration-300 cursor-pointer shrink-0 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/40 ${
                     isActive ? 'bg-[#202526] text-white shadow-md' : 'text-[#596769] hover:text-[#202526]'
                   }`}
                 >
-                  <span className={`text-[10px] sm:text-xs font-mono font-medium ${isActive ? 'text-[#D8A9A8]' : 'text-[#71717A]'}`}>
+                  <span className={`text-xs font-mono font-medium ${isActive ? 'text-[#D8A9A8]' : 'text-[#71717A]'}`}>
                     {disc.num}
                   </span>
                   <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#D8A9A8]' : 'text-[#596769]'}`} />
@@ -188,7 +188,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     <span className="hidden sm:inline">{disc.title}</span>
                     <span className="sm:hidden">{disc.shortTitle}</span>
                   </span>
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#F4F5F4] text-[#71717A]'}`}>
+                  <span className={`text-xs font-mono px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#F4F5F4] text-[#71717A]'}`}>
                     {count}
                   </span>
                 </button>
@@ -199,7 +199,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             <button
               type="button"
               onClick={() => handleSelectCategory('ALL')}
-              className={`relative px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-[20px] flex items-center gap-1.5 transition-all duration-300 cursor-pointer shrink-0 ${
+              className={`relative px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full flex items-center gap-1.5 transition-all duration-300 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/40 ${
                 activeCategory === 'ALL'
                   ? 'bg-[#202526] text-white shadow-md'
                   : 'text-[#596769] hover:text-[#202526]'
@@ -207,7 +207,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span className="text-xs font-label-small uppercase tracking-wider hidden md:inline">All</span>
-              <span className="text-[10px] font-mono opacity-80">({counts.ALL})</span>
+              <span className="text-xs font-mono opacity-80">({counts.ALL})</span>
             </button>
           </div>
         </div>

@@ -432,7 +432,7 @@ export const SeamlessMediaShowcase: React.FC<SeamlessMediaShowcaseProps> = ({
         } left-3.5 right-3.5 z-30 flex items-center justify-between pointer-events-none transition-all`}
       >
         {/* Continuous Playback Badge */}
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#E7EBE9]/90 backdrop-blur-md border border-[#B8C1C0] text-[10px] sm:text-[11px] font-mono font-bold tracking-[0.08em] text-[#202526] uppercase shadow-sm pointer-events-auto">
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#E7EBE9]/90 backdrop-blur-md border border-[#B8C1C0] text-xs font-mono font-bold tracking-[0.08em] text-[#202526] uppercase shadow-sm pointer-events-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
           <span>{badgeLabel}</span>
           {totalItems > 1 && (
@@ -446,31 +446,33 @@ export const SeamlessMediaShowcase: React.FC<SeamlessMediaShowcaseProps> = ({
         </div>
 
         {/* Action Controls: Prev, Next, Play/Pause, Audio */}
-        <div className="pointer-events-auto flex items-center gap-1.5">
+        <div className="pointer-events-auto flex items-center gap-2 sm:gap-2.5">
           {/* Navigation Arrows */}
           {totalItems > 1 && (
             <>
               <button
                 type="button"
+                aria-label="Previous slide"
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#202526]/80 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/30 shadow-sm"
-                title="Previous Clip"
+                className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-[#202526]/85 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/40 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-1 focus-visible:ring-offset-[#202526]"
+                title="Previous Slide"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
               </button>
               <button
                 type="button"
+                aria-label="Next slide"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#202526]/80 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/30 shadow-sm"
-                title="Next Clip"
+                className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-[#202526]/85 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/40 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-1 focus-visible:ring-offset-[#202526]"
+                title="Next Slide"
               >
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
               </button>
             </>
           )}
@@ -478,14 +480,15 @@ export const SeamlessMediaShowcase: React.FC<SeamlessMediaShowcaseProps> = ({
           {/* Play / Pause */}
           <button
             type="button"
+            aria-label={isPlaying ? "Pause carousel" : "Play carousel"}
             onClick={togglePlay}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#202526]/80 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/30 shadow-sm"
+            className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-[#202526]/85 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/40 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-1 focus-visible:ring-offset-[#202526]"
             title={isPlaying ? 'Pause Playback' : 'Resume Playback'}
           >
             {isPlaying ? (
-              <Pause className="w-3.5 h-3.5" />
+              <Pause className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <Play className="w-3.5 h-3.5 fill-[#E7EBE9]" />
+              <Play className="w-4 h-4 fill-[#E7EBE9]" aria-hidden="true" />
             )}
           </button>
 
@@ -493,27 +496,21 @@ export const SeamlessMediaShowcase: React.FC<SeamlessMediaShowcaseProps> = ({
           {currentMedia?.type === 'video' && (
             <button
               type="button"
+              aria-label={isMuted ? "Unmute video" : "Mute video"}
               onClick={toggleMute}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#202526]/80 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/30 shadow-sm"
+              className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] rounded-full bg-[#202526]/85 hover:bg-[#596769] text-[#E7EBE9] flex items-center justify-center transition-all cursor-pointer border border-[#B8C1C0]/40 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-1 focus-visible:ring-offset-[#202526]"
               title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
             >
               {isMuted ? (
-                <VolumeX className="w-3.5 h-3.5" />
+                <VolumeX className="w-4 h-4" aria-hidden="true" />
               ) : (
-                <Volume2 className="w-3.5 h-3.5" />
+                <Volume2 className="w-4 h-4" aria-hidden="true" />
               )}
             </button>
           )}
         </div>
       </div>
 
-      {/* Bottom Specs Action Button */}
-      <div className="absolute bottom-3.5 right-3.5 z-30 flex items-center justify-end pointer-events-none">
-        <div className="pointer-events-auto px-3.5 py-1.5 rounded-full bg-[#E7EBE9] hover:bg-[#CBDCDE] text-[#202526] border border-[#B8C1C0] text-[11px] font-mono font-bold tracking-[0.08em] uppercase flex items-center gap-1 transition-all shadow-sm">
-          <span>Specs</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </div>
-      </div>
     </div>
   );
 };

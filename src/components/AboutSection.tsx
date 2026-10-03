@@ -169,7 +169,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
       <div className="max-w-4xl mx-auto flex flex-col items-center text-center relative z-20">
         {/* Section Heading Tag */}
         <FadeIn delay={0} y={20}>
-          <div className="px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-label-small uppercase tracking-[0.08em] text-[#202526] font-medium glass-pill inline-flex items-center gap-2 mb-3 sm:mb-4">
+          <div className="px-3.5 py-1 rounded-full text-xs font-label-small uppercase tracking-[0.08em] text-[#202526] font-medium glass-pill inline-flex items-center gap-2 mb-3 sm:mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" />
             {subPill}
           </div>
@@ -177,7 +177,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
 
         {/* Section Title */}
         <FadeIn delay={0.1} y={30}>
-          <h2 className="font-elegant font-normal uppercase leading-tight tracking-[-0.02em] mb-6 sm:mb-12 text-[#202526] text-2xl xs:text-3xl sm:text-5xl md:text-7xl lg:text-[100px]">
+          <h2 className="font-elegant font-normal uppercase leading-tight tracking-[-0.02em] mb-6 sm:mb-12 text-[#202526] text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
             {heading}
           </h2>
         </FadeIn>
@@ -205,9 +205,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
         <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-6 text-left">
           {pillars.map((pillar, idx) => (
             <FadeIn key={pillar.id || idx} delay={0.3 + idx * 0.1} y={30}>
-              <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl glass-panel glass-panel-hover h-full flex flex-col justify-between group">
+              <div className="p-4 sm:p-7 rounded-2xl glass-panel glass-panel-hover h-full flex flex-col justify-between group">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl glass-pill flex items-center justify-center text-[#202526] group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl glass-pill flex items-center justify-center text-[#202526] group-hover:scale-110 transition-transform duration-300">
                     {idx === 0 && <Terminal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                     {idx === 1 && <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                     {idx === 2 && <Code2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}

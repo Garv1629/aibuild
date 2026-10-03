@@ -236,7 +236,7 @@ export default function App() {
   return (
     <SmoothScrollProvider>
       <main
-        className="relative w-full max-w-[100vw] bg-[#FFFFFF] text-[#202526] font-['Manrope',sans-serif] min-h-screen selection:bg-[#D8A9A8] selection:text-[#202526]"
+        className="relative w-full max-w-[100vw] bg-[#FFFFFF] text-[#202526] font-body min-h-screen selection:bg-[#D8A9A8] selection:text-[#202526]"
       >
         <ScrollProgressBar />
 

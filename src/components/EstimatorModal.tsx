@@ -334,7 +334,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 25 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-5xl frosted-modal-glass rounded-[28px] sm:rounded-[36px] p-4 sm:p-7 md:p-9 shadow-2xl text-[#202526] z-10 my-4 max-h-[92dvh] overflow-y-auto overflow-x-hidden font-sans-clean"
+            className="relative w-full max-w-5xl frosted-modal-glass rounded-3xl p-4 sm:p-7 md:p-9 shadow-2xl text-[#202526] z-10 my-4 max-h-[92dvh] overflow-y-auto overflow-x-hidden font-body"
           >
             {/* Top Bar / Header */}
             <div className="flex items-center justify-between pb-4 border-b border-[#B8C1C0]/60 relative z-10">
@@ -343,11 +343,11 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                   <Sliders className="w-4 h-4 text-[#202526]" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-label-small uppercase tracking-[0.08em] text-[#596769] font-semibold flex items-center gap-1.5">
+                  <span className="text-xs font-mono uppercase tracking-[0.08em] text-[#596769] font-semibold flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
                     Real-time Scope Engine
                   </span>
-                  <h3 className="font-elegant text-xl sm:text-2xl uppercase tracking-tight text-[#202526] leading-none">
+                  <h3 className="font-heading text-xl sm:text-2xl uppercase tracking-tight text-[#202526] leading-none">
                     {settings.modalTitle || 'AI Project Cost & Timeline Estimator'}
                   </h3>
                 </div>
@@ -359,7 +359,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                     type="button"
                     onClick={resetConfig}
                     title="Reset to defaults"
-                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#E7EBE9] hover:bg-[#AFC7C5] text-[11px] font-mono uppercase tracking-wider text-[#596769] hover:text-[#202526] transition-colors border border-[#B8C1C0] cursor-pointer"
+                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#E7EBE9] hover:bg-[#AFC7C5] text-xs font-mono uppercase tracking-wider text-[#596769] hover:text-[#202526] transition-colors border border-[#B8C1C0] cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Reset</span>
@@ -382,10 +382,10 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                   <Sparkles className="w-7 h-7 text-[#202526]" />
                 </div>
                 <div className="space-y-2">
-                  <span className="text-[11px] font-label-small uppercase tracking-widest text-[#596769] font-semibold">
+                  <span className="text-xs font-mono uppercase tracking-widest text-[#596769] font-semibold">
                     Studio Capacity Update
                   </span>
-                  <h4 className="font-elegant text-2xl uppercase text-[#202526]">
+                  <h4 className="font-heading text-2xl uppercase text-[#202526]">
                     Bespoke Creative Consultation
                   </h4>
                   <p className="text-xs sm:text-sm text-[#596769] font-body leading-relaxed">
@@ -409,7 +409,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                       }
                       onClose();
                     }}
-                    className="w-full sm:w-auto px-7 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-[#E7EBE9] text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                    className="btn-primary !px-7 !py-3 text-xs"
                   >
                     <MessageSquare className="w-4 h-4 text-[#D8A9A8]" />
                     <span>Request Bespoke Proposal</span>
@@ -417,7 +417,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full sm:w-auto px-5 py-3 rounded-full bg-[#CBDCDE]/70 hover:bg-[#CBDCDE] text-[#202526] text-xs font-semibold uppercase tracking-wider border border-[#B8C1C0] cursor-pointer"
+                    className="btn-secondary !px-5 !py-3 text-xs"
                   >
                     Back to Studio
                   </button>
@@ -882,10 +882,10 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
 
                       {/* Main Dynamic Price Display */}
                       <div>
-                        <div className="font-elegant text-3xl sm:text-4xl text-[#E7EBE9] tracking-tight">
+                        <div className="font-heading text-3xl sm:text-4xl text-[#E7EBE9] tracking-tight">
                           {estimate.budgetRange}
                         </div>
-                        <span className="text-[11px] text-[#AFC7C5] block mt-1">
+                        <span className="text-xs text-[#AFC7C5] block mt-1">
                           *USD pricing includes full commercial usage rights &amp; source transfer.
                         </span>
                       </div>
@@ -910,7 +910,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                         <button
                           type="button"
                           onClick={handleProceed}
-                          className="w-full py-3.5 rounded-full bg-[#E7EBE9] hover:bg-white text-[#202526] text-xs sm:text-sm font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:scale-[1.02] active:scale-98"
+                          className="btn-secondary w-full !py-3.5 !rounded-full !bg-[#E7EBE9] !text-[#202526] hover:!bg-white text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2"
                         >
                           <span>Lock In Scope &amp; Book Project</span>
                           <ArrowRight className="w-4 h-4" />
@@ -919,7 +919,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                         <button
                           type="button"
                           onClick={handleCopy}
-                          className="w-full py-2.5 rounded-full bg-transparent hover:bg-white/10 text-[#AFC7C5] hover:text-[#E7EBE9] text-xs font-mono uppercase tracking-wider border border-[#596769]/60 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                          className="btn-ghost w-full !py-2.5 !rounded-full !text-[#AFC7C5] hover:!text-[#E7EBE9] text-xs font-mono uppercase tracking-wider border border-[#596769]/60 flex items-center justify-center gap-2"
                         >
                           {copied ? (
                             <>
@@ -942,7 +942,7 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                         <ShieldCheck className="w-4 h-4 text-[#202526]" />
                         <span>Studio Production Guarantee</span>
                       </div>
-                      <p className="text-[11px] leading-relaxed">
+                      <p className="text-xs leading-relaxed">
                         Quotes generated by this engine include 2 comprehensive revision rounds, ad-ready 4K master outputs, and continuous staging previews.
                       </p>
                     </div>

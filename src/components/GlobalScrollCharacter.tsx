@@ -383,13 +383,13 @@ export const GlobalScrollCharacter: React.FC<GlobalScrollCharacterProps> = ({
   useEffect(() => {
     const unsub = scrollYProgress.on('change', (latest) => {
       if (scrollMode === 'stable') {
-        setCurrentZIndex(30);
+        setCurrentZIndex(10);
         return;
       }
 
       if (latest < 0.12) {
         setActiveSection('hero');
-        setCurrentZIndex(30);
+        setCurrentZIndex(10);
       } else if (latest < 0.35) {
         setActiveSection('about');
         setCurrentZIndex(12);
@@ -688,7 +688,7 @@ export const GlobalScrollCharacter: React.FC<GlobalScrollCharacterProps> = ({
                     type="button"
                     whileTap={{ scale: 0.94 }}
                     onClick={() => handleSelectScrollMode('scroll')}
-                    className={`relative px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[9px] xs:text-[10px] sm:text-[11px] font-btn uppercase tracking-wider font-semibold flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 cursor-pointer ${
+                    className={`relative px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-btn uppercase tracking-wider font-semibold flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 cursor-pointer ${
                       scrollMode === 'scroll'
                         ? 'text-white'
                         : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
@@ -712,7 +712,7 @@ export const GlobalScrollCharacter: React.FC<GlobalScrollCharacterProps> = ({
                     type="button"
                     whileTap={{ scale: 0.94 }}
                     onClick={() => handleSelectScrollMode('stable')}
-                    className={`relative px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[9px] xs:text-[10px] sm:text-[11px] font-btn uppercase tracking-wider font-semibold flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 cursor-pointer ${
+                    className={`relative px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-btn uppercase tracking-wider font-semibold flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 cursor-pointer ${
                       scrollMode === 'stable'
                         ? 'text-white'
                         : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'

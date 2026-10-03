@@ -213,7 +213,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="relative w-full max-w-xl max-h-[90dvh] overflow-y-auto frosted-modal-glass rounded-[28px] sm:rounded-[36px] p-5 sm:p-8 md:p-10 shadow-2xl text-[#202526] z-10 my-auto font-sans-clean"
+            className="relative w-full max-w-xl max-h-[90dvh] overflow-y-auto frosted-modal-glass rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl text-[#202526] z-10 my-auto font-body"
           >
             {/* Close Button */}
             <button
@@ -304,7 +304,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.25, duration: 0.35 }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-label-small uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5]"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Transmission Confirmed</span>
@@ -314,7 +314,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.35 }}
-                    className="font-elegant text-2xl sm:text-3xl uppercase tracking-tight text-[#202526]"
+                    className="font-heading text-2xl sm:text-3xl uppercase tracking-tight text-[#202526]"
                   >
                     Message Dispatched
                   </motion.h4>
@@ -338,11 +338,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     className="w-full bg-[#CBDCDE]/60 border border-[#AFC7C5] rounded-2xl p-3 sm:p-4 text-xs flex flex-wrap items-center justify-between gap-2"
                   >
                     <div className="text-left">
-                      <span className="text-[10px] uppercase font-mono text-[#596769] block">Scope Selected</span>
+                      <span className="text-xs uppercase font-mono text-[#596769] block">Scope Selected</span>
                       <span className="font-semibold text-[#202526]">{submittedData.projectType}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-mono text-[#596769] block">Target Budget</span>
+                      <span className="text-xs uppercase font-mono text-[#596769] block">Target Budget</span>
                       <span className="font-semibold font-mono text-[#202526]">{submittedData.budget}</span>
                     </div>
                   </motion.div>
@@ -358,7 +358,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   <button
                     type="button"
                     onClick={handleResetAndClose}
-                    className="w-full sm:w-auto px-7 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-[#E7EBE9] text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                    className="btn-primary w-full sm:w-auto !px-7 !py-3 text-xs"
                   >
                     <Check className="w-3.5 h-3.5 text-[#D8A9A8]" />
                     <span>Done &amp; Return to Studio</span>
@@ -367,7 +367,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   <button
                     type="button"
                     onClick={handleSendAnother}
-                    className="w-full sm:w-auto px-5 py-3 rounded-full bg-[#E7EBE9] hover:bg-[#CBDCDE] text-[#596769] hover:text-[#202526] text-xs font-semibold uppercase tracking-wider border border-[#B8C1C0] transition-colors cursor-pointer"
+                    className="btn-secondary w-full sm:w-auto !px-5 !py-3 text-xs"
                   >
                     Send Another Note
                   </button>
@@ -377,10 +377,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               <>
                 {/* Header */}
                 <div className="mb-6 relative z-10">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-label-small uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5] mb-2 shadow-xs">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5] mb-2 shadow-xs">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" /> AI Build (ai.build_)
                   </span>
-                  <h3 className="hero-heading font-black text-3xl sm:text-4xl uppercase tracking-tight text-[#202526]">
+                  <h3 className="font-heading font-black text-3xl sm:text-4xl uppercase tracking-tight text-[#202526]">
                     {ctaHeadline}
                   </h3>
                   <p className="text-sm sm:text-base text-[#596769] mt-1 font-normal">

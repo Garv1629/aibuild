@@ -68,6 +68,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const bottomBarOpacity = useTransform(scrollYProgress, [0, 0.45], [1, 0]);
   const bottomBarY = useTransform(scrollYProgress, [0, 0.45], [0, 35]);
 
+  const [activeSection, setActiveSection] = useState<string>('');
+
+  useEffect(() => {
+    const sectionIds = ['hero', 'services', 'about', 'projects', 'reviews', 'contact'];
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 250;
+      let current = '';
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            current = id;
+          }
+        }
+      }
+      setActiveSection(current);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -92,58 +117,78 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="flex items-center gap-2.5 shrink-0">
           <div
             onClick={handleBrandClick}
-            className="px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 min-h-[32px] sm:min-h-[38px] rounded-full glass-pill flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none transition-all duration-300 hover:scale-105"
+            className="px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 min-h-[36px] sm:min-h-[38px] rounded-full glass-pill flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none transition-all duration-300 hover:scale-105"
           >
             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#D8A9A8] shadow-[0_0_8px_rgba(216,169,168,0.8)]" />
-            <span className="font-bezoria text-[11px] xs:text-xs sm:text-sm uppercase tracking-wider text-[#202526] font-normal">
+            <span className="font-bezoria text-xs sm:text-sm uppercase tracking-wider text-[#202526] font-normal">
               {badgeText}
             </span>
           </div>
         </div>
 
         {/* Center Floating Menu (Tablet & Desktop) */}
-        <div className="hidden sm:flex rounded-full px-3.5 py-1.5 items-center gap-1.5 md:gap-3 glass-pill shadow-[0_8px_32px_rgba(0,0,0,0.06)] font-nav shrink-0">
+        <div className="hidden sm:flex rounded-full px-2 py-1 items-center gap-1 md:gap-1.5 glass-pill shadow-[0_8px_32px_rgba(0,0,0,0.06)] font-nav shrink-0">
           <button
             type="button"
             onClick={() => scrollToSection('services')}
-            className="px-2.5 sm:px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-full text-xs sm:text-sm font-medium uppercase tracking-[0.06em] text-[#202526]/85 hover:text-[#FFFFFF] hover:bg-[#202526] transition-all duration-300 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap"
+            aria-current={activeSection === 'services' ? 'page' : undefined}
+            className={`btn-ghost ${activeSection === 'services' ? '!bg-[#202526] !text-[#FFFFFF] font-semibold shadow-xs' : ''}`}
           >
-            What We Do
+            {activeSection === 'services' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" aria-hidden="true" />
+            )}
+            <span>What We Do</span>
           </button>
           <button
             type="button"
             onClick={onOpenPrice ? onOpenPrice : () => scrollToSection('services')}
-            className="px-2.5 sm:px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-full text-xs sm:text-sm font-medium uppercase tracking-[0.06em] text-[#202526]/85 hover:text-[#FFFFFF] hover:bg-[#202526] transition-all duration-300 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap"
+            className="btn-ghost"
           >
             Price
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('about')}
-            className="px-2.5 sm:px-3 py-1.5 min-h-[36px] items-center justify-center rounded-full text-xs sm:text-sm font-medium uppercase tracking-[0.06em] text-[#202526]/85 hover:text-[#FFFFFF] hover:bg-[#202526] transition-all duration-300 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap"
+            aria-current={activeSection === 'about' ? 'page' : undefined}
+            className={`btn-ghost ${activeSection === 'about' ? '!bg-[#202526] !text-[#FFFFFF] font-semibold shadow-xs' : ''}`}
           >
-            Experience
+            {activeSection === 'about' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" aria-hidden="true" />
+            )}
+            <span>Experience</span>
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('projects')}
-            className="hidden md:inline-flex px-3 py-1.5 min-h-[36px] items-center justify-center rounded-full text-xs sm:text-sm font-medium uppercase tracking-[0.06em] text-[#202526]/85 hover:text-[#FFFFFF] hover:bg-[#202526] transition-all duration-300 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap"
+            aria-current={activeSection === 'projects' ? 'page' : undefined}
+            className={`hidden md:inline-flex btn-ghost ${activeSection === 'projects' ? '!bg-[#202526] !text-[#FFFFFF] font-semibold shadow-xs' : ''}`}
           >
-            Case Studies
+            {activeSection === 'projects' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" aria-hidden="true" />
+            )}
+            <span>Case Studies</span>
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('reviews')}
-            className="hidden lg:inline-flex px-3 py-1.5 min-h-[36px] items-center justify-center rounded-full text-xs sm:text-sm font-medium uppercase tracking-[0.06em] text-[#202526]/85 hover:text-[#FFFFFF] hover:bg-[#202526] transition-all duration-300 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap"
+            aria-current={activeSection === 'reviews' ? 'page' : undefined}
+            className={`hidden lg:inline-flex btn-ghost ${activeSection === 'reviews' ? '!bg-[#202526] !text-[#FFFFFF] font-semibold shadow-xs' : ''}`}
           >
-            Reviews
+            {activeSection === 'reviews' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" aria-hidden="true" />
+            )}
+            <span>Reviews</span>
           </button>
           <button
             type="button"
-            onClick={onOpenContact ? onOpenContact : () => scrollToSection('about')}
-            className="px-2.5 sm:px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-full text-xs sm:text-sm font-medium uppercase tracking-[0.06em] text-[#202526]/85 hover:text-[#FFFFFF] hover:bg-[#202526] transition-all duration-300 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap"
+            onClick={onOpenContact ? onOpenContact : () => scrollToSection('contact')}
+            aria-current={activeSection === 'contact' ? 'page' : undefined}
+            className={`btn-ghost ${activeSection === 'contact' ? '!bg-[#202526] !text-[#FFFFFF] font-semibold shadow-xs' : ''}`}
           >
-            Contact
+            {activeSection === 'contact' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" aria-hidden="true" />
+            )}
+            <span>Contact</span>
           </button>
         </div>
 
@@ -153,7 +198,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               type="button"
               onClick={onOpenEstimator}
-              className="px-3.5 py-1.5 min-h-[38px] rounded-full glass-pill hover:bg-[#202526] hover:text-[#FFFFFF] text-[#202526] text-xs font-semibold uppercase tracking-[0.08em] font-label-small flex items-center gap-1.5 transition-all duration-300 cursor-pointer shadow-xs group"
+              className="btn-secondary !py-1.5 !min-h-[38px] group"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] group-hover:scale-125 transition-transform" />
               <span>Scope Estimator</span>
@@ -172,46 +217,40 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* 2. Hero Heading with Scroll Parallax */}
       <motion.div
         style={{ y: headingY, opacity: headingOpacity }}
-        className="w-full flex flex-col items-center justify-center my-auto py-4 z-0 pointer-events-none px-2 max-w-full overflow-hidden"
+        className="w-full flex flex-col items-center justify-center my-auto py-4 z-30 pointer-events-none px-2 max-w-full overflow-hidden relative"
       >
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-          className="hero-heading font-bezoria font-normal uppercase tracking-[-0.03em] leading-[0.98] w-full text-center text-[26px] xs:text-[34px] sm:text-6xl md:text-8xl lg:text-[14vw] max-w-full px-2 break-words text-[#202526]"
+          className="hero-heading font-bezoria font-normal uppercase tracking-[-0.03em] leading-[0.98] w-full text-center text-4xl xs:text-5xl sm:text-7xl md:text-8xl lg:text-[14vw] max-w-full px-2 break-words text-[#202526] relative z-30 pointer-events-none"
         >
           {headline}
         </motion.h1>
       </motion.div>
 
-      {/* 3. Bottom bar with scroll fade-out - intentionally designed mobile layout */}
+      {/* 3. Bottom bar with value proposition and Contact Studio CTA */}
       <motion.div
         style={{ opacity: bottomBarOpacity, y: bottomBarY }}
-        className="w-full flex flex-row items-end justify-between gap-1.5 xs:gap-3 pb-3 xs:pb-4 sm:pb-8 md:pb-10 px-2.5 xs:px-4 sm:px-8 md:px-12 z-20 relative max-w-full"
+        className="w-full flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-6 pb-3 xs:pb-4 sm:pb-8 md:pb-10 px-2.5 xs:px-4 sm:px-8 md:px-12 z-40 relative max-w-full"
       >
-        {/* Left tagline inside Glassmorphic Material Card */}
+        {/* Value proposition & CTA Group */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-          className="glass-panel p-2 xs:p-2.5 sm:p-4 rounded-xl sm:rounded-2xl max-w-[140px] xs:max-w-[190px] sm:max-w-[280px] md:max-w-[340px] shrink min-w-0"
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 max-w-full"
         >
-          <div className="flex items-center gap-1 mb-0.5 sm:mb-1 text-[8px] xs:text-[9px] sm:text-[10px] text-[#596769] font-label-small uppercase tracking-[0.08em] font-medium truncate">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" />
-            <span className="truncate">{subBadge}</span>
+          <div className="glass-panel p-2.5 xs:p-3 sm:p-4 rounded-2xl max-w-[260px] xs:max-w-[300px] sm:max-w-[360px] md:max-w-[400px] shrink min-w-0">
+            <div className="flex items-center gap-1.5 mb-1 text-xs text-[#596769] font-mono uppercase tracking-[0.08em] font-semibold truncate">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] shrink-0" />
+              <span className="truncate">{subBadge}</span>
+            </div>
+            <p className="text-[#202526] font-medium font-body tracking-normal leading-relaxed text-xs sm:text-sm md:text-base">
+              {subtext}
+            </p>
           </div>
-          <p className="text-[#202526] font-medium font-sans-clean tracking-normal leading-tight xs:leading-snug text-[9px] xs:text-[11px] sm:text-xs md:text-sm line-clamp-2 xs:line-clamp-none">
-            {subtext}
-          </p>
-        </motion.div>
 
-        {/* Right Contact button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          className="shrink-0 flex justify-end"
-        >
           <ContactButton onClick={onOpenContact} />
         </motion.div>
       </motion.div>

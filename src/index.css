@@ -47,109 +47,217 @@
   }
 
   /* 
-   * EXACT SPECIFICATION TYPOGRAPHY SYSTEM:
-   * Logo / AI.BUILD: BEZORIA (Regular)
-   * Hero headline: BEZORIA (Regular)
-   * Hero italic/emphasis: ELEGANT (Italic/Regular)
-   * Section headings: ELEGANT (Regular)
-   * Project names: PRAISE (Regular)
-   * Project category / metadata: STRONG (Regular)
-   * Navigation: Clean sans-serif (Medium)
-   * Buttons: Clean sans-serif (Medium)
-   * Body text: Clean sans-serif (Regular)
-   * Numbers / stats: STRONG (Regular)
-   * Small labels: Clean sans-serif (Medium + letter spacing)
+   * STANDARDIZED TYPOGRAPHY SYSTEM (4 Primary Roles):
+   * 1. Body/UI font: Clean sans-serif ('Instrument Sans', 'Inter', sans-serif)
+   * 2. Heading font: Editorial serif ('Instrument Serif', 'Libre Bodoni', Georgia, serif)
+   * 3. Display/decorative font: High-impact editorial display ('Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', serif)
+   * 4. Label/code font: Monospace ('JetBrains Mono', monospace)
    */
 
-  /* 1. BEZORIA - Logo & Hero Headline (Regular) */
-  .font-bezoria {
-    font-family: 'Bezoria', 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', 'Didot', Georgia, serif;
+  /* 1. Display / Decorative Font */
+  .font-bezoria,
+  .font-display,
+  .hero-heading {
+    font-family: 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', Georgia, serif;
     font-weight: 400;
     letter-spacing: -0.025em;
   }
 
-  /* 2. ELEGANT - Section Headings & Hero Italic/Emphasis (Regular/Italic) */
-  .font-elegant {
-    font-family: 'Elegant', 'Instrument Serif', 'Newsreader', 'Bodoni Moda', 'Cormorant Garamond', 'Libre Bodoni', Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-  }
-
-  /* 3. PRAISE - Project Names (Regular) */
+  /* 2. Heading Font */
+  .font-elegant,
+  .font-heading,
   .font-praise {
-    font-family: 'Praise', 'Prata', 'Playfair Display', 'Bodoni Moda', 'Cinzel', Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.015em;
-  }
-
-  /* 4. STRONG - Project Category / Metadata & Numbers / Stats (Regular) */
-  .font-strong {
-    font-family: 'Strong', 'Space Grotesk', 'Syne', 'JetBrains Mono', 'Neue Haas Grotesk Display Pro', -apple-system, sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-
-  /* 5. Clean Sans-Serif - Navigation, Buttons, Body, Small Labels */
-  .font-sans-clean {
-    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  }
-
-  .font-nav {
-    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-  }
-
-  .font-btn {
-    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-  }
-
-  .font-label-small {
-    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .font-display {
-    font-family: 'Bezoria', 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', 'Didot', Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.025em;
-  }
-
-  .font-heading {
-    font-family: 'Elegant', 'Instrument Serif', 'Newsreader', 'Bodoni Moda', 'Cormorant Garamond', 'Libre Bodoni', Georgia, serif;
+    font-family: 'Instrument Serif', 'Libre Bodoni', 'Italiana', Georgia, serif;
     font-weight: 400;
     letter-spacing: -0.02em;
   }
 
   .font-editorial {
-    font-family: 'Elegant', 'Instrument Serif', 'Newsreader', 'Bodoni Moda', 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Instrument Serif', 'Libre Bodoni', Georgia, serif;
     font-style: italic;
     font-weight: 400;
   }
 
-  .font-grotesk {
-    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* 3. Body / UI Font */
+  .font-sans-clean,
+  .font-grotesk,
+  .font-body,
+  .font-nav,
+  .font-btn {
+    font-family: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .font-label-small {
+    font-family: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* 4. Label / Mono / Strong Font */
+  .font-strong {
+    font-family: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   .font-mono {
-    font-family: 'JetBrains Mono', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-
-  .font-body {
-    font-family: 'Neue Haas Grotesk Display Pro', 'Neue Haas Grotesk', 'Helvetica Neue', 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-weight: 400;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
 
-.hero-heading {
-  font-family: 'Bezoria', 'Italiana', 'Cinzel', 'Bodoni Moda', 'Prata', 'Didot', Georgia, serif;
+/* ==========================================================================
+   THREE REUSABLE STANDARDIZED BUTTON PATTERNS
+   - Primary: High-emphasis action (solid charcoal #202526, white text, pill radius)
+   - Secondary: Medium-emphasis action (outlined / soft pill, #202526 text, #B8C1C0 border)
+   - Text/Ghost: Low-emphasis / nav action (transparent, subtle hover pill)
+   ========================================================================== */
+
+/* 1. Primary Button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  background-color: #202526;
+  color: #FFFFFF;
+  border: 1px solid #202526;
+  font-family: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(32, 37, 38, 0.12);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .btn-primary {
+    font-size: 0.875rem;
+    padding: 0.75rem 1.75rem;
+  }
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #596769;
+  border-color: #596769;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 22px rgba(32, 37, 38, 0.2);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #202526;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 2. Secondary Button */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.85);
   color: #202526;
-  letter-spacing: -0.03em;
-  font-weight: 400;
+  border: 1px solid #B8C1C0;
+  font-family: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: all 0.25s ease-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .btn-secondary {
+    font-size: 0.875rem;
+    padding: 0.5rem 1.5rem;
+  }
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #202526;
+  color: #FFFFFF;
+  border-color: #202526;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 18px rgba(32, 37, 38, 0.15);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(32, 37, 38, 0.4);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 3. Ghost / Text Button */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 36px;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: rgba(32, 37, 38, 0.85);
+  border: 1px solid transparent;
+  font-family: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: all 0.2s ease-out;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .btn-ghost {
+    font-size: 0.875rem;
+    padding: 0.375rem 1rem;
+  }
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: #FFFFFF;
+  background-color: #202526;
+}
+
+.btn-ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(32, 37, 38, 0.3);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Material Surfaces */

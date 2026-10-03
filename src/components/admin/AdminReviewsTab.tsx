@@ -287,7 +287,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
                       </div>
                     )}
                     <div>
-                      <h4 className="text-base font-praise font-normal text-[#202526] tracking-wide">{rev.author}</h4>
+                      <p className="text-base font-praise font-normal text-[#202526] tracking-wide">{rev.author}</p>
                       <p className="text-xs text-[#596769]">
                         {rev.role} &bull; <span className="text-[#D8A9A8] font-medium">{rev.company}</span>
                       </p>

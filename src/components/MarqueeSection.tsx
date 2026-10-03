@@ -27,8 +27,8 @@ export const MarqueeSection: React.FC<MarqueeSectionProps> = ({ content }) => {
     offset: ['start end', 'end start'],
   });
 
-  const row1X = useTransform(scrollYProgress, [0, 1], ['0px', '-120px']);
-  const row2X = useTransform(scrollYProgress, [0, 1], ['-120px', '0px']);
+  const row1X = useTransform(scrollYProgress, [0, 1], ['0px', '-60px']);
+  const row2X = useTransform(scrollYProgress, [0, 1], ['0px', '60px']);
 
   const validRow1 = (content?.row1Images || []).map((s) => s?.trim()).filter(Boolean) as string[];
   const validRow2 = (content?.row2Images || []).map((s) => s?.trim()).filter(Boolean) as string[];
