@@ -1,11 +1,12 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
 
 export default defineConfig(({ command }) => {
+  const isVercel = Boolean(process.env.VERCEL);
   return {
-    base: command === 'serve' ? '/' : '/aibuild/',
+    base: isVercel || command === 'serve' ? '/' : '/aibuild/',
     plugins: [react(), tailwindcss()],
     build: {
       emptyOutDir: false,
