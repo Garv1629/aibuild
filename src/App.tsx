@@ -272,14 +272,28 @@ export default function App() {
         {/* Global Interactive Cursor Hole Grid Canvas */}
         <InteractiveCursorGrid gridSize={48} holeRadius={160} pushStrength={70} />
 
-        {/* Background Soft Material Ambient Variation */}
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          {/* Soft dust material lighting variation */}
-          <div className="absolute -top-[15%] -right-[10%] w-[650px] h-[650px] rounded-full bg-[#CBDCDE]/30 blur-[140px]" />
-          <div className="absolute top-[45%] -left-[15%] w-[600px] h-[600px] rounded-full bg-[#AFC7C5]/20 blur-[150px]" />
-          <div className="absolute top-[80%] right-[5%] w-[550px] h-[550px] rounded-full bg-[#D8A9A8]/20 blur-[160px]" />
+        {/* Background Soft Material Ambient Variation (GPU-friendly radial gradients) */}
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden will-change-transform">
           <div
-            className="absolute inset-0 opacity-[0.06]"
+            className="absolute -top-[15%] -right-[10%] w-[650px] h-[650px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(203,220,222,0.35) 0%, rgba(203,220,222,0) 70%)',
+            }}
+          />
+          <div
+            className="absolute top-[45%] -left-[15%] w-[600px] h-[600px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(175,199,197,0.25) 0%, rgba(175,199,197,0) 70%)',
+            }}
+          />
+          <div
+            className="absolute top-[80%] right-[5%] w-[550px] h-[550px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(216,169,168,0.25) 0%, rgba(216,169,168,0) 70%)',
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.05]"
             style={{
               backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.9) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 1px, transparent 1px)`,
               backgroundSize: '48px 48px',

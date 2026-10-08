@@ -30,15 +30,40 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       typeof window !== 'undefined' &&
       ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768);
 
-    // 1. Initialize Lenis: smooth desktop wheel scroll, native momentum scroll on mobile
+    // On mobile devices, use pure native 120Hz/60Hz momentum scrolling without Lenis overhead
+    if (isTouchOrMobile) {
+      const handleAnchorClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement | null;
+        const anchor = target?.closest('a[href^="#"]');
+        if (anchor) {
+          const href = anchor.getAttribute('href');
+          if (href && href.length > 1) {
+            try {
+              const targetElement = document.querySelector(href);
+              if (targetElement) {
+                e.preventDefault();
+                targetElement.scrollIntoView({ behavior: 'smooth' });
+              }
+            } catch {}
+          }
+        }
+      };
+
+      document.addEventListener('click', handleAnchorClick, { capture: true });
+      return () => {
+        document.removeEventListener('click', handleAnchorClick, { capture: true });
+      };
+    }
+
+    // On desktop, initialize luxury butter-smooth Lenis scroll
     const lenis = new Lenis({
-      duration: isTouchOrMobile ? 0 : 0.6, // Native instant on mobile, smooth on desktop
-      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+      duration: 1.05,
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
-      smoothWheel: !isTouchOrMobile,
-      syncTouch: false,
-      touchMultiplier: 0, // Never hijack native mobile touch scrolling
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 0,
       infinite: false,
     });
 
@@ -46,7 +71,6 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     globalLenis = lenis;
     setLenisState(lenis);
 
-    // 2. RequestAnimationFrame Render Loop
     let animationFrameId: number;
     function raf(time: number) {
       lenis.raf(time);
@@ -54,7 +78,6 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
     animationFrameId = requestAnimationFrame(raf);
 
-    // 3. Intercept global hash anchor clicks for smooth glide transitions
     const handleAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       const anchor = target?.closest('a[href^="#"]');
@@ -67,27 +90,18 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
               e.preventDefault();
               lenis.scrollTo(targetElement as HTMLElement, {
                 offset: 0,
-                duration: 1.4,
+                duration: 1.1,
               });
             }
-          } catch {
-            // Ignore invalid selector syntax gracefully
-          }
+          } catch {}
         }
       }
     };
 
     document.addEventListener('click', handleAnchorClick, { capture: true });
 
-    // 4. Handle resize and dynamic content height changes
-    const resizeObserver = new ResizeObserver(() => {
-      lenis.resize();
-    });
-    resizeObserver.observe(document.body);
-
     return () => {
       document.removeEventListener('click', handleAnchorClick, { capture: true });
-      resizeObserver.disconnect();
       cancelAnimationFrame(animationFrameId);
       lenis.destroy();
       lenisRef.current = null;
