@@ -25,6 +25,12 @@ export const InteractiveCursorGrid: React.FC<InteractiveCursorGridProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    const isTouchOrMobile =
+      typeof window !== 'undefined' &&
+      ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768);
+
+    if (isTouchOrMobile) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 

@@ -328,24 +328,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   // Editorial Text Card Component
   const EditorialTextCard = (
-    <div className="w-full h-full min-h-0 rounded-lg bg-[#FAF7F2] p-4 sm:p-6 md:p-8 flex flex-col justify-between items-center text-center relative overflow-hidden select-none border border-[#E5E7EB] shadow-xs">
+    <div className="w-full h-full min-h-0 rounded-lg bg-[#FAF7F2] p-3.5 sm:p-6 md:p-8 flex flex-col justify-between items-center text-center relative overflow-hidden select-none border border-[#E5E7EB] shadow-xs">
       {/* Subtle Top Decorative Numbering */}
       <div className="w-full flex items-center justify-between text-xs text-[#596769] font-mono uppercase tracking-widest pb-2 border-b border-[#E5E7EB]">
         <span>AI.BUILD // {index < 9 ? `0${index + 1}` : `${index + 1}`}</span>
-        <span className="px-2.5 py-0.5 rounded-full bg-[#F4F5F4] text-[#202526] border border-[#E5E7EB] font-medium font-sans-clean text-[10px] sm:text-[11px]">
+        <span className="px-2 py-0.5 rounded-full bg-[#F4F5F4] text-[#202526] border border-[#E5E7EB] font-medium font-sans-clean text-[10px] sm:text-[11px]">
           {project.category}
         </span>
       </div>
 
       {/* Main Typography Stack */}
-      <div className="my-auto py-3 sm:py-4 flex flex-col items-center justify-center max-w-sm mx-auto">
+      <div className="my-auto py-2.5 sm:py-4 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
         {/* Script Cursive Accent Word */}
-        <span className="font-script text-3xl sm:text-4xl md:text-5xl text-[#8B1E1E] leading-none mb-0.5 block select-none transform -rotate-1">
+        <span className="font-script text-2xl sm:text-4xl md:text-5xl text-[#8B1E1E] leading-none mb-0.5 block select-none transform -rotate-1">
           {ordinalWord}
         </span>
 
         {/* Bold Uppercase Project Title */}
-        <h3 className="font-project-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-[#202526] leading-[0.92] mt-0 mb-2 select-none">
+        <h3 className="font-project-title text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-[#202526] leading-[0.92] mt-0 mb-1.5 select-none break-words max-w-full">
           {displayHeadline}
         </h3>
 

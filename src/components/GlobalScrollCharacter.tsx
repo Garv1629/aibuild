@@ -621,7 +621,7 @@ export const GlobalScrollCharacter: React.FC<GlobalScrollCharacterProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-5 right-5 z-40"
+            className="hidden sm:block fixed bottom-5 right-5 z-40"
           >
             <motion.button
               type="button"
