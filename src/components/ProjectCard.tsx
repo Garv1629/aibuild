@@ -1,79 +1,116 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { ProjectItem } from '../types';
 import { LiveProjectButton } from './LiveProjectButton';
-import { ProjectSeamlessShowcase } from './ProjectSeamlessShowcase';
 import {
   Video,
-  Sparkles,
-  Repeat,
   ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  ImageIcon,
   Maximize2,
-  CheckCircle2,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
 } from 'lucide-react';
 import { isVideoMedia } from '../utils/mediaUpload';
-import { resolveProjectAspectRatio } from '../services/adminStore';
 
 export interface ProjectCardProps {
   project: ProjectItem;
   index: number;
-  totalCards: number;
+  totalCards?: number;
   onSelectProject?: (project: ProjectItem) => void;
   className?: string;
 }
 
-interface CardMediaSlotProps {
-  src?: string;
+const ORDINAL_WORDS = [
+  'First',
+  'Second',
+  'Third',
+  'Fourth',
+  'Fifth',
+  'Sixth',
+  'Seventh',
+  'Eighth',
+  'Ninth',
+  'Tenth',
+  'Eleventh',
+  'Twelfth',
+  'Thirteenth',
+  'Fourteenth',
+  'Fifteenth',
+];
+
+// Curated high-fashion aesthetic editorial media fallbacks
+const EDITORIAL_FALLBACKS = [
+  {
+    url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Product & Fragrance Aesthetics',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Creative Palette & Material Study',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: '3D Spatial Geometry & Form',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Creator Portrait & Campaign Direction',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Digital Interfaces & Floating Cards',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Design Workshop & Collaboration',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Architecture & Surface Relief',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80',
+    type: 'image' as const,
+    title: 'Paper, Print & Editorial Stack',
+  },
+];
+
+interface CollageCellProps {
+  media: {
+    url: string;
+    type: 'video' | 'image';
+    title?: string;
+    poster?: string;
+  };
   alt: string;
-  isProjectVertical?: boolean;
-  slotLabel?: string;
+  className?: string;
+  aspectClass?: string;
   onClick?: () => void;
+  showOverlayLabel?: boolean;
 }
 
-const CardMediaSlot: React.FC<CardMediaSlotProps> = ({ src, alt, isProjectVertical = false, slotLabel, onClick }) => {
+const CollageCell: React.FC<CollageCellProps> = ({
+  media,
+  alt,
+  className = '',
+  aspectClass = '',
+  onClick,
+  showOverlayLabel = false,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isVideo = src ? isVideoMedia(src) : false;
-
-  const [isMediaVertical, setIsMediaVertical] = useState<boolean>(() => {
-    if (!src) return isProjectVertical;
-    const lower = src.toLowerCase();
-    if (lower.includes('vertical') || lower.includes('reel') || lower.includes('tiktok') || lower.includes('9:16')) return true;
-    if (lower.includes('16:9') || lower.includes('cinema') || lower.includes('landscape') || lower.includes('widescreen')) return false;
-    return isProjectVertical;
-  });
-
-  useEffect(() => {
-    if (!src) {
-      setIsMediaVertical(isProjectVertical);
-      return;
-    }
-    const lower = src.toLowerCase();
-    if (lower.includes('vertical') || lower.includes('reel') || lower.includes('tiktok') || lower.includes('9:16')) {
-      setIsMediaVertical(true);
-    } else if (lower.includes('16:9') || lower.includes('cinema') || lower.includes('landscape') || lower.includes('widescreen')) {
-      setIsMediaVertical(false);
-    } else {
-      setIsMediaVertical(isProjectVertical);
-    }
-  }, [src, isProjectVertical]);
-
-  const handleVideoMeta = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const v = e.currentTarget;
-    if (v.videoWidth > 0 && v.videoHeight > 0) {
-      setIsMediaVertical(v.videoHeight > v.videoWidth * 1.05);
-    }
-  };
-
-  const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-      setIsMediaVertical(img.naturalHeight > img.naturalWidth * 1.05);
-    }
-  };
+  const isVideo = media.type === 'video' || isVideoMedia(media.url);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [, setIsHovered] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!isVideo) return;
@@ -86,109 +123,121 @@ const CardMediaSlot: React.FC<CardMediaSlotProps> = ({ src, alt, isProjectVertic
         const entry = entries[0];
         if (entry.isIntersecting) {
           video.play().catch(() => {});
+          setIsPlaying(true);
         } else {
           video.pause();
+          setIsPlaying(false);
         }
       },
-      { threshold: 0.1, rootMargin: '60px 0px 60px 0px' }
+      { threshold: 0.15, rootMargin: '80px 0px' }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isVideo, src]);
+  }, [isVideo, media.url]);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
 
   return (
     <div
       ref={containerRef}
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      aria-label={onClick ? `View ${alt} in case study details` : undefined}
-      onKeyDown={(e) => {
-        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className={`w-full aspect-[16/10] overflow-hidden rounded-2xl bg-[#181C1D] border border-[#E5E7EB]/80 hover:border-[#CBDCDE] group/slot shadow-xs relative flex items-center justify-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526] ${
-        onClick ? 'cursor-pointer hover:shadow-md' : ''
-      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`relative w-full h-full min-h-0 rounded-sm sm:rounded-md overflow-hidden bg-[#181C1D] group/cell cursor-pointer select-none transition-transform duration-300 ${className} ${aspectClass}`}
     >
-      {slotLabel && (
-        <div className="absolute top-3 left-3 z-20 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-xs font-mono uppercase tracking-wider text-white/90 shadow-2xs pointer-events-none flex items-center gap-1">
-          <span className="w-1 h-1 rounded-full bg-[#AFC7C5]" />
-          <span>{slotLabel}</span>
-        </div>
-      )}
-
-      {/* Hover Gallery Badge */}
-      {onClick && (
-        <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-white opacity-0 group-hover/slot:opacity-100 transition-all duration-200 pointer-events-none shadow-md transform translate-y-1 group-hover/slot:translate-y-0">
-          <Maximize2 className="w-3 h-3 text-[#D8A9A8]" />
-          <span className="hidden sm:inline">Gallery</span>
-        </div>
-      )}
-
-      {src && src.trim() ? (
-        isVideo ? (
-          <>
-            {isMediaVertical && isProjectVertical && (
-              <video
-                src={src}
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 scale-110 pointer-events-none"
-              />
-            )}
-            <video
-              ref={videoRef}
-              src={src}
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              onLoadedMetadata={handleVideoMeta}
-              className={`transition-transform duration-700 pointer-events-none select-none ${
-                isMediaVertical && isProjectVertical
-                  ? 'h-full max-h-full aspect-[9/16] object-contain rounded-xl shadow-lg relative z-10 mx-auto'
-                  : 'w-full h-full object-cover'
-              } group-hover/slot:scale-[1.03] ease-out`}
-            />
-          </>
-        ) : (
-          <>
-            {isMediaVertical && isProjectVertical && (
-              <img
-                src={src}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 scale-110 pointer-events-none"
-              />
-            )}
-            <img
-              src={src}
-              alt={alt}
-              onLoad={handleImgLoad}
-              className={`transition-transform duration-700 pointer-events-none select-none ${
-                isMediaVertical && isProjectVertical
-                  ? 'h-full max-h-full aspect-[9/16] object-contain rounded-xl shadow-lg relative z-10 mx-auto'
-                  : 'w-full h-full object-cover'
-              } group-hover/slot:scale-[1.03] ease-out`}
-              loading="lazy"
-              decoding="async"
-              referrerPolicy="no-referrer"
-            />
-          </>
-        )
+      {/* Background Media */}
+      {isVideo ? (
+        <video
+          ref={videoRef}
+          src={media.url}
+          poster={media.poster}
+          playsInline
+          autoPlay
+          muted={isMuted}
+          loop
+          onLoadedData={() => setIsLoaded(true)}
+          className={`w-full h-full object-cover transition-all duration-700 group-hover/cell:scale-[1.03] ${
+            isLoaded ? 'opacity-100' : 'opacity-80 blur-xs'
+          }`}
+        />
       ) : (
-        <div className="w-full h-full bg-[#181C1D] flex flex-col items-center justify-center gap-1 text-[#596769] p-4 text-center">
-          <ImageIcon className="w-5 h-5 opacity-40 text-[#AFC7C5]" />
-          <span className="text-xs font-mono opacity-50 uppercase tracking-wider">Detail View</span>
+        <img
+          src={media.url}
+          alt={alt}
+          loading="lazy"
+          onLoad={() => setIsLoaded(true)}
+          className={`w-full h-full object-cover transition-all duration-700 group-hover/cell:scale-[1.03] ${
+            isLoaded ? 'opacity-100' : 'opacity-80 blur-xs'
+          }`}
+        />
+      )}
+
+      {/* Subtle Dark Vignette on Hover */}
+      <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/cell:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+      {/* Media Type Badge / Title Overlay */}
+      {isVideo && (
+        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[10px] uppercase font-mono tracking-wider text-white font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#E53E3E] animate-pulse" />
+          <span>Video</span>
         </div>
       )}
 
-      {/* Subtle Hover Sheen Vignette */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover/slot:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
+      {/* Hover Floating Controls */}
+      <div className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 opacity-0 group-hover/cell:opacity-100 transition-opacity duration-200">
+        {isVideo && (
+          <>
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label={isPlaying ? 'Pause video' : 'Play video'}
+              className="w-7 h-7 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center backdrop-blur-md transition-transform hover:scale-110 cursor-pointer"
+            >
+              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+              className="w-7 h-7 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center backdrop-blur-md transition-transform hover:scale-110 cursor-pointer"
+            >
+              {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label="Expand in lightbox"
+          className="w-7 h-7 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center backdrop-blur-md transition-transform hover:scale-110 cursor-pointer"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {showOverlayLabel && media.title && (
+        <div className="absolute bottom-2 left-2 z-20 max-w-[80%] truncate px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] text-white/90 font-mono">
+          {media.title}
+        </div>
+      )}
     </div>
   );
 };
@@ -200,222 +249,270 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onSelectProject,
   className = '',
 }) => {
-  const [, setIsHovered] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isEvenLayout = index % 2 === 0;
+  const ordinalWord = ORDINAL_WORDS[index] || `Project ${index + 1}`;
 
-  const totalVideos = (project.mediaItems || []).filter((m) => m.type === 'video').length || (project.videoUrl ? 1 : 0);
-  const totalMedia = project.mediaItems && project.mediaItems.length > 0 ? project.mediaItems.length : 1;
+  // Assemble resolved media items for this project
+  const projectMediaList = useMemo(() => {
+    const list: { url: string; type: 'video' | 'image'; title?: string; poster?: string }[] = [];
+    const seenUrls = new Set<string>();
 
-  // Real-time aspect ratio that adapts dynamically according to media loaded
-  const [activeRatio, setActiveRatio] = useState<'16:9' | '9:16'>(() => resolveProjectAspectRatio(project));
+    const addMedia = (url?: string, type?: 'video' | 'image', title?: string, poster?: string) => {
+      if (!url || typeof url !== 'string') return;
+      const clean = url.trim();
+      if (!clean || seenUrls.has(clean)) return;
+      seenUrls.add(clean);
+      const isVid = type === 'video' || isVideoMedia(clean);
+      list.push({
+        url: clean,
+        type: isVid ? 'video' : 'image',
+        title: title || project.title,
+        poster,
+      });
+    };
 
-  useEffect(() => {
-    setActiveRatio(resolveProjectAspectRatio(project));
-  }, [project]);
+    // 1. From mediaItems array
+    if (Array.isArray(project.mediaItems)) {
+      project.mediaItems.forEach((m) => {
+        if (m && m.url) addMedia(m.url, m.type, m.title, m.poster);
+      });
+    }
 
-  const isVertical = activeRatio === '9:16';
-  const hasDetails = Boolean((project.col1Image1 && project.col1Image1.trim()) || (project.col1Image2 && project.col1Image2.trim()));
+    // 2. Main videoUrl
+    if (project.videoUrl) {
+      addMedia(project.videoUrl, 'video', `${project.title} Reel`);
+    }
 
-  const detailsId = `project-details-${project.id}`;
-  const toggleBtnId = `toggle-details-btn-${project.id}`;
+    // 3. Main image slots
+    if (project.col2Image) {
+      addMedia(project.col2Image, project.mediaType || 'image', `${project.title} Hero Visual`);
+    }
+    if (project.col1Image1) {
+      addMedia(project.col1Image1, 'image', `${project.title} Detail 1`);
+    }
+    if (project.col1Image2) {
+      addMedia(project.col1Image2, 'image', `${project.title} Detail 2`);
+    }
+
+    // 4. Blend curated high-fashion aesthetic companions if project has fewer than 6 assets
+    let fallbackIdx = index % EDITORIAL_FALLBACKS.length;
+    while (list.length < 6) {
+      const fb = EDITORIAL_FALLBACKS[fallbackIdx % EDITORIAL_FALLBACKS.length];
+      if (!seenUrls.has(fb.url)) {
+        seenUrls.add(fb.url);
+        list.push({
+          url: fb.url,
+          type: fb.type,
+          title: fb.title,
+        });
+      }
+      fallbackIdx++;
+    }
+
+    return list;
+  }, [project, index]);
+
+  const handleOpenModal = () => {
+    if (onSelectProject) {
+      onSelectProject(project);
+    }
+  };
+
+  const projectTitleUpper = project.title ? project.title.toUpperCase() : 'PROJECT';
+  const displayHeadline = projectTitleUpper.length > 20 ? 'PROJECT' : projectTitleUpper;
+  const projectTagline =
+    project.tagline ||
+    project.description ||
+    'My project marked the beginning of my design journey, exploring creativity, problem-solving, and digital product design.';
+
+  // Editorial Text Card Component
+  const EditorialTextCard = (
+    <div className="w-full h-full min-h-0 rounded-md sm:rounded-lg bg-[#FAF7F2] p-4 sm:p-6 md:p-8 flex flex-col justify-between items-center text-center relative overflow-hidden select-none border border-[#E5E7EB] shadow-xs">
+      {/* Subtle Top Decorative Numbering */}
+      <div className="w-full flex items-center justify-between text-xs text-[#596769] font-mono uppercase tracking-widest pb-1.5 border-b border-[#E5E7EB]">
+        <span>AI.BUILD // {index < 9 ? `0${index + 1}` : `${index + 1}`}</span>
+        <span className="px-2 py-0.5 rounded-full bg-[#F4F5F4] text-[#202526] border border-[#E5E7EB] font-medium font-sans-clean text-[10px] sm:text-[11px]">
+          {project.category}
+        </span>
+      </div>
+
+      {/* Main Typography Stack */}
+      <div className="my-auto py-2 sm:py-3 flex flex-col items-center justify-center max-w-sm mx-auto">
+        {/* Script Cursive Accent Word */}
+        <span className="font-script text-3xl sm:text-4xl md:text-5xl text-[#8B1E1E] leading-none mb-0.5 block select-none transform -rotate-1">
+          {ordinalWord}
+        </span>
+
+        {/* Bold Uppercase Project Title */}
+        <h3 className="font-project-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase tracking-tight text-[#202526] leading-[0.92] mt-0 mb-2 select-none">
+          {displayHeadline}
+        </h3>
+
+        {/* Subtitle / Narrative Description */}
+        <p className="text-xs sm:text-sm md:text-[14px] text-[#4A5568] font-body leading-relaxed max-w-xs sm:max-w-sm text-center font-normal px-1 line-clamp-3">
+          {projectTagline}
+        </p>
+      </div>
+
+      {/* Action CTA Group */}
+      <div className="w-full pt-3 border-t border-[#E5E7EB] flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+        <button
+          type="button"
+          onClick={handleOpenModal}
+          aria-label={`Explore ${project.title} case study`}
+          className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs sm:text-sm font-semibold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 shadow-sm hover:shadow-md cursor-pointer transform hover:-translate-y-0.5"
+        >
+          <span>Explore</span>
+          <ArrowUpRight className="w-3.5 h-3.5 text-white/80" />
+        </button>
+
+        {project.liveUrl && (
+          <LiveProjectButton
+            href={project.liveUrl}
+            label="Live"
+            showIcon={true}
+            target="_blank"
+            rel="noopener noreferrer"
+            ariaLabel={`Visit live application for ${project.title}`}
+            className="!bg-white !border-[#E5E7EB] !text-[#202526] hover:!bg-[#F4F5F4] !min-h-[30px] !py-1 !px-3 text-xs"
+          />
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div
-      className={`w-full max-w-6xl mx-auto flex items-center justify-center p-0 select-none ${className}`}
+      className={`w-full max-w-4xl lg:max-w-5xl mx-auto flex items-center justify-center p-0 select-none ${className}`}
     >
-      <div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="w-full rounded-3xl border border-[#E5E7EB]/90 hover:border-[#CBDCDE] bg-gradient-to-b from-white via-[#FCFDFD] to-[#F9FAFA] p-5 sm:p-7 md:p-8 flex flex-col justify-between shadow-[0_20px_50px_-20px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.12)] transition-all duration-300 relative overflow-hidden group/card"
-      >
-        {/* Subtle Ambient Light Wash */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#D8A9A8]/12 via-[#AFC7C5]/10 to-transparent rounded-full blur-3xl pointer-events-none -z-0" />
+      {/* Clean Modern Outer Frame with neutral borders covering 2-project height */}
+      <div className="w-full rounded-xl sm:rounded-2xl border border-[#E5E7EB] bg-[#F8F9FA] p-1 sm:p-1.5 md:p-2 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#D1D5DB] transition-all duration-300 relative overflow-hidden">
+        
+        {/* =========================================================================
+            LAYOUT A: Even index (Text Hero Box on LEFT, Media in CENTER & RIGHT)
+            ========================================================================= */}
+        {isEvenLayout ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 sm:gap-2 w-full items-stretch h-[290px] xs:h-[320px] sm:h-[360px] md:h-[400px] lg:h-[430px]">
+            {/* Column 1: Left Editorial Text Box (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col justify-stretch h-full min-h-0">
+              {EditorialTextCard}
+            </div>
 
-        {/* Top Header Row */}
-        <div className="flex flex-wrap items-start sm:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-[#E5E7EB]/80 relative z-10 shrink-0">
-          <div className="flex items-start sm:items-center gap-3 sm:gap-6">
-            {/* Large Editorial Number Indicator */}
-            <span className="font-strong text-[#202526] leading-none select-none text-2xl xs:text-3xl sm:text-5xl md:text-6xl tracking-tight">
-              {index < 9 ? `0${index + 1}` : `${index + 1}`}
-            </span>
-
-            {/* Category Pills & Titles */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-strong uppercase tracking-[0.08em] text-[#202526] bg-[#F4F5F4] border border-[#E5E7EB] flex items-center gap-1.5 shadow-2xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
-                  {project.category}
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium uppercase text-[#596769] bg-[#F4F5F4] border border-[#E5E7EB] flex items-center gap-1.5 shadow-2xs">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isVertical ? 'bg-[#D8A9A8]' : 'bg-[#AFC7C5]'}`} />
-                  <span>{isVertical ? '9:16 Vertical' : '16:9 Cinema'}</span>
-                </span>
-                {totalVideos > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-strong uppercase text-[#596769] bg-[#F4F5F4] border border-[#E5E7EB] flex items-center gap-1">
-                    <Video className="w-2.5 h-2.5 text-[#596769]" />
-                    {totalVideos > 1 ? `${totalVideos} Videos` : 'Video Reel'}
-                  </span>
-                )}
-                {totalMedia > 1 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-strong uppercase text-[#202526] bg-[#E7EBE9] border border-[#B8C1C0] hidden xs:inline-flex items-center gap-1">
-                    <Repeat className="w-2.5 h-2.5 text-[#D8A9A8]" />
-                    Continuous Loop
-                  </span>
-                )}
-                {project.featured && (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-strong uppercase text-[#202526] bg-[#CBDCDE]/50 border border-[#AFC7C5] hidden sm:inline-flex items-center gap-1">
-                    <Sparkles className="w-2.5 h-2.5 text-[#D8A9A8]" />
-                    Featured
-                  </span>
-                )}
+            {/* Column 2: Center 3-Stack Media Collage (3 cols) */}
+            <div className="lg:col-span-3 grid grid-rows-12 gap-1.5 sm:gap-2 h-full min-h-0">
+              {/* Center Top Cell: Product / Bottle / Detail (Row span 3) */}
+              <div className="row-span-3 min-h-0">
+                <CollageCell
+                  media={projectMediaList[0]}
+                  alt={`${project.title} - Visual 1`}
+                  onClick={handleOpenModal}
+                />
               </div>
+              {/* Center Middle Cell: Main Campaign / Crafting Video (Row span 6) */}
+              <div className="row-span-6 min-h-0">
+                <CollageCell
+                  media={projectMediaList[1]}
+                  alt={`${project.title} - Main Feature`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+              {/* Center Bottom Cell: Product Packaging / Accent (Row span 3) */}
+              <div className="row-span-3 min-h-0">
+                <CollageCell
+                  media={projectMediaList[2]}
+                  alt={`${project.title} - Visual 2`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+            </div>
 
-              <div>
-                <h3 className="text-[#202526] font-praise font-normal uppercase tracking-tight text-lg xs:text-xl sm:text-2xl md:text-3xl leading-snug">
-                  {project.title}
-                </h3>
-                {project.tagline && (
-                  <p className="text-xs sm:text-sm text-[#596769] font-sans-clean leading-relaxed max-w-2xl line-clamp-2 mt-0.5">
-                    {project.tagline}
-                  </p>
-                )}
+            {/* Column 3: Right 2-Stack Media Collage (4 cols) */}
+            <div className="lg:col-span-4 grid grid-rows-12 gap-1.5 sm:gap-2 h-full min-h-0">
+              {/* Right Top Cell: 3D UI / Cards / Floating Sheets (Row span 5) */}
+              <div className="row-span-5 min-h-0">
+                <CollageCell
+                  media={projectMediaList[3]}
+                  alt={`${project.title} - 3D Render & Interface`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+              {/* Right Bottom Cell: Creator / Portrait / Dynamic Video (Row span 7) */}
+              <div className="row-span-7 min-h-0">
+                <CollageCell
+                  media={projectMediaList[4]}
+                  alt={`${project.title} - Campaign Live`}
+                  onClick={handleOpenModal}
+                />
               </div>
             </div>
           </div>
-
-          {/* Action Group: Primary "Explore Case Study" + Secondary "Live Case Study" */}
-          <div className="shrink-0 self-start sm:self-auto flex flex-wrap items-center gap-2 sm:gap-2.5">
-            {/* Primary Action: Explore Case Study */}
-            <button
-              type="button"
-              onClick={() => onSelectProject && onSelectProject(project)}
-              aria-label={`Explore ${project.title} case study`}
-              className="btn-primary !min-h-[44px] !px-4 sm:!px-5 !py-2 sm:!py-2.5 text-xs sm:text-sm font-semibold rounded-full flex items-center gap-2 cursor-pointer shadow-md hover:shadow-lg transition-all"
-            >
-              <span>Explore Case Study</span>
-              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#CBDCDE]" aria-hidden="true" />
-            </button>
-
-            {/* Secondary Action: Live Case Study (External Link if present) */}
-            {project.liveUrl && (
-              <LiveProjectButton
-                href={project.liveUrl}
-                label="Live Case Study"
-                showIcon={true}
-                target="_blank"
-                rel="noopener noreferrer"
-                ariaLabel={`Visit live case study for ${project.title} (opens in new tab)`}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Primary Visible Project Showcase Preview */}
-        <div className="pt-4 sm:pt-5 w-full relative z-10">
-          <ProjectSeamlessShowcase
-            project={project}
-            onOpenDetails={() => onSelectProject && onSelectProject(project)}
-            onRatioChange={setActiveRatio}
-            className="w-full"
-          />
-        </div>
-
-        {/* Expandable Case Study Breakdown Section */}
-        <AnimatePresence initial={false}>
-          {isExpanded && (
-            <motion.div
-              id={detailsId}
-              role="region"
-              aria-labelledby={toggleBtnId}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden"
-            >
-              <div className="pt-5 mt-4 border-t border-[#E5E7EB]/80 space-y-4">
-                {/* Secondary Detail Media Views (if present) */}
-                {hasDetails && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#596769] font-semibold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" />
-                      <span>Production Angles &amp; Detail Frames</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                      <CardMediaSlot
-                        src={project.col1Image1}
-                        alt={`${project.title} detail 1`}
-                        isProjectVertical={isVertical}
-                        slotLabel={isVertical ? 'Detail 01' : 'Angle 01'}
-                        onClick={() => onSelectProject && onSelectProject(project)}
-                      />
-                      <CardMediaSlot
-                        src={project.col1Image2}
-                        alt={`${project.title} detail 2`}
-                        isProjectVertical={isVertical}
-                        slotLabel={isVertical ? 'Detail 02' : 'Angle 02'}
-                        onClick={() => onSelectProject && onSelectProject(project)}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Case Study Summary & Objectives */}
-                {project.description && (
-                  <div className="p-4 rounded-2xl bg-[#F8F9F9] border border-[#E5E7EB] space-y-1.5">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#202526] font-bold">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#596769]" />
-                      <span>Case Scope &amp; Deployment</span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#596769] font-sans-clean leading-relaxed">
-                      {project.description}
-                    </p>
-                  </div>
-                )}
+        ) : (
+          /* =========================================================================
+             LAYOUT B: Odd index (Media on LEFT, Text Hero Box in CENTER, Media on RIGHT)
+             ========================================================================= */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 sm:gap-2 w-full items-stretch h-[290px] xs:h-[320px] sm:h-[360px] md:h-[400px] lg:h-[430px]">
+            {/* Column 1: Left 3-Stack Media Collage (3 cols) */}
+            <div className="lg:col-span-3 grid grid-rows-12 gap-1.5 sm:gap-2 h-full min-h-0 order-2 lg:order-1">
+              {/* Left Top Cell: Color Palette / Materials (Row span 3) */}
+              <div className="row-span-3 min-h-0">
+                <CollageCell
+                  media={projectMediaList[0]}
+                  alt={`${project.title} - Swatches & Setup`}
+                  onClick={handleOpenModal}
+                />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {/* Left Middle Cell: 3D Geometric Relief / Sculpture (Row span 6) */}
+              <div className="row-span-6 min-h-0">
+                <CollageCell
+                  media={projectMediaList[1]}
+                  alt={`${project.title} - Sculpture & Relief`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+              {/* Left Bottom Cell: Texture / Clay Material (Row span 3) */}
+              <div className="row-span-3 min-h-0">
+                <CollageCell
+                  media={projectMediaList[2]}
+                  alt={`${project.title} - Texture Detail`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+            </div>
 
-        {/* Bottom Action & Meta Control Bar */}
-        <div className="pt-3.5 sm:pt-4 mt-3 sm:mt-4 border-t border-[#E5E7EB]/70 flex flex-wrap items-center justify-between gap-3 text-xs relative z-10">
-          {/* Deliverables / Tech Stack */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs font-mono uppercase tracking-wider text-[#8E9B9C] mr-0.5">
-              Deliverables:
-            </span>
-            {(project.techStack && project.techStack.length > 0
-              ? project.techStack
-              : ['React', 'AI Video', 'Direct UGC']
-            ).map((tech, tIdx) => (
-              <span
-                key={tIdx}
-                className="px-2.5 py-0.5 rounded-full text-xs font-mono text-[#202526] bg-[#F4F5F4] border border-[#E5E7EB] shadow-2xs hover:bg-[#EAEAEA] transition-colors"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
+            {/* Column 2: Center Editorial Text Box (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col justify-stretch h-full min-h-0 order-1 lg:order-2">
+              {EditorialTextCard}
+            </div>
 
-          {/* Accessible Expand/Collapse Details Button */}
-          <div className="flex items-center gap-2.5 ml-auto">
-            <button
-              type="button"
-              id={toggleBtnId}
-              aria-expanded={isExpanded}
-              aria-controls={detailsId}
-              onClick={() => setIsExpanded((prev) => !prev)}
-              className="btn-secondary !py-2 !px-3.5 !min-h-[40px] text-xs font-semibold rounded-full flex items-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/40"
-            >
-              <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
-              {isExpanded ? (
-                <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
-              )}
-            </button>
+            {/* Column 3: Right 3-Stack Media Collage (4 cols) */}
+            <div className="lg:col-span-4 grid grid-rows-12 gap-1.5 sm:gap-2 h-full min-h-0 order-3">
+              {/* Right Top Cell: Identity / Cards / Stationery (Row span 3) */}
+              <div className="row-span-3 min-h-0">
+                <CollageCell
+                  media={projectMediaList[3]}
+                  alt={`${project.title} - Brand Deliverables`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+              {/* Right Middle Cell: Collaboration / Team / Creator Workshop (Row span 6) */}
+              <div className="row-span-6 min-h-0">
+                <CollageCell
+                  media={projectMediaList[4]}
+                  alt={`${project.title} - Collaborative Workshop`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+              {/* Right Bottom Cell: Print Stack / Publications (Row span 3) */}
+              <div className="row-span-3 min-h-0">
+                <CollageCell
+                  media={projectMediaList[5] || projectMediaList[0]}
+                  alt={`${project.title} - Print Stack`}
+                  onClick={handleOpenModal}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@
     "build": "vite build",
     "docs": "vite build --outDir docs",
     "build:docs": "vite build --outDir docs",
+    "do-push": "node scripts/do_rebase_push.cjs",
     "preview": "vite preview",
     "deploy": "gh-pages -d docs",
     "clean": "rm -rf dist server.js",
