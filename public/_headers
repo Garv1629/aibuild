@@ -1,0 +1,22 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-XSS-Protection: 1; mode=block
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), vr=(), accelerometer=(), gyroscope=(), magnetometer=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://images.unsplash.com https://*.figma.site https://shrug-person-78902957.figma.site https://*.supabase.co https://*.supabase.in https://*.githubusercontent.com https://res.cloudinary.com https://images.pexels.com; media-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://commondatastorage.googleapis.com https://assets.mixkit.co https://player.vimeo.com https://*.vimeo.com; connect-src 'self' http://localhost:* http://127.0.0.1:* https://*.supabase.co https://*.supabase.in https://api.github.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self';
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/api/*
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex, nofollow

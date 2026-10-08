@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdminTab } from '../../types';
 import { adminStore, AdminStoreState } from '../../services/adminStore';
+import { unsavedChanges } from '../../services/unsavedChanges';
 import { InteractiveCursorGrid } from '../InteractiveCursorGrid';
 import { AdminProjectsTab } from './AdminProjectsTab';
 import { AdminContentTab } from './AdminContentTab';
@@ -8,6 +9,7 @@ import { AdminReviewsTab } from './AdminReviewsTab';
 import { AdminMessagesTab } from './AdminMessagesTab';
 import { AdminEstimatorTab } from './AdminEstimatorTab';
 import { AdminSecurityTab } from './AdminSecurityTab';
+import { AdminHistoryTab } from './AdminHistoryTab';
 import { AdminPreviewSection } from './AdminPreviewSection';
 import { refreshSession, isSessionActive } from '../../services/security';
 import {
@@ -28,6 +30,8 @@ import {
   Columns2,
   GripVertical,
   X,
+  AlertCircle,
+  History,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -39,7 +43,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
     try {
       if (typeof window !== 'undefined' && window.sessionStorage) {
         const saved = window.sessionStorage.getItem('ai_build_admin_tab') as AdminTab;
-        if (saved && ['content', 'projects', 'reviews', 'messages', 'estimator', 'security', 'preview'].includes(saved)) {
+        if (saved && ['content', 'projects', 'reviews', 'messages', 'estimator', 'history', 'security', 'preview'].includes(saved)) {
           return saved;
         }
       }
@@ -51,12 +55,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
   const [splitRatio, setSplitRatio] = useState<number>(50); // percentage for left editor pane
   const [storeState, setStoreState] = useState<AdminStoreState>(adminStore.getState());
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(() => unsavedChanges.hasUnsavedChanges());
   const [isLgScreen, setIsLgScreen] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
   );
 
   const splitContainerRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef<boolean>(false);
+
+  // Subscribe to unsavedChanges manager
+  useEffect(() => {
+    const unsub = unsavedChanges.subscribe((hasUnsaved) => {
+      setHasUnsavedChanges(hasUnsaved);
+    });
+    return unsub;
+  }, []);
 
   // Keep track of screen size for responsive split view
   useEffect(() => {
@@ -68,6 +81,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
   }, []);
 
   const handleSelectTab = (tab: AdminTab) => {
+    if (tab === activeTab && tab !== 'preview') return;
+
+    // Check if current sections have unsaved changes before switching
+    if (unsavedChanges.hasUnsavedChanges()) {
+      const labels = unsavedChanges.getDirtySectionLabels();
+      const sectionName = labels.length > 0 ? labels.join(', ') : 'the active section';
+      const confirmed = window.confirm(
+        `You have unsaved changes in ${sectionName}.\n\nIf you switch sections now, your unsaved changes may be lost.\n\nDo you want to discard your changes and proceed?`
+      );
+      if (!confirmed) {
+        return;
+      }
+      unsavedChanges.discardAll();
+    }
+
     try {
       if (typeof window !== 'undefined' && window.sessionStorage) {
         window.sessionStorage.setItem('ai_build_admin_tab', tab);
@@ -83,6 +111,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
         setActiveTab(lastEditorTab);
       }
     }
+  };
+
+  const handleExit = () => {
+    if (unsavedChanges.hasUnsavedChanges()) {
+      const labels = unsavedChanges.getDirtySectionLabels();
+      const sectionName = labels.length > 0 ? labels.join(', ') : 'the admin panel';
+      const confirmed = window.confirm(
+        `You have unsaved changes in ${sectionName}.\n\nAre you sure you want to exit to the live site without saving?`
+      );
+      if (!confirmed) {
+        return;
+      }
+      unsavedChanges.discardAll();
+    }
+    onExit();
   };
 
   // Draggable Divider Mouse Events
@@ -194,7 +237,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={onExit}
+            onClick={handleExit}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-[#F3F4F6] text-xs uppercase tracking-wider text-[#202526] font-btn font-medium border border-[#E5E7EB] transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
             title="Return to Live Website"
           >
@@ -212,6 +255,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
                 / Studio Executive CMS
               </span>
             </div>
+            {hasUnsavedChanges && (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-[11px] font-label-small font-bold uppercase tracking-wider shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                <span>Unsaved changes</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -304,6 +353,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
             <span className={`text-[11px] font-strong ${activeTab === 'estimator' ? 'text-white/90' : 'text-[#71717A]'}`}>
               ({(storeState.savedQuotes || []).length})
             </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectTab('history')}
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-label-small font-medium uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'history'
+                ? 'bg-[#202526] text-white shadow-md'
+                : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
+            }`}
+          >
+            <History className="w-3.5 h-3.5 text-[#D8A9A8]" />
+            <span>History</span>
           </button>
 
           <button
@@ -469,6 +531,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
                   estimatorSettings={storeState.estimatorSettings}
                 />
               )}
+              {activeTab === 'history' && <AdminHistoryTab />}
               {activeTab === 'security' && <AdminSecurityTab onLockSession={onExit} />}
             </div>
 
@@ -566,6 +629,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onExit }) => {
                 estimatorSettings={storeState.estimatorSettings}
               />
             )}
+            {activeTab === 'history' && <AdminHistoryTab />}
             {activeTab === 'security' && <AdminSecurityTab onLockSession={onExit} />}
           </>
         )}

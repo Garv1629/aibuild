@@ -6,19 +6,25 @@
   "homepage": "https://garv1629.github.io/aibuild",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
+    "start": "node server/index.ts",
+    "server": "node server/index.ts",
     "build": "vite build",
-    "docs": "git add -u",
+    "docs": "vite build --outDir docs",
     "build:docs": "vite build --outDir docs",
     "preview": "vite preview",
     "deploy": "gh-pages -d docs",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:draft": "tsx scripts/verify-draft-publish.ts",
+    "test:history": "tsx scripts/verify-version-history.ts",
+    "test:deletion": "tsx scripts/verify-safe-deletion.ts",
+    "test:ordering": "tsx scripts/verify-drag-drop-ordering.ts",
+    "test:visibility": "tsx scripts/verify-published-hidden.ts",
+    "test:stress": "tsx scripts/verify-stress-readiness.ts",
+    "test:e2e": "tsx scripts/verify-e2e-suite.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
-    "@tailwindcss/vite": "^4.1.14",
-    "@types/canvas-confetti": "^1.9.0",
-    "@vitejs/plugin-react": "^5.0.4",
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "lenis": "^1.3.26",
@@ -26,11 +32,13 @@
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "recharts": "^3.10.1",
-    "vite": "^6.2.3"
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
     "gh-pages": "^6.3.0",

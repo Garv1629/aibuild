@@ -42,6 +42,7 @@ export const MarqueeSection: React.FC<MarqueeSectionProps> = ({ content }) => {
   return (
     <section
       ref={sectionRef}
+      aria-hidden="true"
       className="relative w-full py-16 sm:py-24 bg-transparent overflow-hidden flex flex-col gap-6 select-none z-10"
     >
       {/* Subtle edge fades */}

@@ -86,15 +86,29 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollTo } = useSmoothScroll();
 
-  // Normalize project categories to ensure consistent matching
+  // Normalize project categories and ensure stable display_order sorting
   const normalizedProjects = useMemo(() => {
     const list = Array.isArray(projects) ? projects : [];
     return list
-      .filter((p): p is ProjectItem => Boolean(p && typeof p === 'object'))
+      .filter((p): p is ProjectItem =>
+        Boolean(
+          p &&
+            typeof p === 'object' &&
+            !p.isDeleted &&
+            !p.deletedAt &&
+            !p.isHidden &&
+            (p.status === 'published' || (!p.status && (p.published ?? true))) &&
+            p.status !== 'draft' &&
+            p.status !== 'unpublished' &&
+            p.status !== 'hidden' &&
+            p.status !== 'archived'
+        )
+      )
       .map((p) => ({
         ...p,
         category: normalizeProjectCategory(p.category),
-      }));
+      }))
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
   }, [projects]);
 
   // Counts per discipline

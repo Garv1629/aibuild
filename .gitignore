@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+check.js
+find_small_text.js
+deploy.ps1
+commit_msg.txt
+sync.js
+*.cjs

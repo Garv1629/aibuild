@@ -8,10 +8,12 @@ interface ReviewsSectionProps {
   reviews: PublicReview[];
 }
 
-export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
+export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews = [] }) => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
-  const approvedReviews = reviews.filter((r) => r.status === 'approved');
+  const approvedReviews = (Array.isArray(reviews) ? [...reviews] : [])
+    .filter((r) => r && r.status === 'approved' && !r.isDeleted && !r.deletedAt && !r.isHidden)
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
   const count = approvedReviews.length;
   const avg =
     count > 0

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { WebsiteContent } from '../types';
 import { playStudioChime } from '../services/adminStore';
+import { copyToClipboard } from '../utils/helpers';
 import { useSmoothScroll } from './SmoothScrollProvider';
 
 interface FooterSectionProps {
@@ -21,6 +22,7 @@ interface FooterSectionProps {
   onOpenContact?: (serviceType?: string) => void;
   onOpenPrice?: () => void;
   onOpenEstimator?: () => void;
+  onOpenLegal?: (tab: 'privacy' | 'terms') => void;
   onSecretAdminTrigger?: () => void;
 }
 
@@ -29,6 +31,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
   onOpenContact,
   onOpenPrice,
   onOpenEstimator,
+  onOpenLegal,
   onSecretAdminTrigger,
 }) => {
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -63,18 +66,10 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
   const handleCopyEmail = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(email);
-      }
-      setCopiedEmail(true);
-      playStudioChime('success');
-      setTimeout(() => setCopiedEmail(false), 2500);
-    } catch {
-      // Fallback
-      setCopiedEmail(true);
-      setTimeout(() => setCopiedEmail(false), 2500);
-    }
+    await copyToClipboard(email);
+    setCopiedEmail(true);
+    playStudioChime('success');
+    setTimeout(() => setCopiedEmail(false), 2500);
   };
 
   const { scrollTo } = useSmoothScroll();
@@ -306,10 +301,32 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           </FadeIn>
         </div>
 
-        {/* Bottom Bar with Copyright & Back to Top */}
-        <div className="pt-8 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm font-label-small font-medium text-[#71717A]">
-          <div className="flex items-center gap-2">
+        {/* Bottom Bar with Copyright, Legal & Back to Top */}
+        <div className="pt-8 border-t border-[#E5E7EB] flex flex-col md:flex-row items-center justify-between gap-4 text-xs sm:text-sm font-label-small font-medium text-[#71717A]">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-2">
             <span>&copy; {new Date().getFullYear()} AI BUILD STUDIO. ALL RIGHTS RESERVED.</span>
+            <span className="hidden sm:inline text-[#CBDCDE]">•</span>
+            <button
+              type="button"
+              onClick={() => {
+                playStudioChime('click');
+                onOpenLegal?.('privacy');
+              }}
+              className="text-[#596769] hover:text-[#202526] transition-colors cursor-pointer underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[#202526]"
+            >
+              Privacy Policy
+            </button>
+            <span className="text-[#CBDCDE]">•</span>
+            <button
+              type="button"
+              onClick={() => {
+                playStudioChime('click');
+                onOpenLegal?.('terms');
+              }}
+              className="text-[#596769] hover:text-[#202526] transition-colors cursor-pointer underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[#202526]"
+            >
+              Terms of Service
+            </button>
           </div>
 
           <div className="flex items-center gap-6">

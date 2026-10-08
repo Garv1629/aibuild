@@ -20,6 +20,26 @@ export interface ServiceItem {
   process?: string[];
   turnaround?: string;
   deliverables?: string[];
+  displayOrder?: number;
+  status?: 'published' | 'hidden' | 'draft' | 'unpublished' | 'archived';
+  isHidden?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+}
+
+export type ContentPublishStatus = 'draft' | 'published' | 'modified';
+
+export interface SiteSettingsAdminState {
+  published: WebsiteContent;
+  draft: WebsiteContent;
+  current: WebsiteContent;
+  status: ContentPublishStatus;
+  publishedAt: string | null;
+  createdAt?: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+  hasDraftChanges: boolean;
 }
 
 export interface ProjectItem {
@@ -35,10 +55,24 @@ export interface ProjectItem {
   mediaType?: 'image' | 'video';
   mediaItems?: ServiceMediaItem[];
   liveUrl?: string;
+  description?: string;
+  tags?: string[];
   techStack?: string[];
   featured?: boolean;
   aspectRatio?: 'auto' | '16:9' | '9:16';
+  displayOrder?: number;
+  status?: 'draft' | 'published' | 'unpublished' | 'hidden' | 'archived';
+  published?: boolean;
+  publishedAt?: string | null;
+  isHidden?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
+
 
 export interface WebsiteContent {
   hero: {
@@ -130,9 +164,17 @@ export interface PublicReview {
   rating: number; // 1 to 5
   comment: string;
   date: string;
-  status: 'approved' | 'pending' | 'rejected';
+  status: 'approved' | 'pending' | 'rejected' | 'hidden' | 'archived';
   isFeatured: boolean;
   projectReferenced?: string;
+  displayOrder?: number;
+  isHidden?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface PublicMessage {
@@ -145,6 +187,10 @@ export interface PublicMessage {
   message: string;
   date: string;
   status: 'unread' | 'read' | 'replied' | 'archived';
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface EstimatorCategoryUgcAds {
@@ -198,6 +244,10 @@ export interface EstimatorSettings {
     aiVideo: EstimatorCategoryAiVideo;
     webAutomation: EstimatorCategoryWebAutomation;
   };
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface SavedScopeQuote {
@@ -210,7 +260,24 @@ export interface SavedScopeQuote {
   deliverables: string[];
   notes?: string;
   createdAt: string;
-  status: 'draft' | 'sent' | 'accepted' | 'declined';
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  status: 'draft' | 'sent' | 'accepted' | 'declined' | 'archived';
+  isDeleted?: boolean;
+  deletedAt?: string | null;
 }
 
-export type AdminTab = 'projects' | 'content' | 'reviews' | 'messages' | 'estimator' | 'security' | 'preview';
+export interface CmsVersionItem {
+  id: string;
+  versionNumber: number;
+  entityType: 'site_content' | 'project' | 'review' | 'estimator' | 'services';
+  entityId?: string;
+  title: string;
+  summary: string;
+  content: any;
+  author: string;
+  createdAt: string;
+}
+
+export type AdminTab = 'projects' | 'content' | 'history' | 'reviews' | 'messages' | 'estimator' | 'security' | 'preview';

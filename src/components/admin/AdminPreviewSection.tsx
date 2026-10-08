@@ -542,11 +542,9 @@ export const AdminPreviewSection: React.FC<AdminPreviewSectionProps> = ({
             `Scope Summary:\n\n${scopeData.summary}`
           );
         }}
-        estimatorSettings={storeState.estimatorSettings}
       />
 
       <ProjectModal
-        isOpen={Boolean(selectedProject)}
         project={selectedProject}
         onClose={() => setSelectedProject(null)}
         onOpenContact={handleOpenContact}

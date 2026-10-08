@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, ArrowUpRight } from 'lucide-react';
 import { ContactButton } from './ContactButton';
@@ -93,6 +93,9 @@ export const PriceModal: React.FC<PriceModalProps> = ({
           {/* Modal Container with Frosted Glassmorphism and Grain */}
           <motion.div
             data-lenis-prevent
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="price-modal-title"
             initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
@@ -103,9 +106,10 @@ export const PriceModal: React.FC<PriceModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer z-20"
+              aria-label="Close pricing modal"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
 
             {/* Header */}
@@ -114,7 +118,7 @@ export const PriceModal: React.FC<PriceModalProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" />
                 Transparent Studio Rates
               </div>
-              <h3 className="font-heading font-normal text-3xl sm:text-5xl uppercase tracking-tight text-[#202526] mt-1">
+              <h3 id="price-modal-title" className="font-heading font-normal text-3xl sm:text-5xl uppercase tracking-tight text-[#202526] mt-1">
                 Pricing &amp; Packages
               </h3>
               <p className="text-sm sm:text-base text-[#596769] mt-2 font-body font-normal">

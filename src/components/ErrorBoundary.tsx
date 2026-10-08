@@ -11,10 +11,6 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public declare state: State;
-  public declare props: Props;
-  public declare setState: (state: Partial<State> | ((prevState: State) => Partial<State>)) => void;
-
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -39,17 +35,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private handleResetAndReload = () => {
     try {
-      localStorage.removeItem('ai_build_projects_v3');
-      localStorage.removeItem('ai_build_projects_v2');
-      localStorage.removeItem('ai_build_content_v2');
-      localStorage.removeItem('ai_build_reviews_v2');
-      localStorage.removeItem('ai_build_messages_v2');
-      localStorage.removeItem('ai_build_quotes_v2');
-      localStorage.removeItem('ai_build_estimator_settings_v2');
+      localStorage.clear();
+      sessionStorage.clear();
     } catch {
       // Ignore storage errors
     }
-    window.location.reload();
+    window.location.href = window.location.origin + window.location.pathname;
   };
 
   public render() {
@@ -70,9 +61,19 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
 
             {this.state.error && (
-              <div className="w-full bg-white/80 border border-[#E5E7EB] rounded-xl p-3.5 mb-6 text-left overflow-x-auto text-xs font-mono text-[#D8A9A8]">
+              <div className="w-full bg-white/95 border border-[#E5E7EB] rounded-xl p-4 mb-6 text-left overflow-x-auto text-xs font-mono text-[#D8A9A8]">
                 <p className="font-semibold text-[#202526] mb-1 font-sans-clean">Error Details:</p>
-                <code>{this.state.error.toString()}</code>
+                <div className="text-red-600 font-bold mb-2">{this.state.error.toString()}</div>
+                {this.state.error.stack && (
+                  <pre className="text-[10px] text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto bg-gray-50 p-2 rounded border border-gray-200">
+                    {this.state.error.stack}
+                  </pre>
+                )}
+                {this.state.errorInfo?.componentStack && (
+                  <pre className="text-[10px] text-gray-500 whitespace-pre-wrap max-h-32 overflow-y-auto bg-gray-50 p-2 rounded border border-gray-200 mt-2">
+                    {this.state.errorInfo.componentStack}
+                  </pre>
+                )}
               </div>
             )}
 

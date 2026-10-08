@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { EstimatorSettings } from '../types';
 import { adminStore, playStudioChime } from '../services/adminStore';
+import { copyToClipboard } from '../utils/helpers';
 
 interface EstimatorModalProps {
   isOpen: boolean;
@@ -272,9 +273,9 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
     settings,
   ]);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const summaryText = `AI Build Scope Estimate\nDiscipline: ${estimate.projectTypeName}\nInvestment Range: ${estimate.budgetRange}\nEstimated Timeline: ${estimate.timeline}\nIncluded Deliverables:\n${estimate.deliverables.map((d) => `• ${d}`).join('\n')}`;
-    navigator.clipboard.writeText(summaryText);
+    await copyToClipboard(summaryText);
     setCopied(true);
     playStudioChime('success');
     setTimeout(() => setCopied(false), 2000);
@@ -330,6 +331,9 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
           {/* Modal Container with Frosted Glass and Grain */}
           <motion.div
             data-lenis-prevent
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="estimator-modal-title"
             initial={{ opacity: 0, scale: 0.95, y: 25 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 25 }}
@@ -340,14 +344,14 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
             <div className="flex items-center justify-between pb-4 border-b border-[#B8C1C0]/60 relative z-10">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-[#D8A9A8]/30 border border-[#D8A9A8] flex items-center justify-center text-[#202526]">
-                  <Sliders className="w-4 h-4 text-[#202526]" />
+                  <Sliders className="w-4 h-4 text-[#202526]" aria-hidden="true" />
                 </div>
                 <div>
                   <span className="text-xs font-mono uppercase tracking-[0.08em] text-[#596769] font-semibold flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8] animate-pulse" aria-hidden="true" />
                     Real-time Scope Engine
                   </span>
-                  <h3 className="font-heading text-xl sm:text-2xl uppercase tracking-tight text-[#202526] leading-none">
+                  <h3 id="estimator-modal-title" className="font-heading text-xl sm:text-2xl uppercase tracking-tight text-[#202526] leading-none">
                     {settings.modalTitle || 'AI Project Cost & Timeline Estimator'}
                   </h3>
                 </div>
@@ -359,18 +363,20 @@ export const EstimatorModal: React.FC<EstimatorModalProps> = ({
                     type="button"
                     onClick={resetConfig}
                     title="Reset to defaults"
-                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#E7EBE9] hover:bg-[#AFC7C5] text-xs font-mono uppercase tracking-wider text-[#596769] hover:text-[#202526] transition-colors border border-[#B8C1C0] cursor-pointer"
+                    aria-label="Reset scope configuration to defaults"
+                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#E7EBE9] hover:bg-[#AFC7C5] text-xs font-mono uppercase tracking-wider text-[#596769] hover:text-[#202526] transition-colors border border-[#B8C1C0] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
                   >
-                    <RotateCcw className="w-3 h-3" />
+                    <RotateCcw className="w-3 h-3" aria-hidden="true" />
                     <span>Reset</span>
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer"
+                  aria-label="Close cost estimator modal"
+                  className="p-2 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             </div>

@@ -149,6 +149,9 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
 
           {/* Dialog Container with Frosted Glass and Noise Grain */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-auth-modal-title"
             data-lenis-prevent
             initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -160,14 +163,15 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full text-[#71717A] hover:text-[#202526] hover:bg-black/[0.05] transition-all z-20 cursor-pointer"
+              aria-label="Close admin authentication modal"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full text-[#71717A] hover:text-[#202526] hover:bg-black/[0.05] transition-all z-20 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#202526]"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
 
             {/* Ambient Lighting */}
-            <div className="absolute -top-24 -right-24 w-60 h-60 bg-[#D8A9A8]/20 blur-[90px] rounded-full pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-[#CBDCDE]/30 blur-[90px] rounded-full pointer-events-none" />
+            <div className="absolute -top-24 -right-24 w-60 h-60 bg-[#D8A9A8]/20 blur-[90px] rounded-full pointer-events-none" aria-hidden="true" />
+            <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-[#CBDCDE]/30 blur-[90px] rounded-full pointer-events-none" aria-hidden="true" />
 
             {/* Header */}
             <div className="text-center mb-7 relative z-10">
@@ -190,7 +194,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" />
                 Owner Security Clearance
               </div>
-              <h3 className="font-bezoria font-normal text-2xl sm:text-3xl uppercase tracking-wider text-[#202526]">
+              <h3 id="admin-auth-modal-title" className="font-bezoria font-normal text-2xl sm:text-3xl uppercase tracking-wider text-[#202526]">
                 Studio Owner Portal
               </h3>
               <p className="text-xs sm:text-[13px] text-[#596769] mt-1.5 max-w-xs mx-auto leading-relaxed">
@@ -205,14 +209,15 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
+                role="alert"
                 className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center gap-3 text-rose-700 font-sans-clean text-sm shadow-sm"
               >
-                <Timer className="w-5 h-5 text-rose-500 animate-spin" style={{ animationDuration: '3s' }} />
+                <Timer className="w-5 h-5 text-rose-500 animate-spin" style={{ animationDuration: '3s' }} aria-hidden="true" />
                 <span>Quarantined for <strong className="text-[#202526] text-base font-strong font-normal">{lockoutSec}s</strong></span>
               </motion.div>
             ) : (
               /* PIN Indicator Dots */
-              <div className="flex items-center justify-center gap-3.5 mb-5 relative z-10">
+              <div className="flex items-center justify-center gap-3.5 mb-5 relative z-10" aria-label={`PIN entered: ${pin.length} of 4 digits`} role="status">
                 {[0, 1, 2, 3].map((index) => {
                   const filled = pin.length > index;
                   return (
@@ -244,9 +249,10 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
+                role="alert"
                 className="flex items-center justify-center gap-1.5 text-xs text-rose-600 mb-4 font-medium"
               >
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 <span>{errorMessage}</span>
               </motion.div>
             )}
@@ -257,10 +263,12 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
             }`}>
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((key) => {
                 const isAction = key === 'C' || key === '⌫';
+                const keyLabel = key === 'C' ? 'Clear PIN' : key === '⌫' ? 'Delete last digit' : `Digit ${key}`;
                 return (
                   <button
                     key={key}
                     type="button"
+                    aria-label={keyLabel}
                     disabled={isLocked || isVerifying}
                     onClick={() => {
                       if (key === 'C') {
@@ -273,7 +281,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
                         handleDigit(key);
                       }
                     }}
-                    className={`h-13 rounded-2xl flex items-center justify-center text-lg transition-all duration-200 cursor-pointer select-none ${
+                    className={`h-13 rounded-2xl flex items-center justify-center text-lg transition-all duration-200 cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-[#202526] ${
                       isAction
                         ? 'bg-black/[0.03] text-[#71717A] hover:bg-black/[0.07] hover:text-[#202526] border border-[#E5E7EB] active:scale-95 text-xs font-label-small uppercase tracking-widest'
                         : 'bg-white text-[#202526] hover:bg-[#F3F4F6] hover:border-[#D8A9A8] border border-[#E5E7EB] active:scale-95 shadow-sm hover:shadow-md font-strong'

@@ -38,7 +38,9 @@ import {
   Percent,
 } from 'lucide-react';
 import { adminStore, AdminStoreState, playStudioChime } from '../../services/adminStore';
+import { unsavedChanges } from '../../services/unsavedChanges';
 import { SavedScopeQuote, PublicMessage, EstimatorSettings } from '../../types';
+import { copyToClipboard } from '../../utils/helpers';
 
 type ServiceCategory = 'ai-video' | 'ugc-ads' | 'web-automation';
 
@@ -64,11 +66,37 @@ export const AdminEstimatorTab: React.FC<AdminEstimatorTabProps> = ({
   const [settingsForm, setSettingsForm] = useState<EstimatorSettings>(() => {
     return propSettings || adminStore.getEstimatorSettings();
   });
+  const [savedSettingsBaseline, setSavedSettingsBaseline] = useState<EstimatorSettings>(() => {
+    return propSettings || adminStore.getEstimatorSettings();
+  });
+
+  const isSettingsDirty = useMemo(() => {
+    try {
+      return JSON.stringify(settingsForm) !== JSON.stringify(savedSettingsBaseline);
+    } catch {
+      return false;
+    }
+  }, [settingsForm, savedSettingsBaseline]);
+
+  useEffect(() => {
+    if (activeSubView === 'cms-config' && isSettingsDirty) {
+      unsavedChanges.setDirty('estimator-settings', true, {
+        label: 'Estimator Rates Configuration',
+        onDiscard: () => setSettingsForm(savedSettingsBaseline),
+      });
+    } else {
+      unsavedChanges.setDirty('estimator-settings', false);
+    }
+    return () => {
+      unsavedChanges.setDirty('estimator-settings', false);
+    };
+  }, [activeSubView, isSettingsDirty, savedSettingsBaseline]);
 
   // Sync if prop updates
   useEffect(() => {
     if (propSettings) {
       setSettingsForm(propSettings);
+      setSavedSettingsBaseline(propSettings);
     }
   }, [propSettings]);
 
@@ -359,63 +387,85 @@ export const AdminEstimatorTab: React.FC<AdminEstimatorTabProps> = ({
     return lines.filter(Boolean).join('\n');
   }, [estimate, clientName, clientEmail, clientNotes, turnaroundSpeed]);
 
-  const handleCopyProposal = () => {
-    navigator.clipboard.writeText(formattedProposal);
+  const handleCopyProposal = async () => {
+    await copyToClipboard(formattedProposal);
     setCopiedProposal(true);
     playStudioChime('success');
     setTimeout(() => setCopiedProposal(false), 2500);
   };
 
-  const handleCopySummary = () => {
+  const handleCopySummary = async () => {
     const summary = `AI Build Scope Quote | ${estimate.categoryName}\nBudget: ${estimate.budgetRange}\nTimeline: ${estimate.timeline}\nDeliverables:\n${estimate.deliverables.map((d) => `• ${d}`).join('\n')}`;
-    navigator.clipboard.writeText(summary);
+    await copyToClipboard(summary);
     setCopiedSummary(true);
     playStudioChime('success');
     setTimeout(() => setCopiedSummary(false), 2500);
   };
 
-  const handleSaveToArchive = () => {
+  const handleSaveToArchive = async () => {
     const finalClientName = clientName.trim() || 'Private Client';
-    adminStore.addSavedQuote({
-      clientName: finalClientName,
-      clientEmail: clientEmail.trim() || undefined,
-      serviceCategory: estimate.categoryName,
-      budgetRange: estimate.budgetRange,
-      turnaroundTime: estimate.timeline,
-      deliverables: estimate.deliverables,
-      notes: clientNotes.trim() || undefined,
-      status: 'draft',
-    });
-    setSaveSuccess(true);
-    playStudioChime('success');
-    setTimeout(() => setSaveSuccess(false), 2500);
-  };
-
-  const handleDeleteSavedQuote = (id: string, name: string) => {
-    if (window.confirm(`Delete saved quote for "${name}"?`)) {
-      adminStore.deleteSavedQuote(id);
-      playStudioChime('alert');
+    try {
+      await adminStore.addSavedQuote({
+        clientName: finalClientName,
+        clientEmail: clientEmail.trim() || undefined,
+        serviceCategory: estimate.categoryName,
+        budgetRange: estimate.budgetRange,
+        turnaroundTime: estimate.timeline,
+        deliverables: estimate.deliverables,
+        notes: clientNotes.trim() || undefined,
+        status: 'draft',
+      });
+      setSaveSuccess(true);
+      playStudioChime('success');
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err: any) {
+      alert(`Save Error: ${err.message || 'Unable to save quote.'}`);
     }
   };
 
-  const handleUpdateQuoteStatus = (id: string, newStatus: SavedScopeQuote['status']) => {
-    adminStore.updateSavedQuote(id, { status: newStatus });
-    playStudioChime('click');
+  const handleDeleteSavedQuote = async (id: string, name: string) => {
+    if (window.confirm(`Delete saved quote for "${name}"?`)) {
+      try {
+        await adminStore.deleteSavedQuote(id);
+        playStudioChime('alert');
+      } catch (err: any) {
+        alert(`Delete Error: ${err.message || 'Unable to delete quote.'}`);
+      }
+    }
+  };
+
+  const handleUpdateQuoteStatus = async (id: string, newStatus: SavedScopeQuote['status']) => {
+    try {
+      await adminStore.updateSavedQuote(id, { status: newStatus });
+      playStudioChime('click');
+    } catch (err: any) {
+      alert(`Update Error: ${err.message || 'Unable to update status.'}`);
+    }
   };
 
   // --- CMS CONFIGURATION ACTIONS ---
-  const handleSaveSettings = () => {
-    adminStore.updateEstimatorSettings(settingsForm);
-    setConfigSaveSuccess(true);
-    playStudioChime('success');
-    setTimeout(() => setConfigSaveSuccess(false), 3000);
+  const handleSaveSettings = async () => {
+    try {
+      await adminStore.updateEstimatorSettings(settingsForm);
+      setSavedSettingsBaseline(settingsForm);
+      unsavedChanges.setDirty('estimator-settings', false);
+      setConfigSaveSuccess(true);
+      playStudioChime('success');
+      setTimeout(() => setConfigSaveSuccess(false), 3000);
+    } catch (err: any) {
+      alert(`Save Error: ${err.message || 'Unable to save estimator settings. Your inputs are preserved.'}`);
+    }
   };
 
-  const handleResetSettingsToDefault = () => {
+  const handleResetSettingsToDefault = async () => {
     if (window.confirm('Reset all scope estimator pricing and discipline settings to factory defaults?')) {
-      adminStore.resetEstimatorSettings();
-      setSettingsForm(adminStore.getEstimatorSettings());
-      playStudioChime('alert');
+      try {
+        await adminStore.resetEstimatorSettings();
+        setSettingsForm(adminStore.getEstimatorSettings());
+        playStudioChime('alert');
+      } catch (err: any) {
+        alert(`Reset Error: ${err.message || 'Unable to reset settings.'}`);
+      }
     }
   };
 
@@ -1222,9 +1272,9 @@ export const AdminEstimatorTab: React.FC<AdminEstimatorTabProps> = ({
                   <div className="pt-3 border-t border-[#E5E7EB] flex items-center justify-between gap-2">
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         const text = `AI Build Scope Quote for ${quote.clientName}\nCategory: ${quote.serviceCategory}\nEstimate: ${quote.budgetRange}\nTimeline: ${quote.turnaroundTime}\nDeliverables:\n${quote.deliverables.map((d) => `• ${d}`).join('\n')}${quote.notes ? `\nNotes: ${quote.notes}` : ''}`;
-                        navigator.clipboard.writeText(text);
+                        await copyToClipboard(text);
                         playStudioChime('success');
                       }}
                       className="px-3.5 py-1.5 rounded-full bg-[#F9FAFB] hover:bg-[#F3F4F6] text-[#202526] text-xs font-label-small uppercase tracking-wider border border-[#E5E7EB] transition-all flex items-center gap-1.5 cursor-pointer"
@@ -1918,15 +1968,30 @@ export const AdminEstimatorTab: React.FC<AdminEstimatorTabProps> = ({
           </div>
 
           {/* Sticky CMS Action Bar */}
-          <div className="p-5 rounded-3xl bg-white border-2 border-[#202526] shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className={`p-5 rounded-3xl bg-white border-2 transition-all shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 ${
+            isSettingsDirty ? 'border-amber-400 ring-2 ring-amber-300/40' : 'border-[#202526]'
+          }`}>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#D8A9A8]/30 flex items-center justify-center">
-                <Save className="w-4 h-4 text-[#202526]" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                isSettingsDirty ? 'bg-amber-100' : 'bg-[#D8A9A8]/30'
+              }`}>
+                <Save className={`w-4 h-4 ${isSettingsDirty ? 'text-amber-700' : 'text-[#202526]'}`} />
               </div>
               <div>
-                <span className="text-xs font-strong text-[#202526] block">
-                  Publish Estimator Rate Card Changes
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-strong text-[#202526] block">
+                    Publish Estimator Rate Card Changes
+                  </span>
+                  {isSettingsDirty ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-200 text-amber-900 text-[10px] font-label-small uppercase tracking-wider font-bold">
+                      ● Unsaved Changes
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-label-small uppercase tracking-wider font-semibold">
+                      ✓ Saved
+                    </span>
+                  )}
+                </div>
                 <span className="text-[11px] text-[#596769]">
                   Updates live calculations across both public visitor view and admin proposal builder.
                 </span>
@@ -1956,7 +2021,14 @@ export const AdminEstimatorTab: React.FC<AdminEstimatorTabProps> = ({
               <button
                 type="button"
                 onClick={handleSaveSettings}
-                className="px-6 py-2.5 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-105 active:scale-95"
+                disabled={!isSettingsDirty && !configSaveSuccess}
+                className={`px-6 py-2.5 rounded-full text-xs font-btn font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md ${
+                  configSaveSuccess
+                    ? 'bg-emerald-600 text-white cursor-default'
+                    : isSettingsDirty
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white cursor-pointer hover:scale-105 active:scale-95 ring-2 ring-amber-300/60'
+                    : 'bg-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
+                }`}
               >
                 {configSaveSuccess ? (
                   <>
@@ -1965,8 +2037,8 @@ export const AdminEstimatorTab: React.FC<AdminEstimatorTabProps> = ({
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 text-[#D8A9A8]" />
-                    <span>Save CMS Rates</span>
+                    <Save className={`w-4 h-4 ${isSettingsDirty ? 'text-white' : 'text-[#D8A9A8]'}`} />
+                    <span>{isSettingsDirty ? 'Save CMS Rates' : 'Rates Saved'}</span>
                   </>
                 )}
               </button>

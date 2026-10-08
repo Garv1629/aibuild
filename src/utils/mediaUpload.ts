@@ -1,7 +1,8 @@
 /**
  * Utility functions for handling direct file uploads (Images & Videos)
- * Converts user files into base64 Data URLs with automatic optimization.
+ * Automatically uploads to backend storage (Supabase Storage / Persistent CDN)
  */
+import { api } from '../services/api';
 
 export function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -19,66 +20,84 @@ export function readFileAsDataUrl(file: File): Promise<string> {
 }
 
 /**
- * Optimizes an uploaded image file into a crisp, compressed Data URL to prevent local storage quota overflow
+ * Optimizes an uploaded image file and persists to Supabase Storage / Server Storage
  */
 export async function processImageUpload(file: File, maxWidth = 1600, maxHeight = 1600, quality = 0.85): Promise<string> {
-  // If it's a GIF or SVG, do not run canvas compression to preserve animation and vector crispness
+  // If it's a GIF or SVG, read directly and upload
+  let dataUrl: string;
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') {
-    return readFileAsDataUrl(file);
+    dataUrl = await readFileAsDataUrl(file);
+  } else {
+    const rawDataUrl = await readFileAsDataUrl(file);
+    dataUrl = await new Promise<string>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          resolve(rawDataUrl);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const hasAlpha = file.type === 'image/png';
+        const outputType = hasAlpha ? 'image/png' : 'image/jpeg';
+        resolve(canvas.toDataURL(outputType, hasAlpha ? undefined : quality));
+      };
+      img.onerror = () => resolve(rawDataUrl);
+      img.src = rawDataUrl;
+    });
+  }
+
+  // Upload to persistent storage (Supabase Storage / Server Disk)
+  try {
+    const res = await api.uploadMedia(dataUrl, file.name, file.type);
+    if (res && res.url) {
+      return res.url;
+    }
+  } catch (err) {
+    console.warn('[MediaUpload] Server upload fallback to data URL:', err);
+  }
+
+  return dataUrl;
+}
+
+/**
+ * Reads uploaded video file and persists to Supabase Storage / Server Storage
+ */
+export async function processVideoUpload(file: File): Promise<string> {
+  if (file.size > 50 * 1024 * 1024) {
+    throw new Error('Video file size exceeds 50MB. Please upload an optimized web video clip (MP4/WebM).');
   }
 
   const rawDataUrl = await readFileAsDataUrl(file);
 
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      let width = img.width;
-      let height = img.height;
-
-      if (width > maxWidth || height > maxHeight) {
-        if (width > height) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        } else {
-          width = Math.round((width * maxHeight) / height);
-          height = maxHeight;
-        }
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        resolve(rawDataUrl);
-        return;
-      }
-
-      ctx.drawImage(img, 0, 0, width, height);
-
-      // Output as optimized JPEG or WEBP depending on transparency
-      const hasAlpha = file.type === 'image/png';
-      const outputType = hasAlpha ? 'image/png' : 'image/jpeg';
-      const optimizedUrl = canvas.toDataURL(outputType, hasAlpha ? undefined : quality);
-
-      resolve(optimizedUrl);
-    };
-    img.onerror = () => resolve(rawDataUrl);
-    img.src = rawDataUrl;
-  });
-}
-
-/**
- * Reads uploaded video file (MP4, WebM, MOV, etc.) into Data URL with validation
- */
-export async function processVideoUpload(file: File): Promise<string> {
-  // Max recommended size for client-side storage is ~15MB
-  if (file.size > 25 * 1024 * 1024) {
-    throw new Error('Video file size exceeds 25MB. Please upload an optimized web video clip (MP4/WebM).');
+  try {
+    const res = await api.uploadMedia(rawDataUrl, file.name, file.type);
+    if (res && res.url) {
+      return res.url;
+    }
+  } catch (err) {
+    console.warn('[MediaUpload] Video upload fallback to data URL:', err);
   }
 
-  return readFileAsDataUrl(file);
+  return rawDataUrl;
 }
 
 /**
@@ -109,6 +128,7 @@ export function isVideoMedia(url: string | undefined | null): boolean {
     clean.includes('.mov?') ||
     clean.includes('mixkit.co/videos') ||
     clean.includes('/videos/') ||
-    clean.includes('video/')
+    clean.includes('video/') ||
+    clean.includes('supabase.co/storage/v1/object/public/cms-media')
   );
 }

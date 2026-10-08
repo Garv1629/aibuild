@@ -103,13 +103,14 @@ const CardMediaSlot: React.FC<CardMediaSlotProps> = ({ src, alt, isProjectVertic
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `View ${alt} in case study details` : undefined}
       onKeyDown={(e) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick();
         }
       }}
-      className={`w-full aspect-[16/10] overflow-hidden rounded-2xl bg-[#181C1D] border border-[#E5E7EB]/80 hover:border-[#CBDCDE] group/slot shadow-xs relative flex items-center justify-center transition-all duration-300 ${
+      className={`w-full aspect-[16/10] overflow-hidden rounded-2xl bg-[#181C1D] border border-[#E5E7EB]/80 hover:border-[#CBDCDE] group/slot shadow-xs relative flex items-center justify-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526] ${
         onClick ? 'cursor-pointer hover:shadow-md' : ''
       }`}
     >

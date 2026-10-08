@@ -9,22 +9,29 @@ import { FooterSection } from './components/FooterSection';
 import { GlobalScrollCharacter } from './components/GlobalScrollCharacter';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
 import { InteractiveCursorGrid } from './components/InteractiveCursorGrid';
-import { ContactModal } from './components/ContactModal';
-import { PriceModal } from './components/PriceModal';
-import { ProjectModal } from './components/ProjectModal';
-import { EstimatorModal } from './components/EstimatorModal';
 import { MobileNavDrawer } from './components/MobileNavDrawer';
-import { AdminAuthModal } from './components/admin/AdminAuthModal';
-import { AdminDashboard } from './components/admin/AdminDashboard';
 import { SmoothScrollProvider } from './components/SmoothScrollProvider';
 import { ProjectItem } from './types';
 import { adminStore, AdminStoreState } from './services/adminStore';
 import { isSessionActive } from './services/security';
 
+// Lazy-loaded modals and CMS dashboard to optimize initial bundle, FCP, LCP and TBT
+const ContactModal = React.lazy(() => import('./components/ContactModal').then((m) => ({ default: m.ContactModal })));
+const PriceModal = React.lazy(() => import('./components/PriceModal').then((m) => ({ default: m.PriceModal })));
+const ProjectModal = React.lazy(() => import('./components/ProjectModal').then((m) => ({ default: m.ProjectModal })));
+const EstimatorModal = React.lazy(() => import('./components/EstimatorModal').then((m) => ({ default: m.EstimatorModal })));
+const LegalModal = React.lazy(() => import('./components/LegalModal').then((m) => ({ default: m.LegalModal })));
+const AdminAuthModal = React.lazy(() => import('./components/admin/AdminAuthModal').then((m) => ({ default: m.AdminAuthModal })));
+const AdminDashboard = React.lazy(() => import('./components/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+import type { LegalTab } from './components/LegalModal';
+export type { LegalTab };
+
 export default function App() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isPriceOpen, setIsPriceOpen] = useState(false);
   const [isEstimatorOpen, setIsEstimatorOpen] = useState(false);
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
+  const [legalTab, setLegalTab] = useState<LegalTab>('privacy');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
 
@@ -198,6 +205,11 @@ export default function App() {
     );
   };
 
+  const handleOpenLegal = (tab: LegalTab = 'privacy') => {
+    setLegalTab(tab);
+    setIsLegalOpen(true);
+  };
+
   const handleSelectProject = (project: ProjectItem) => setSelectedProject(project);
   const handleCloseProject = () => setSelectedProject(null);
 
@@ -230,13 +242,30 @@ export default function App() {
 
   // If in Admin Dashboard view, render the CMS
   if (isAdminViewOpen) {
-    return <AdminDashboard onExit={handleExitAdmin} />;
+    return (
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen w-full bg-[#FAF7F2] flex items-center justify-center text-[#202526] font-mono text-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#D8A9A8] animate-ping" />
+              <span>Loading Studio CMS...</span>
+            </div>
+          </div>
+        }
+      >
+        <AdminDashboard onExit={handleExitAdmin} />
+      </React.Suspense>
+    );
   }
 
   return (
     <SmoothScrollProvider>
+      <a href="#main-content" className="skip-to-content-link">
+        Skip to main content
+      </a>
       <main
-        className="relative w-full max-w-[100vw] bg-[#FFFFFF] text-[#202526] font-body min-h-screen selection:bg-[#D8A9A8] selection:text-[#202526]"
+        id="main-content"
+        className="relative w-full max-w-[100vw] overflow-x-hidden bg-[#FFFFFF] text-[#202526] font-body min-h-screen selection:bg-[#D8A9A8] selection:text-[#202526]"
       >
         <ScrollProgressBar />
 
@@ -266,13 +295,15 @@ export default function App() {
           onOpenContact={handleOpenContact}
           onOpenPrice={handleOpenPrice}
           onOpenEstimator={handleOpenEstimator}
+          onOpenLegal={handleOpenLegal}
           onSecretAdminTrigger={handleTriggerAdmin}
           badgeText={storeState.websiteContent.hero?.badgeText || 'ai.build_'}
+          contactEmail={(storeState.publishedContent || storeState.websiteContent)?.contact?.email || 'hello@aibuild.studio'}
         />
 
         {/* 1. Hero Section (z-10) */}
         <HeroSection
-          content={storeState.websiteContent.hero}
+          content={(storeState.publishedContent || storeState.websiteContent)?.hero}
           onOpenContact={handleOpenContact}
           onOpenPrice={handleOpenPrice}
           onOpenEstimator={handleOpenEstimator}
@@ -281,21 +312,21 @@ export default function App() {
         />
 
         {/* 2. Marquee Section (z-10) */}
-        <MarqueeSection content={storeState.websiteContent.marquee} />
+        <MarqueeSection content={(storeState.publishedContent || storeState.websiteContent)?.marquee} />
 
         {/* 3. About Section (z-20 - Character travels BEHIND) */}
-        <AboutSection content={storeState.websiteContent.about} />
+        <AboutSection content={(storeState.publishedContent || storeState.websiteContent)?.about} />
 
         {/* 4. Services Section (z-10 - Character travels ABOVE What We Do) */}
         <ServicesSection
-          content={storeState.websiteContent.services}
+          content={(storeState.publishedContent || storeState.websiteContent)?.services}
           onOpenContact={handleOpenContact}
           onOpenEstimator={handleOpenEstimator}
         />
 
-        {/* 5. Projects Section (z-20 - Character travels BELOW project card stack) */}
+        {/* 5. Projects Section (z-20 - Character travels BELOW project card stack - Published Only) */}
         <ProjectsSection
-          projects={storeState.projects}
+          projects={storeState.projects.filter((p) => (p.status || 'published') === 'published')}
           isLoading={isLoadingProjects}
           onSelectProject={handleSelectProject}
           onOpenContact={handleOpenContact}
@@ -307,58 +338,68 @@ export default function App() {
 
         {/* 7. Studio Footer & Massive CTA Section (z-10 - Character DOCKS & STICKS at LET'S BUILD) */}
         <FooterSection
-          contactContent={storeState.websiteContent.contact}
+          contactContent={(storeState.publishedContent || storeState.websiteContent)?.contact}
           onOpenContact={handleOpenContact}
           onOpenPrice={handleOpenPrice}
           onOpenEstimator={handleOpenEstimator}
+          onOpenLegal={handleOpenLegal}
           onSecretAdminTrigger={handleTriggerAdmin}
         />
 
         {/* Global 3D Character Travelling Companion across every section */}
         <GlobalScrollCharacter
-          portraitUrl={storeState.websiteContent?.hero?.portraitUrl}
-          portraitMediaType={storeState.websiteContent?.hero?.portraitMediaType}
-          portraitVideoUrl={storeState.websiteContent?.hero?.portraitVideoUrl}
+          portraitUrl={(storeState.publishedContent || storeState.websiteContent)?.hero?.portraitUrl}
+          portraitMediaType={(storeState.publishedContent || storeState.websiteContent)?.hero?.portraitMediaType}
+          portraitVideoUrl={(storeState.publishedContent || storeState.websiteContent)?.hero?.portraitVideoUrl}
           onOpenContact={handleOpenContact}
         />
 
-        {/* Modals & Dialogs */}
-        <ContactModal
-          isOpen={isContactOpen}
-          onClose={handleCloseContact}
-          contactContent={storeState.websiteContent.contact}
-          initialProjectType={contactProjectType}
-          initialBudget={contactInitialBudget}
-          initialMessage={contactInitialMessage}
-        />
+        {/* Lazy-Loaded Modals & Dialogs (Loaded on interaction) */}
+        <React.Suspense fallback={null}>
+          <ContactModal
+            isOpen={isContactOpen}
+            onClose={handleCloseContact}
+            contactContent={(storeState.publishedContent || storeState.websiteContent)?.contact}
+            initialProjectType={contactProjectType}
+            initialBudget={contactInitialBudget}
+            initialMessage={contactInitialMessage}
+          />
 
-        <PriceModal
-          isOpen={isPriceOpen}
-          onClose={handleClosePrice}
-          onSelectPlan={handleOpenContact}
-          onOpenEstimator={handleOpenEstimator}
-        />
+          <PriceModal
+            isOpen={isPriceOpen}
+            onClose={handleClosePrice}
+            onSelectPlan={handleOpenContact}
+            onOpenEstimator={handleOpenEstimator}
+          />
 
-        <EstimatorModal
-          isOpen={isEstimatorOpen}
-          onClose={handleCloseEstimator}
-          settings={storeState.estimatorSettings}
-          onProceedToContact={handleProceedFromEstimator}
-          onOpenContact={() => handleOpenContact()}
-        />
+          <EstimatorModal
+            isOpen={isEstimatorOpen}
+            onClose={handleCloseEstimator}
+            settings={storeState.estimatorSettings}
+            onProceedToContact={handleProceedFromEstimator}
+            onOpenContact={() => handleOpenContact()}
+          />
 
-        <ProjectModal
-          project={selectedProject}
-          onClose={handleCloseProject}
-          onOpenContact={handleOpenContact}
-        />
+          <ProjectModal
+            project={selectedProject}
+            onClose={handleCloseProject}
+            onOpenContact={handleOpenContact}
+          />
 
-        {/* Admin Auth Modal (Secret Owner Authentication) */}
-        <AdminAuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          onAuthenticated={handleAuthenticated}
-        />
+          {/* Legal Transparency & Privacy Modal */}
+          <LegalModal
+            isOpen={isLegalOpen}
+            onClose={() => setIsLegalOpen(false)}
+            initialTab={legalTab}
+          />
+
+          {/* Admin Auth Modal (Secret Owner Authentication) */}
+          <AdminAuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+            onAuthenticated={handleAuthenticated}
+          />
+        </React.Suspense>
       </main>
     </SmoothScrollProvider>
   );

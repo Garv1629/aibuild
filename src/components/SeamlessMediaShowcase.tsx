@@ -378,8 +378,17 @@ export const SeamlessMediaShowcase: React.FC<SeamlessMediaShowcaseProps> = ({
   return (
     <div
       ref={containerRef}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${service.title} specifications and showcase`}
       onClick={onOpenDetails}
-      className={`group/video relative w-full h-[240px] sm:h-[280px] md:h-[320px] rounded-3xl overflow-hidden bg-[#181C1D] border ${style.border} shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01] select-none`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpenDetails();
+        }
+      }}
+      className={`group/video relative w-full h-[240px] sm:h-[280px] md:h-[320px] rounded-3xl overflow-hidden bg-[#181C1D] border ${style.border} shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]`}
     >
       {/* Empty State Fallback */}
       {totalItems === 0 && (
@@ -408,11 +417,12 @@ export const SeamlessMediaShowcase: React.FC<SeamlessMediaShowcaseProps> = ({
               <button
                 key={item.id || idx}
                 type="button"
+                aria-label={`Jump to clip ${idx + 1} of ${totalItems}: ${item.title || item.type.toUpperCase()}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   executeHandoff(idx);
                 }}
-                className="flex-1 h-1 rounded-full bg-white/25 hover:bg-white/50 backdrop-blur-md overflow-hidden cursor-pointer p-0 transition-all focus:outline-none"
+                className="flex-1 h-1 rounded-full bg-white/25 hover:bg-white/50 backdrop-blur-md overflow-hidden cursor-pointer p-0 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
                 title={`Jump to clip ${idx + 1}: ${item.title || item.type.toUpperCase()}`}
               >
                 <div

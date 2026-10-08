@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PublicReview } from '../../types';
 import { adminStore } from '../../services/adminStore';
+import { unsavedChanges } from '../../services/unsavedChanges';
 import { MediaUploader } from './MediaUploader';
 import {
   Star,
@@ -16,6 +17,12 @@ import {
   Award,
   Filter,
   Upload,
+  Archive,
+  RotateCcw,
+  AlertTriangle,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 
 interface AdminReviewsTabProps {
@@ -23,63 +30,132 @@ interface AdminReviewsTabProps {
 }
 
 export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => {
-  const [filterStatus, setFilterStatus] = useState<'all' | 'approved' | 'pending' | 'featured'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'approved' | 'pending' | 'featured' | 'trash'>('all');
   const [ratingFilter, setRatingFilter] = useState<number | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; review: PublicReview | null; permanent: boolean }>({
+    isOpen: false,
+    review: null,
+    permanent: false,
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<PublicReview | null>(null);
 
-  const [formData, setFormData] = useState<Omit<PublicReview, 'id' | 'date'>>({
+  const defaultReviewData: Omit<PublicReview, 'id' | 'date'> = {
     author: '',
-    role: '',
+    role: 'Founder & CEO',
     company: '',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     rating: 5,
     comment: '',
     status: 'approved',
-    isFeatured: false,
-    projectReferenced: '',
-  });
+    isFeatured: true,
+    projectReferenced: 'AI Product Build',
+  };
+
+  const [formData, setFormData] = useState<Omit<PublicReview, 'id' | 'date'>>(defaultReviewData);
+  const [initialReviewBaseline, setInitialReviewBaseline] = useState<Omit<PublicReview, 'id' | 'date'>>(defaultReviewData);
+
+  const isReviewDirty = useMemo(() => {
+    if (!isModalOpen) return false;
+    try {
+      return JSON.stringify(formData) !== JSON.stringify(initialReviewBaseline);
+    } catch {
+      return false;
+    }
+  }, [isModalOpen, formData, initialReviewBaseline]);
+
+  useEffect(() => {
+    if (isModalOpen && isReviewDirty) {
+      unsavedChanges.setDirty('review-editor', true, {
+        label: `Review by ${formData.author || 'Author'}`,
+        onDiscard: () => {
+          setIsModalOpen(false);
+          unsavedChanges.setDirty('review-editor', false);
+        },
+      });
+    } else {
+      unsavedChanges.setDirty('review-editor', false);
+    }
+    return () => {
+      unsavedChanges.setDirty('review-editor', false);
+    };
+  }, [isModalOpen, isReviewDirty, formData.author]);
+
+  const handleCloseModal = () => {
+    if (isReviewDirty) {
+      const confirmed = window.confirm(
+        'You have unsaved changes in this review.\n\nAre you sure you want to close and discard your edits?'
+      );
+      if (!confirmed) return;
+    }
+    setIsModalOpen(false);
+    unsavedChanges.setDirty('review-editor', false);
+  };
 
   const stats = adminStore.getAverageRating();
 
-  const filteredReviews = reviews.filter((r) => {
-    if (filterStatus === 'approved' && r.status !== 'approved') return false;
-    if (filterStatus === 'pending' && r.status !== 'pending') return false;
-    if (filterStatus === 'featured' && !r.isFeatured) return false;
-    if (ratingFilter !== 'all' && r.rating !== ratingFilter) return false;
+  const activeReviews = useMemo(() => {
+    return reviews.filter((r) => !r.isDeleted && r.status !== 'archived');
+  }, [reviews]);
+
+  const trashReviews = useMemo(() => {
+    return reviews.filter((r) => Boolean(r.isDeleted) || r.status === 'archived');
+  }, [reviews]);
+
+  const filteredReviews = useMemo(() => {
+    let list: PublicReview[] = [];
+    if (filterStatus === 'trash') {
+      list = trashReviews;
+    } else if (filterStatus === 'approved') {
+      list = activeReviews.filter((r) => r.status === 'approved');
+    } else if (filterStatus === 'pending') {
+      list = activeReviews.filter((r) => r.status === 'pending');
+    } else if (filterStatus === 'featured') {
+      list = activeReviews.filter((r) => r.isFeatured);
+    } else {
+      list = activeReviews;
+    }
+
+    if (ratingFilter !== 'all') {
+      list = list.filter((r) => r.rating === ratingFilter);
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const match =
-        r.author.toLowerCase().includes(q) ||
-        r.company.toLowerCase().includes(q) ||
-        r.comment.toLowerCase().includes(q) ||
-        (r.role && r.role.toLowerCase().includes(q));
-      if (!match) return false;
+      list = list.filter(
+        (r) =>
+          r.author.toLowerCase().includes(q) ||
+          r.company.toLowerCase().includes(q) ||
+          r.comment.toLowerCase().includes(q) ||
+          (r.role && r.role.toLowerCase().includes(q))
+      );
     }
-    return true;
-  });
+    return list;
+  }, [filterStatus, ratingFilter, searchQuery, activeReviews, trashReviews]);
 
   const openNewReview = () => {
     setEditingReview(null);
-    setFormData({
+    const newRev = {
       author: '',
       role: 'Founder & CEO',
       company: '',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
       rating: 5,
       comment: '',
-      status: 'approved',
+      status: 'approved' as const,
       isFeatured: true,
       projectReferenced: 'AI Product Build',
-    });
+    };
+    setFormData(newRev);
+    setInitialReviewBaseline(newRev);
     setIsModalOpen(true);
   };
 
   const openEditReview = (r: PublicReview) => {
     setEditingReview(r);
-    setFormData({
+    const revData = {
       author: r.author,
       role: r.role,
       company: r.company,
@@ -89,33 +165,105 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
       status: r.status,
       isFeatured: r.isFeatured,
       projectReferenced: r.projectReferenced || '',
-    });
+    };
+    setFormData(revData);
+    setInitialReviewBaseline(revData);
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingReview) {
-      adminStore.updateReview(editingReview.id, formData);
-    } else {
-      adminStore.addReview(formData);
+    try {
+      if (editingReview) {
+        await adminStore.updateReview(editingReview.id, formData);
+      } else {
+        await adminStore.addReview(formData);
+      }
+      unsavedChanges.setDirty('review-editor', false);
+      setIsModalOpen(false);
+    } catch (err: any) {
+      alert(`Save Error: ${err.message || 'Unable to save review to database. Your edits are preserved.'}`);
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string, author: string) => {
-    if (window.confirm(`Delete review from "${author}"?`)) {
-      adminStore.deleteReview(id);
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.review) return;
+    const { id } = deleteModal.review;
+    const isPermanent = deleteModal.permanent;
+    try {
+      await adminStore.deleteReview(id, isPermanent);
+      setDeleteModal({ isOpen: false, review: null, permanent: false });
+    } catch (err: any) {
+      alert(`Delete Error: ${err.message || 'Unable to delete review.'}`);
     }
   };
 
-  const toggleStatus = (r: PublicReview) => {
+  const handleRestore = async (r: PublicReview) => {
+    try {
+      await adminStore.restoreReview(r.id);
+    } catch (err: any) {
+      alert(`Restore Error: ${err.message || 'Unable to restore review.'}`);
+    }
+  };
+
+  const toggleStatus = async (r: PublicReview) => {
     const nextStatus = r.status === 'approved' ? 'pending' : 'approved';
-    adminStore.updateReview(r.id, { status: nextStatus });
+    try {
+      await adminStore.updateReview(r.id, { status: nextStatus });
+    } catch (err: any) {
+      alert(`Update Error: ${err.message || 'Unable to update review status.'}`);
+    }
   };
 
-  const toggleFeatured = (r: PublicReview) => {
-    adminStore.updateReview(r.id, { isFeatured: !r.isFeatured });
+  const toggleFeatured = async (r: PublicReview) => {
+    try {
+      await adminStore.updateReview(r.id, { isFeatured: !r.isFeatured });
+    } catch (err: any) {
+      alert(`Update Error: ${err.message || 'Unable to toggle featured status.'}`);
+    }
+  };
+
+  const [draggedReviewIndex, setDraggedReviewIndex] = useState<number | null>(null);
+  const [dropTargetReviewIndex, setDropTargetReviewIndex] = useState<number | null>(null);
+
+  const moveReview = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= filteredReviews.length) return;
+    const updated = [...reviews];
+    const sourceRev = filteredReviews[index];
+    const destRev = filteredReviews[targetIndex];
+    const sIdx = updated.findIndex((r) => r.id === sourceRev.id);
+    const dIdx = updated.findIndex((r) => r.id === destRev.id);
+    if (sIdx === -1 || dIdx === -1) return;
+
+    const temp = updated[sIdx];
+    updated[sIdx] = updated[dIdx];
+    updated[dIdx] = temp;
+    await adminStore.reorderReviews(updated);
+  };
+
+  const handleDropReview = async (targetIndex: number) => {
+    if (draggedReviewIndex === null || draggedReviewIndex === targetIndex) {
+      setDraggedReviewIndex(null);
+      setDropTargetReviewIndex(null);
+      return;
+    }
+
+    const sourceRev = filteredReviews[draggedReviewIndex];
+    const targetRev = filteredReviews[targetIndex];
+    if (!sourceRev || !targetRev) return;
+
+    const updated = [...reviews];
+    const sIdx = updated.findIndex((r) => r.id === sourceRev.id);
+    const tIdx = updated.findIndex((r) => r.id === targetRev.id);
+    if (sIdx === -1 || tIdx === -1) return;
+
+    const [moved] = updated.splice(sIdx, 1);
+    updated.splice(tIdx, 0, moved);
+
+    setDraggedReviewIndex(null);
+    setDropTargetReviewIndex(null);
+    await adminStore.reorderReviews(updated);
   };
 
   return (
@@ -208,7 +356,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            All ({reviews.length})
+            All Active ({activeReviews.length})
           </button>
           <button
             type="button"
@@ -219,7 +367,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            Approved ({reviews.filter((r) => r.status === 'approved').length})
+            Approved ({activeReviews.filter((r) => r.status === 'approved').length})
           </button>
           <button
             type="button"
@@ -230,7 +378,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            Pending ({reviews.filter((r) => r.status === 'pending').length})
+            Pending ({activeReviews.filter((r) => r.status === 'pending').length})
           </button>
           <button
             type="button"
@@ -241,7 +389,19 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            Featured ({reviews.filter((r) => r.isFeatured).length})
+            Featured ({activeReviews.filter((r) => r.isFeatured).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterStatus('trash')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterStatus === 'trash'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'text-rose-700 hover:text-rose-800 hover:bg-rose-50'
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            Trash ({trashReviews.length})
           </button>
         </div>
 
@@ -262,134 +422,288 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans-clean">
         {filteredReviews.length === 0 ? (
           <div className="md:col-span-2 p-16 text-center bg-white/60 rounded-[28px] border border-dashed border-[#E5E7EB] text-[#596769]">
-            No reviews match your filters.
+            {filterStatus === 'trash' ? 'Trash is empty. Soft-deleted reviews will appear here for recovery.' : 'No reviews match your filters.'}
           </div>
         ) : (
-          filteredReviews.map((rev) => (
-            <div
-              key={rev.id}
-              className="bg-white/85 border border-[#E5E7EB] hover:border-[#D8A9A8] rounded-[28px] p-6 backdrop-blur-2xl flex flex-col justify-between gap-4 group transition-all shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)]"
-            >
-              {/* Header */}
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-3.5">
-                  <div className="flex items-center gap-3">
-                    {rev.avatar && rev.avatar.trim() ? (
-                      <img
-                        src={rev.avatar}
-                        alt={rev.author}
-                        className="w-12 h-12 rounded-full object-cover border border-[#E5E7EB] shadow-xs"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#CBDCDE] border border-[#E5E7EB] shadow-xs flex items-center justify-center text-sm font-strong text-[#202526]">
-                        {rev.author ? rev.author.charAt(0).toUpperCase() : 'U'}
+          filteredReviews.map((rev, idx) => {
+            const isItemDeleted = Boolean(rev.isDeleted) || rev.status === 'archived';
+            const isBeingDragged = draggedReviewIndex === idx;
+            const isDropTarget = dropTargetReviewIndex === idx;
+            const canDrag = !isItemDeleted && filterStatus !== 'trash' && !searchQuery.trim();
+
+            return (
+              <div
+                key={rev.id}
+                draggable={canDrag}
+                onDragStart={(e) => {
+                  setDraggedReviewIndex(idx);
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', rev.id);
+                }}
+                onDragOver={(e) => {
+                  if (draggedReviewIndex !== null && draggedReviewIndex !== idx) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (dropTargetReviewIndex !== idx) {
+                      setDropTargetReviewIndex(idx);
+                    }
+                  }
+                }}
+                onDragLeave={() => {
+                  if (dropTargetReviewIndex === idx) {
+                    setDropTargetReviewIndex(null);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleDropReview(idx);
+                }}
+                onDragEnd={() => {
+                  setDraggedReviewIndex(null);
+                  setDropTargetReviewIndex(null);
+                }}
+                className={`border rounded-[28px] p-6 backdrop-blur-2xl flex flex-col justify-between gap-4 group transition-all shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] relative ${
+                  isBeingDragged ? 'opacity-40 scale-[0.98] border-dashed border-[#202526]' : ''
+                } ${
+                  isDropTarget ? 'ring-2 ring-[#202526] ring-offset-2 border-[#202526] bg-[#202526]/[0.02]' : ''
+                } ${
+                  isItemDeleted
+                    ? 'bg-rose-50/40 border-rose-200 hover:border-rose-300'
+                    : 'bg-white/85 border-[#E5E7EB] hover:border-[#D8A9A8]'
+                }`}
+              >
+                {/* Header */}
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-3.5">
+                    <div className="flex items-center gap-3">
+                      {/* Drag Handle */}
+                      {canDrag && (
+                        <div
+                          className="flex flex-col items-center justify-center p-1.5 -ml-2 rounded-lg text-stone-400 hover:text-[#202526] hover:bg-black/[0.04] cursor-grab active:cursor-grabbing transition-colors shrink-0 select-none group/handle"
+                          title="Drag to reorder this testimonial"
+                        >
+                          <GripVertical className="w-4 h-4 group-hover/handle:scale-110 transition-transform" />
+                          <span className="text-[8px] font-mono font-bold text-[#596769]">#{idx + 1}</span>
+                        </div>
+                      )}
+
+                      {rev.avatar && rev.avatar.trim() ? (
+                        <img
+                          src={rev.avatar}
+                          alt={rev.author}
+                          className="w-12 h-12 rounded-full object-cover border border-[#E5E7EB] shadow-xs shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-[#CBDCDE] border border-[#E5E7EB] shadow-xs flex items-center justify-center text-sm font-strong text-[#202526] shrink-0">
+                          {rev.author ? rev.author.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-base font-praise font-normal text-[#202526] tracking-wide">{rev.author}</p>
+                        <p className="text-xs text-[#596769]">
+                          {rev.role} &bull; <span className="text-[#D8A9A8] font-medium">{rev.company}</span>
+                        </p>
                       </div>
-                    )}
-                    <div>
-                      <p className="text-base font-praise font-normal text-[#202526] tracking-wide">{rev.author}</p>
-                      <p className="text-xs text-[#596769]">
-                        {rev.role} &bull; <span className="text-[#D8A9A8] font-medium">{rev.company}</span>
-                      </p>
+                    </div>
+
+                    {/* Stars */}
+                    <div className="flex items-center gap-0.5 text-amber-500">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-3.5 h-3.5 ${
+                            s <= rev.rating ? 'fill-amber-400 text-amber-500' : 'text-black/10'
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
 
-                  {/* Stars */}
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className={`w-3.5 h-3.5 ${
-                          s <= rev.rating ? 'fill-amber-400 text-amber-500' : 'text-black/10'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  {/* Comment Text */}
+                  <p className="text-xs sm:text-[13px] text-[#596769] leading-relaxed italic bg-[#F8F9FA] p-4 rounded-2xl border border-[#E5E7EB]">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
+
+                  {rev.projectReferenced && (
+                    <div className="mt-3 text-xs font-label-small uppercase tracking-wider text-[#D8A9A8] flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-[#D8A9A8]" /> Project: {rev.projectReferenced}
+                    </div>
+                  )}
                 </div>
 
-                {/* Comment Text */}
-                <p className="text-xs sm:text-[13px] text-[#596769] leading-relaxed italic bg-[#F8F9FA] p-4 rounded-2xl border border-[#E5E7EB]">
-                  &ldquo;{rev.comment}&rdquo;
-                </p>
+                {/* Footer Controls */}
+                <div className="flex items-center justify-between pt-3.5 border-t border-[#E5E7EB] text-xs">
+                  {isItemDeleted ? (
+                    <div className="flex items-center justify-between w-full">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider font-semibold text-rose-800 bg-rose-100 border border-rose-300 flex items-center gap-1 shadow-xs">
+                        <Archive className="w-3 h-3 text-rose-600" /> In Trash (Hidden)
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRestore(rev)}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                        >
+                          <RotateCcw className="w-3 h-3" /> Restore
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteModal({ isOpen: true, review: rev, permanent: true })}
+                          className="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-1 border border-rose-300 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete Forever
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleStatus(rev)}
+                          className={`px-3 py-1 rounded-full text-[10px] font-label-small font-medium uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors ${
+                            rev.status === 'approved'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}
+                        >
+                          {rev.status === 'approved' ? (
+                            <>
+                              <CheckCircle className="w-3 h-3" /> Live on Site
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="w-3 h-3" /> Pending Review
+                            </>
+                          )}
+                        </button>
 
-                {rev.projectReferenced && (
-                  <div className="mt-3 text-xs font-label-small uppercase tracking-wider text-[#D8A9A8] flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-[#D8A9A8]" /> Project: {rev.projectReferenced}
-                  </div>
-                )}
+                        <button
+                          type="button"
+                          onClick={() => toggleFeatured(rev)}
+                          className={`p-1.5 rounded-full border text-[10px] cursor-pointer transition-colors ${
+                            rev.isFeatured
+                              ? 'bg-[#D8A9A8]/20 text-[#202526] border-[#D8A9A8]'
+                              : 'bg-black/[0.03] text-[#596769] border-[#E5E7EB] hover:text-[#202526]'
+                          }`}
+                          title={rev.isFeatured ? 'Featured on Homepage' : 'Mark as Featured'}
+                        >
+                          <Award className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        {/* Up / Down Quick Reorder */}
+                        {canDrag && (
+                          <div className="flex items-center bg-[#F3F4F6] border border-[#E5E7EB] rounded-lg p-0.5 mr-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => moveReview(idx, 'up')}
+                              className="p-1 rounded text-[#596769] hover:text-[#202526] hover:bg-white disabled:opacity-30 cursor-pointer transition-colors"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === filteredReviews.length - 1}
+                              onClick={() => moveReview(idx, 'down')}
+                              className="p-1 rounded text-[#596769] hover:text-[#202526] hover:bg-white disabled:opacity-30 cursor-pointer transition-colors"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+
+                        <span className="text-[11px] text-[#596769] font-strong mr-1">{rev.date}</span>
+                        <button
+                          type="button"
+                          onClick={() => openEditReview(rev)}
+                          className="p-2 rounded-xl bg-black/[0.03] hover:bg-black/[0.07] text-[#596769] hover:text-[#202526] border border-[#E5E7EB] transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteModal({ isOpen: true, review: rev, permanent: false })}
+                          className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
+                          title="Move to Trash (Safe Delete)"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-
-              {/* Footer Controls */}
-              <div className="flex items-center justify-between pt-3.5 border-t border-[#E5E7EB] text-xs">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleStatus(rev)}
-                    className={`px-3 py-1 rounded-full text-[10px] font-label-small font-medium uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors ${
-                      rev.status === 'approved'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
-                  >
-                    {rev.status === 'approved' ? (
-                      <>
-                        <CheckCircle className="w-3 h-3" /> Live on Site
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-3 h-3" /> Pending Review
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleFeatured(rev)}
-                    className={`p-1.5 rounded-full border text-[10px] cursor-pointer transition-colors ${
-                      rev.isFeatured
-                        ? 'bg-[#D8A9A8]/20 text-[#202526] border-[#D8A9A8]'
-                        : 'bg-black/[0.03] text-[#596769] border-[#E5E7EB] hover:text-[#202526]'
-                    }`}
-                    title={rev.isFeatured ? 'Featured on Homepage' : 'Mark as Featured'}
-                  >
-                    <Award className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-[#596769] font-strong mr-2">{rev.date}</span>
-                  <button
-                    type="button"
-                    onClick={() => openEditReview(rev)}
-                    className="p-2 rounded-xl bg-black/[0.03] hover:bg-black/[0.07] text-[#596769] hover:text-[#202526] border border-[#E5E7EB] transition-colors cursor-pointer"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(rev.id, rev.author)}
-                    className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && deleteModal.review && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-stone-200 shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-elegant text-[#202526]">
+                {deleteModal.permanent ? 'Permanently Delete Review?' : 'Move Review to Trash?'}
+              </h3>
+              <p className="text-xs text-[#596769] mt-1.5 leading-relaxed font-sans-clean">
+                {deleteModal.permanent ? (
+                  <>
+                    Are you sure you want to permanently delete the review from{' '}
+                    <strong className="text-[#202526]">&quot;{deleteModal.review.author}&quot;</strong>? This
+                    action cannot be undone and will permanently remove this record from the database.
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to move the review from{' '}
+                    <strong className="text-[#202526]">&quot;{deleteModal.review.author}&quot;</strong> to the Trash?
+                    It will immediately disappear from the public website, but remains safely recoverable in the Trash tab.
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, review: null, permanent: false })}
+                className="px-4 py-2 rounded-xl text-xs font-btn font-medium uppercase tracking-wider text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl text-xs font-btn font-semibold uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-sm"
+              >
+                {deleteModal.permanent ? 'Permanently Delete' : 'Move to Trash'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Review Edit / Add Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto font-sans-clean">
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-md"
-            onClick={() => setIsModalOpen(false)}
+            onClick={handleCloseModal}
           />
           <div className="relative w-full max-w-xl bg-white/95 border border-[#E5E7EB] rounded-[36px] p-6 sm:p-8 shadow-[0_30px_90px_rgba(0,0,0,0.15)] backdrop-blur-2xl z-10 my-8 max-h-[90vh] overflow-y-auto">
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModal}
               className="absolute top-6 right-6 p-2.5 rounded-full bg-black/[0.04] hover:bg-black/[0.08] text-[#596769] hover:text-[#202526] border border-[#E5E7EB] cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -527,7 +841,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({ reviews }) => 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={handleCloseModal}
                   className="px-5 py-2.5 rounded-full border border-[#E5E7EB] hover:bg-black/[0.04] text-xs font-btn font-medium text-[#596769] hover:text-[#202526] uppercase tracking-wider cursor-pointer"
                 >
                   Cancel

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ProjectItem, ServiceMediaItem } from '../../types';
 import { adminStore } from '../../services/adminStore';
+import { unsavedChanges } from '../../services/unsavedChanges';
 import { MediaUploader } from './MediaUploader';
 import { ProjectMediaManager } from './ProjectMediaManager';
 import { ProjectSeamlessShowcase } from '../ProjectSeamlessShowcase';
@@ -21,6 +22,11 @@ import {
   ArrowDown,
   Upload,
   Repeat,
+  RotateCcw,
+  AlertTriangle,
+  Archive,
+  RefreshCw,
+  GripVertical,
 } from 'lucide-react';
 
 // Curated high-res media presets to quickly test/apply
@@ -65,8 +71,9 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
   const [previewProject, setPreviewProject] = useState<ProjectItem | null>(null);
   const [saveToast, setSaveToast] = useState(false);
   const [savedProjectName, setSavedProjectName] = useState('');
+  const [toastMessage, setToastMessage] = useState('Project Saved Live! ✓');
 
-  const [formData, setFormData] = useState<Omit<ProjectItem, 'id'>>({
+  const defaultNewProject: Omit<ProjectItem, 'id'> = {
     number: '01',
     title: '',
     category: 'UGC ADS',
@@ -81,14 +88,56 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
     techStack: ['React', 'TypeScript', 'Tailwind', 'AI API'],
     featured: true,
     aspectRatio: 'auto',
-  });
+    status: 'published',
+  };
 
+  const [formData, setFormData] = useState<Omit<ProjectItem, 'id'>>(defaultNewProject);
+  const [initialModalBaseline, setInitialModalBaseline] = useState<Omit<ProjectItem, 'id'>>(defaultNewProject);
   const [techInput, setTechInput] = useState('');
+
+  // Dirty detection for project editor modal
+  const isModalDirty = useMemo(() => {
+    if (!isEditorOpen) return false;
+    try {
+      return JSON.stringify(formData) !== JSON.stringify(initialModalBaseline);
+    } catch {
+      return false;
+    }
+  }, [isEditorOpen, formData, initialModalBaseline]);
+
+  // Synchronize unsaved changes manager with project modal dirty state
+  useEffect(() => {
+    if (isEditorOpen && isModalDirty) {
+      unsavedChanges.setDirty('project-editor', true, {
+        label: `Project: ${formData.title.trim() || 'Untitled Project'}`,
+        onDiscard: () => {
+          setIsEditorOpen(false);
+          unsavedChanges.setDirty('project-editor', false);
+        },
+      });
+    } else {
+      unsavedChanges.setDirty('project-editor', false);
+    }
+    return () => {
+      unsavedChanges.setDirty('project-editor', false);
+    };
+  }, [isEditorOpen, isModalDirty, formData.title]);
+
+  const handleCloseModal = () => {
+    if (isModalDirty) {
+      const confirmed = window.confirm(
+        'You have unsaved changes in this project.\n\nAre you sure you want to close and discard your edits?'
+      );
+      if (!confirmed) return;
+    }
+    setIsEditorOpen(false);
+    unsavedChanges.setDirty('project-editor', false);
+  };
 
   const openNewProject = () => {
     setEditingProject(null);
     const nextNum = projects.length + 1 < 10 ? `0${projects.length + 1}` : `${projects.length + 1}`;
-    setFormData({
+    const newProjectData: Omit<ProjectItem, 'id'> = {
       number: nextNum,
       title: '',
       category: 'UGC ADS',
@@ -111,7 +160,10 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       techStack: ['React', 'TypeScript', 'Tailwind', 'Agentic AI'],
       featured: true,
       aspectRatio: 'auto',
-    });
+      status: 'published',
+    };
+    setFormData(newProjectData);
+    setInitialModalBaseline(newProjectData);
     setTechInput('React, TypeScript, Tailwind, Agentic AI');
     setIsEditorOpen(true);
   };
@@ -170,7 +222,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
               : []),
           ];
 
-    setFormData({
+    const projectData: Omit<ProjectItem, 'id'> = {
       number: project.number,
       title: project.title,
       category: project.category,
@@ -185,12 +237,19 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       techStack: project.techStack || ['React', 'TypeScript', 'Tailwind'],
       featured: project.featured ?? true,
       aspectRatio: project.aspectRatio || 'auto',
-    });
+      status: project.status || 'published',
+    };
+
+    setFormData(projectData);
+    setInitialModalBaseline(projectData);
     setTechInput((project.techStack || ['React', 'TypeScript', 'Tailwind']).join(', '));
     setIsEditorOpen(true);
   };
 
-  const handleSave = (e?: React.FormEvent | React.MouseEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSave = async (overrideStatus?: 'published' | 'draft' | 'unpublished', e?: React.FormEvent | React.MouseEvent) => {
     if (e) {
       if (typeof e.preventDefault === 'function') e.preventDefault();
       if (typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -206,9 +265,12 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
 
     const firstVideo = (formData.mediaItems || []).find((m) => m.type === 'video');
     const firstImage = (formData.mediaItems || []).find((m) => m.type === 'image');
+    const targetStatus = overrideStatus || formData.status || 'published';
 
     const projectPayload: Omit<ProjectItem, 'id'> = {
       ...formData,
+      status: targetStatus,
+      published: targetStatus === 'published',
       mediaItems: formData.mediaItems || [],
       videoUrl: firstVideo ? firstVideo.url : '',
       col2Image: firstImage ? firstImage.url : (firstVideo?.poster || formData.col2Image),
@@ -216,31 +278,178 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
       techStack: parsedTech.length > 0 ? parsedTech : ['React', 'TypeScript', 'Tailwind'],
     };
 
-    if (editingProject) {
-      adminStore.updateProject(editingProject.id, projectPayload);
+    setIsSaving(true);
+    setErrorMessage(null);
+
+    try {
+      if (editingProject) {
+        await adminStore.updateProject(editingProject.id, projectPayload);
+      } else {
+        await adminStore.addProject(projectPayload);
+      }
+
+      setSavedProjectName(formData.title || 'Project');
+      setToastMessage(targetStatus === 'published' ? 'Project Published Live! ✓' : 'Project Draft Saved! ✓');
+      setSaveToast(true);
+      unsavedChanges.setDirty('project-editor', false);
+      setIsEditorOpen(false);
+      setTimeout(() => setSaveToast(false), 4000);
+    } catch (err: any) {
+      // NEVER silently discard edits — modal remains open and inputs preserved
+      setErrorMessage(err.message || 'Unable to save project to database. Your edits are kept intact.');
+      alert(`Save Error: ${err.message || 'Unable to save project to database. Your edits are kept intact.'}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Quick action helpers
+  const handleQuickPublish = async (project: ProjectItem) => {
+    try {
+      await adminStore.publishProject(project.id);
+      setSavedProjectName(project.title);
+      setToastMessage('Project Published Live! ✓');
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 3000);
+    } catch (err: any) {
+      alert(`Publish Error: ${err.message || 'Unable to publish project.'}`);
+    }
+  };
+
+  const handleQuickUnpublish = async (project: ProjectItem) => {
+    try {
+      await adminStore.unpublishProject(project.id);
+      setSavedProjectName(project.title);
+      setToastMessage('Project Unpublished (Removed from Live Site)');
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 3000);
+    } catch (err: any) {
+      alert(`Unpublish Error: ${err.message || 'Unable to unpublish project.'}`);
+    }
+  };
+
+  const handleQuickDraft = async (project: ProjectItem) => {
+    try {
+      await adminStore.draftProject(project.id);
+      setSavedProjectName(project.title);
+      setToastMessage('Project set to Draft mode');
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 3000);
+    } catch (err: any) {
+      alert(`Draft Error: ${err.message || 'Unable to set project to draft.'}`);
+    }
+  };
+
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'trash'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; project: ProjectItem | null; permanent: boolean }>({
+    isOpen: false,
+    project: null,
+    permanent: false,
+  });
+
+  const activeProjects = useMemo(() => {
+    return projects.filter((p) => !p.isDeleted && p.status !== 'archived');
+  }, [projects]);
+
+  const trashProjects = useMemo(() => {
+    return projects.filter((p) => Boolean(p.isDeleted) || p.status === 'archived');
+  }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    let list: ProjectItem[] = [];
+    if (statusFilter === 'trash') {
+      list = trashProjects;
+    } else if (statusFilter === 'published') {
+      list = activeProjects.filter((p) => p.status === 'published');
+    } else if (statusFilter === 'draft') {
+      list = activeProjects.filter((p) => p.status === 'draft' || p.status === 'unpublished');
     } else {
-      adminStore.addProject(projectPayload);
+      list = activeProjects;
     }
 
-    setSavedProjectName(formData.title || 'Project');
-    setSaveToast(true);
-    setIsEditorOpen(false);
-    setTimeout(() => setSaveToast(false), 4000);
-  };
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.tagline && p.tagline.toLowerCase().includes(q)) ||
+          (p.techStack && p.techStack.some((t) => t.toLowerCase().includes(q)))
+      );
+    }
+    return list;
+  }, [statusFilter, activeProjects, trashProjects, searchQuery]);
 
-  const handleDelete = (id: string, title: string) => {
-    if (window.confirm(`Are you sure you want to delete "${title}" from the website?`)) {
-      adminStore.deleteProject(id);
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.project) return;
+    const { id, title } = deleteModal.project;
+    const isPermanent = deleteModal.permanent;
+
+    try {
+      await adminStore.deleteProject(id, isPermanent);
+      setDeleteModal({ isOpen: false, project: null, permanent: false });
+      setSavedProjectName(title);
+      setToastMessage(isPermanent ? 'Project Permanently Removed ✕' : 'Moved to Trash (Safe Delete) 🗑');
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 4000);
+    } catch (err: any) {
+      alert(`Delete Error: ${err.message || 'Unable to complete deletion.'}`);
     }
   };
+
+  const handleRestore = async (project: ProjectItem) => {
+    try {
+      await adminStore.restoreProject(project.id);
+      setSavedProjectName(project.title);
+      setToastMessage('Project Restored to Showcase! ✓');
+      setSaveToast(true);
+      setTimeout(() => setSaveToast(false), 4000);
+    } catch (err: any) {
+      alert(`Restore Error: ${err.message || 'Unable to restore project.'}`);
+    }
+  };
+
+  const [draggedProjectIndex, setDraggedProjectIndex] = useState<number | null>(null);
+  const [dropTargetProjectIndex, setDropTargetProjectIndex] = useState<number | null>(null);
 
   const moveProject = (index: number, direction: 'up' | 'down') => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= projects.length) return;
+    if (targetIndex < 0 || targetIndex >= filteredProjects.length) return;
     const updated = [...projects];
-    const temp = updated[index];
-    updated[index] = updated[targetIndex];
-    updated[targetIndex] = temp;
+    const sourceProject = filteredProjects[index];
+    const destProject = filteredProjects[targetIndex];
+    const sIdx = updated.findIndex((p) => p.id === sourceProject.id);
+    const dIdx = updated.findIndex((p) => p.id === destProject.id);
+    if (sIdx === -1 || dIdx === -1) return;
+
+    const temp = updated[sIdx];
+    updated[sIdx] = updated[dIdx];
+    updated[dIdx] = temp;
+    adminStore.reorderProjects(updated);
+  };
+
+  const handleDropProject = (targetIndex: number) => {
+    if (draggedProjectIndex === null || draggedProjectIndex === targetIndex) {
+      setDraggedProjectIndex(null);
+      setDropTargetProjectIndex(null);
+      return;
+    }
+
+    const sourceProject = filteredProjects[draggedProjectIndex];
+    const targetProject = filteredProjects[targetIndex];
+    if (!sourceProject || !targetProject) return;
+
+    const updated = [...projects];
+    const sIdx = updated.findIndex((p) => p.id === sourceProject.id);
+    const tIdx = updated.findIndex((p) => p.id === targetProject.id);
+    if (sIdx === -1 || tIdx === -1) return;
+
+    const [moved] = updated.splice(sIdx, 1);
+    updated.splice(tIdx, 0, moved);
+
+    setDraggedProjectIndex(null);
+    setDropTargetProjectIndex(null);
     adminStore.reorderProjects(updated);
   };
 
@@ -304,182 +513,427 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
         <button
           type="button"
           onClick={openNewProject}
-          className="px-5 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          className="px-5 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
         >
           <Plus className="w-4 h-4" />
           Add Case Study
         </button>
       </div>
 
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white/80 p-3 rounded-2xl border border-[#E5E7EB] shadow-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer ${
+              statusFilter === 'all'
+                ? 'bg-[#202526] text-white shadow-xs'
+                : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
+            }`}
+          >
+            All Active ({activeProjects.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('published')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer ${
+              statusFilter === 'published'
+                ? 'bg-[#202526] text-white shadow-xs'
+                : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
+            }`}
+          >
+            Published ({activeProjects.filter((p) => p.status === 'published').length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('draft')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer ${
+              statusFilter === 'draft'
+                ? 'bg-[#202526] text-white shadow-xs'
+                : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
+            }`}
+          >
+            Drafts ({activeProjects.filter((p) => p.status === 'draft' || p.status === 'unpublished').length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('trash')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === 'trash'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'text-rose-700 hover:text-rose-800 hover:bg-rose-50'
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            Trash ({trashProjects.length})
+          </button>
+        </div>
+
+        <div className="relative min-w-[240px]">
+          <input
+            type="text"
+            placeholder="Search projects by title, tech..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl px-3.5 py-1.5 text-xs text-[#202526] placeholder:text-[#596769]/50 focus:outline-none focus:border-[#D8A9A8] focus:bg-white"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Projects List Grid */}
       <div className="grid grid-cols-1 gap-4">
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="p-16 text-center bg-white/60 rounded-[32px] border border-dashed border-[#E5E7EB] text-[#71717A] font-sans-clean text-sm">
-            No projects added yet. Click &quot;Add Case Study&quot; above to publish your first studio masterpiece!
+            {statusFilter === 'trash' ? (
+              <div className="space-y-1">
+                <p className="font-medium text-[#202526]">Trash is empty</p>
+                <p className="text-xs text-[#596769]">No soft-deleted projects found. Deleted items are kept safely here for recovery.</p>
+              </div>
+            ) : (
+              'No projects match the selected filter. Click "Add Case Study" above to create one!'
+            )}
           </div>
         ) : (
-          projects.map((project, idx) => (
-            <div
-              key={project.id}
-              className="bg-white/85 border border-[#E5E7EB] hover:border-[#D8A9A8] rounded-[28px] p-5 sm:p-6 backdrop-blur-xl transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 group shadow-sm hover:shadow-xl"
-            >
-              {/* Left Info & Thumbnail */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1">
-                {/* Visual Thumbnail */}
-                <div className="relative w-full sm:w-44 h-30 rounded-2xl overflow-hidden bg-[#F3F4F6] border border-[#E5E7EB] shrink-0 group-hover:border-[#D8A9A8] transition-colors shadow-inner">
-                  {project.videoUrl && project.videoUrl.trim() && project.mediaType === 'video' ? (
-                    <div className="relative w-full h-full">
-                      <video
-                        src={project.videoUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                        loop
-                        autoPlay
-                        playsInline
-                      />
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-label-small uppercase tracking-wider text-[#D8A9A8] flex items-center gap-1 border border-white/20">
-                        <Film className="w-2.5 h-2.5" /> Video
-                      </div>
-                    </div>
-                  ) : project.col2Image && project.col2Image.trim() ? (
-                    <img
-                      src={project.col2Image}
-                      alt={project.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-[#E5E7EB] flex items-center justify-center text-[10px] text-[#71717A] uppercase font-mono">
-                      No Media
+          filteredProjects.map((project, idx) => {
+            const isItemDeleted = Boolean(project.isDeleted) || project.status === 'archived';
+            const isBeingDragged = draggedProjectIndex === idx;
+            const isDropTarget = dropTargetProjectIndex === idx;
+            const canDrag = !isItemDeleted && statusFilter !== 'trash' && !searchQuery.trim();
+
+            return (
+              <div
+                key={project.id}
+                draggable={canDrag}
+                onDragStart={(e) => {
+                  setDraggedProjectIndex(idx);
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', project.id);
+                }}
+                onDragOver={(e) => {
+                  if (draggedProjectIndex !== null && draggedProjectIndex !== idx) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (dropTargetProjectIndex !== idx) {
+                      setDropTargetProjectIndex(idx);
+                    }
+                  }
+                }}
+                onDragLeave={() => {
+                  if (dropTargetProjectIndex === idx) {
+                    setDropTargetProjectIndex(null);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleDropProject(idx);
+                }}
+                onDragEnd={() => {
+                  setDraggedProjectIndex(null);
+                  setDropTargetProjectIndex(null);
+                }}
+                className={`border rounded-[28px] p-5 sm:p-6 backdrop-blur-xl transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 group shadow-sm hover:shadow-xl relative ${
+                  isBeingDragged ? 'opacity-40 scale-[0.98] border-dashed border-[#202526]' : ''
+                } ${
+                  isDropTarget ? 'ring-2 ring-[#202526] ring-offset-2 border-[#202526] bg-[#202526]/[0.02]' : ''
+                } ${
+                  isItemDeleted
+                    ? 'bg-rose-50/40 border-rose-200 hover:border-rose-300'
+                    : 'bg-white/85 border-[#E5E7EB] hover:border-[#D8A9A8]'
+                }`}
+              >
+                {/* Left Info & Thumbnail */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1 w-full sm:w-auto">
+                  {/* Drag Handle */}
+                  {canDrag && (
+                    <div
+                      className="hidden sm:flex flex-col items-center justify-center p-2 rounded-xl text-stone-400 hover:text-[#202526] hover:bg-black/[0.04] cursor-grab active:cursor-grabbing transition-colors shrink-0 select-none group/handle"
+                      title="Drag to reorder this project"
+                    >
+                      <GripVertical className="w-5 h-5 group-hover/handle:scale-110 transition-transform" />
+                      <span className="text-[9px] font-mono font-bold text-[#596769]">#{idx + 1}</span>
                     </div>
                   )}
-                  <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-xs font-strong font-normal text-[#202526] border border-[#E5E7EB] shadow-xs">
-                    {project.number}
-                  </span>
-                </div>
 
-                {/* Details */}
-                <div className="space-y-2 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-3 py-0.5 rounded-full text-xs font-label-small uppercase tracking-wider font-medium text-[#202526] bg-white border border-[#E5E7EB] shadow-xs">
-                      {project.category}
+                  {/* Visual Thumbnail */}
+                  <div className="relative w-full sm:w-44 h-30 rounded-2xl overflow-hidden bg-[#F3F4F6] border border-[#E5E7EB] shrink-0 group-hover:border-[#D8A9A8] transition-colors shadow-inner">
+                    {project.videoUrl && project.videoUrl.trim() && project.mediaType === 'video' ? (
+                      <div className="relative w-full h-full">
+                        <video
+                          src={project.videoUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                          loop
+                          autoPlay
+                          playsInline
+                        />
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-label-small uppercase tracking-wider text-[#D8A9A8] flex items-center gap-1 border border-white/20">
+                          <Film className="w-2.5 h-2.5" /> Video
+                        </div>
+                      </div>
+                    ) : project.col2Image && project.col2Image.trim() ? (
+                      <img
+                        src={project.col2Image}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#E5E7EB] flex items-center justify-center text-[10px] text-[#71717A] uppercase font-mono">
+                        No Media
+                      </div>
+                    )}
+                    <span className="absolute bottom-2 left-2 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-xs font-strong font-normal text-[#202526] border border-[#E5E7EB] shadow-xs">
+                      {project.number}
                     </span>
-                    {project.videoUrl && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider text-[#202526] bg-[#D8A9A8]/20 border border-[#D8A9A8]/40 flex items-center gap-1">
-                        <Video className="w-2.5 h-2.5 text-[#D8A9A8]" /> Motion Enabled
-                      </span>
-                    )}
-                    {project.mediaItems && project.mediaItems.length > 1 && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider text-[#202526] bg-[#E7EBE9] border border-[#B8C1C0] flex items-center gap-1">
-                        <Repeat className="w-2.5 h-2.5 text-[#D8A9A8]" />
-                        {project.mediaItems.length} Clips Continuous
-                      </span>
-                    )}
-                    {project.liveUrl && (
-                      <a
-                        href={project.liveUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-label-small text-[#596769] hover:text-[#202526] flex items-center gap-1 transition-colors uppercase tracking-wider"
-                      >
-                        <ExternalLink className="w-3 h-3 text-[#D8A9A8]" /> Live Demo
-                      </a>
-                    )}
                   </div>
 
-                  <h3 className="text-xl sm:text-2xl font-praise font-normal text-[#202526] tracking-wide group-hover:text-[#D8A9A8] transition-colors">
-                    {project.title}
-                  </h3>
+                  {/* Details */}
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-3 py-0.5 rounded-full text-xs font-label-small uppercase tracking-wider font-medium text-[#202526] bg-white border border-[#E5E7EB] shadow-xs">
+                        {project.category}
+                      </span>
 
-                  <p className="text-xs sm:text-[13px] text-[#596769] line-clamp-2 max-w-2xl font-sans-clean leading-relaxed">
-                    {project.tagline || 'Bespoke AI product and frontend experience.'}
-                  </p>
-
-                  {/* Tech stack pills */}
-                  {project.techStack && project.techStack.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {project.techStack.map((tech, i) => (
-                        <span
-                          key={i}
-                          className="px-2.5 py-0.5 rounded-md bg-[#F3F4F6] text-[11px] text-[#596769] font-strong border border-[#E5E7EB]"
-                        >
-                          {tech}
+                      {/* Status Badge */}
+                      {isItemDeleted ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider font-semibold text-rose-800 bg-rose-100 border border-rose-300 flex items-center gap-1.5 shadow-xs">
+                          <Archive className="w-3 h-3 text-rose-600" /> In Trash (Hidden Publicly)
                         </span>
-                      ))}
+                      ) : project.status === 'draft' ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider font-semibold text-amber-800 bg-amber-50 border border-amber-200 flex items-center gap-1.5 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Draft
+                        </span>
+                      ) : project.status === 'unpublished' ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider font-semibold text-stone-600 bg-stone-100 border border-stone-200 flex items-center gap-1.5 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400" /> Unpublished
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 flex items-center gap-1.5 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Published (Live)
+                        </span>
+                      )}
+
+                      {project.videoUrl && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider text-[#202526] bg-[#D8A9A8]/20 border border-[#D8A9A8]/40 flex items-center gap-1">
+                          <Video className="w-2.5 h-2.5 text-[#D8A9A8]" /> Motion Enabled
+                        </span>
+                      )}
+                      {project.mediaItems && project.mediaItems.length > 1 && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-label-small uppercase tracking-wider text-[#202526] bg-[#E7EBE9] border border-[#B8C1C0] flex items-center gap-1">
+                          <Repeat className="w-2.5 h-2.5 text-[#D8A9A8]" />
+                          {project.mediaItems.length} Clips Continuous
+                        </span>
+                      )}
+                      {project.liveUrl && (
+                        <a
+                          href={project.liveUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-label-small text-[#596769] hover:text-[#202526] flex items-center gap-1 transition-colors uppercase tracking-wider"
+                        >
+                          <ExternalLink className="w-3 h-3 text-[#D8A9A8]" /> Live Demo
+                        </a>
+                      )}
                     </div>
+
+                    <h3 className="text-xl sm:text-2xl font-praise font-normal text-[#202526] tracking-wide group-hover:text-[#D8A9A8] transition-colors">
+                      {project.title}
+                    </h3>
+
+                    <p className="text-xs sm:text-[13px] text-[#596769] line-clamp-2 max-w-2xl font-sans-clean leading-relaxed">
+                      {project.tagline || 'Bespoke AI product and frontend experience.'}
+                    </p>
+
+                    {/* Tech stack pills */}
+                    {project.techStack && project.techStack.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {project.techStack.map((tech, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-0.5 rounded-md bg-[#F3F4F6] text-[11px] text-[#596769] font-strong border border-[#E5E7EB]"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Controls & Ordering */}
+                <div className="flex items-center gap-2 self-end md:self-center flex-wrap">
+                  {isItemDeleted ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleRestore(project)}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+                        title="Restore this project back to active status"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Restore
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDeleteModal({ isOpen: true, project, permanent: true })}
+                        className="px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-1 border border-rose-300 transition-colors cursor-pointer"
+                        title="Permanently remove project from database"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-700" /> Delete Forever
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Quick Status Toggle Button */}
+                      {project.status !== 'published' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickPublish(project)}
+                          className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-1 shadow-xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+                          title="Make project live on public website"
+                        >
+                          <Check className="w-3.5 h-3.5 text-white" /> Publish
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickUnpublish(project)}
+                          className="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-btn font-medium uppercase tracking-wider border border-stone-200 transition-colors cursor-pointer"
+                          title="Unpublish (hide from public site)"
+                        >
+                          Unpublish
+                        </button>
+                      )}
+
+                      {/* Reorder Buttons */}
+                      <div className="flex items-center bg-[#F3F4F6] border border-[#E5E7EB] rounded-xl p-1 shadow-inner">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => moveProject(idx, 'up')}
+                          className="p-1.5 rounded-lg text-[#596769] hover:text-[#202526] hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                          title="Move Up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === filteredProjects.length - 1}
+                          onClick={() => moveProject(idx, 'down')}
+                          className="p-1.5 rounded-lg text-[#596769] hover:text-[#202526] hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                          title="Move Down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Preview Button */}
+                      <button
+                        type="button"
+                        onClick={() => setPreviewProject(project)}
+                        className="p-2.5 rounded-xl bg-white hover:bg-[#F3F4F6] text-[#596769] hover:text-[#202526] border border-[#E5E7EB] transition-colors cursor-pointer shadow-xs"
+                        title="Quick Preview"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      {/* Edit Button */}
+                      <button
+                        type="button"
+                        onClick={() => openEditProject(project)}
+                        className="px-3.5 py-2.5 rounded-xl bg-[#202526] hover:bg-[#111314] text-white transition-all text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-[#D8A9A8]" /> Edit
+                      </button>
+
+                      {/* Soft Delete Button */}
+                      <button
+                        type="button"
+                        onClick={() => setDeleteModal({ isOpen: true, project, permanent: false })}
+                        className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
+                        title="Move to Trash (Safe Delete)"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
-
-              {/* Right Controls & Ordering */}
-              <div className="flex items-center gap-2 self-end md:self-center">
-                {/* Reorder Buttons */}
-                <div className="flex items-center bg-[#F3F4F6] border border-[#E5E7EB] rounded-xl p-1 shadow-inner">
-                  <button
-                    type="button"
-                    disabled={idx === 0}
-                    onClick={() => moveProject(idx, 'up')}
-                    className="p-1.5 rounded-lg text-[#596769] hover:text-[#202526] hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
-                    title="Move Up"
-                  >
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={idx === projects.length - 1}
-                    onClick={() => moveProject(idx, 'down')}
-                    className="p-1.5 rounded-lg text-[#596769] hover:text-[#202526] hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors"
-                    title="Move Down"
-                  >
-                    <ArrowDown className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Preview Button */}
-                <button
-                  type="button"
-                  onClick={() => setPreviewProject(project)}
-                  className="p-2.5 rounded-xl bg-white hover:bg-[#F3F4F6] text-[#596769] hover:text-[#202526] border border-[#E5E7EB] transition-colors cursor-pointer shadow-xs"
-                  title="Quick Preview"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-
-                {/* Edit Button */}
-                <button
-                  type="button"
-                  onClick={() => openEditProject(project)}
-                  className="px-3.5 py-2.5 rounded-xl bg-[#202526] hover:bg-[#111314] text-white transition-all text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Edit2 className="w-3.5 h-3.5 text-[#D8A9A8]" /> Edit
-                </button>
-
-                {/* Delete Button */}
-                <button
-                  type="button"
-                  onClick={() => handleDelete(project.id, project.title)}
-                  className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
-                  title="Delete Project"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && deleteModal.project && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-stone-200 shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-elegant text-[#202526]">
+                {deleteModal.permanent ? 'Permanently Delete Project?' : 'Move Project to Trash?'}
+              </h3>
+              <p className="text-xs text-[#596769] mt-1.5 leading-relaxed font-sans-clean">
+                {deleteModal.permanent ? (
+                  <>
+                    Are you sure you want to permanently delete{' '}
+                    <strong className="text-[#202526]">&quot;{deleteModal.project.title}&quot;</strong>? This
+                    action cannot be undone and will permanently remove this record from the database.
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to move{' '}
+                    <strong className="text-[#202526]">&quot;{deleteModal.project.title}&quot;</strong> to the Trash?
+                    It will immediately disappear from the public website, but remains safely recoverable in the Trash tab anytime.
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, project: null, permanent: false })}
+                className="px-4 py-2 rounded-xl text-xs font-btn font-medium uppercase tracking-wider text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl text-xs font-btn font-semibold uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-sm"
+              >
+                {deleteModal.permanent ? 'Permanently Delete' : 'Move to Trash'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Project Editor Modal */}
       {isEditorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-xl"
-            onClick={() => setIsEditorOpen(false)}
+            onClick={handleCloseModal}
           />
           <div className="relative w-full max-w-3xl bg-white/95 border border-white/80 rounded-[36px] p-6 sm:p-8 shadow-[0_30px_90px_rgba(0,0,0,0.2)] z-10 my-8 max-h-[90vh] overflow-y-auto font-sans-clean text-[#202526]">
             <button
               type="button"
-              onClick={() => setIsEditorOpen(false)}
+              onClick={handleCloseModal}
               className="absolute top-6 right-6 p-2.5 rounded-full bg-black/[0.04] hover:bg-black/[0.08] text-[#71717A] hover:text-[#202526] border border-[#E5E7EB] cursor-pointer transition-all"
             >
               <X className="w-4 h-4" />
@@ -667,21 +1121,73 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
+              {/* Publish Status Selector */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-label-small font-medium text-[#596769] mb-1.5">
+                  Publish Status
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, status: 'published' })}
+                    className={`p-3 rounded-2xl border text-xs font-btn uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                      formData.status === 'published'
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-xs ring-1 ring-emerald-300'
+                        : 'bg-white border-[#E5E7EB] text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" /> Published (Live)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, status: 'draft' })}
+                    className={`p-3 rounded-2xl border text-xs font-btn uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                      formData.status === 'draft'
+                        ? 'bg-amber-50 border-amber-300 text-amber-800 font-bold shadow-xs ring-1 ring-amber-300'
+                        : 'bg-white border-[#E5E7EB] text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500" /> Draft (Pending)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, status: 'unpublished' })}
+                    className={`p-3 rounded-2xl border text-xs font-btn uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                      formData.status === 'unpublished'
+                        ? 'bg-stone-100 border-stone-300 text-stone-800 font-bold shadow-xs ring-1 ring-stone-300'
+                        : 'bg-white border-[#E5E7EB] text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-stone-400" /> Unpublished
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
-                  onClick={() => setIsEditorOpen(false)}
+                  onClick={handleCloseModal}
                   className="px-5 py-2.5 rounded-full border border-[#E5E7EB] hover:bg-black/[0.04] text-xs font-btn font-medium text-[#596769] hover:text-[#202526] uppercase tracking-wider cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={handleSave}
-                  className="px-6 py-2.5 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  onClick={(e) => handleSave('draft', e)}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-800 text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-2 shadow-xs transition-all cursor-pointer hover:border-stone-400 active:scale-95 disabled:opacity-50"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{isSaving && formData.status === 'draft' ? 'Saving Draft...' : 'Save as Draft'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleSave('published', e)}
+                  disabled={isSaving}
+                  className="px-6 py-2.5 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   <Check className="w-4 h-4 text-[#D8A9A8]" />
-                  {editingProject ? 'Update & Save Case Study Live' : 'Publish Case Study Live'}
+                  <span>{isSaving && formData.status === 'published' ? 'Publishing...' : editingProject ? 'Update & Publish Live' : 'Publish Case Study Live'}</span>
                 </button>
               </div>
             </div>
@@ -779,10 +1285,10 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({ projects }) 
           </div>
           <div className="flex-1">
             <p className="text-xs font-bold uppercase tracking-wider text-white">
-              Project Saved Live! ✓
+              {toastMessage}
             </p>
             <p className="text-[11px] text-[#CBDCDE] font-sans-clean mt-0.5">
-              &quot;{savedProjectName}&quot; media playlist &amp; continuous playback updated.
+              &quot;{savedProjectName}&quot; updated in database catalog.
             </p>
           </div>
           <button

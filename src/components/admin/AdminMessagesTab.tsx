@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PublicMessage } from '../../types';
 import { adminStore } from '../../services/adminStore';
 import {
@@ -13,6 +13,9 @@ import {
   DollarSign,
   Briefcase,
   X,
+  Archive,
+  RotateCcw,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface AdminMessagesTabProps {
@@ -20,47 +23,96 @@ interface AdminMessagesTabProps {
 }
 
 export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) => {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unread' | 'read' | 'replied'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unread' | 'read' | 'replied' | 'trash'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMessage, setSelectedMessage] = useState<PublicMessage | null>(null);
-
-  const filteredMessages = messages.filter((m) => {
-    if (statusFilter !== 'all' && m.status !== statusFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const match =
-        m.name.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q) ||
-        (m.company && m.company.toLowerCase().includes(q)) ||
-        m.message.toLowerCase().includes(q) ||
-        m.projectType.toLowerCase().includes(q);
-      if (!match) return false;
-    }
-    return true;
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    message: PublicMessage | null;
+    permanent: boolean;
+  }>({
+    isOpen: false,
+    message: null,
+    permanent: false,
   });
 
-  const unreadCount = messages.filter((m) => m.status === 'unread').length;
+  const activeMessages = useMemo(() => {
+    return messages.filter((m) => !m.isDeleted && m.status !== 'archived');
+  }, [messages]);
 
-  const handleSelectMessage = (msg: PublicMessage) => {
+  const trashMessages = useMemo(() => {
+    return messages.filter((m) => Boolean(m.isDeleted) || m.status === 'archived');
+  }, [messages]);
+
+  const filteredMessages = useMemo(() => {
+    let list: PublicMessage[] = [];
+    if (statusFilter === 'trash') {
+      list = trashMessages;
+    } else if (statusFilter !== 'all') {
+      list = activeMessages.filter((m) => m.status === statusFilter);
+    } else {
+      list = activeMessages;
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q) ||
+          (m.company && m.company.toLowerCase().includes(q)) ||
+          m.message.toLowerCase().includes(q) ||
+          m.projectType.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [statusFilter, searchQuery, activeMessages, trashMessages]);
+
+  const unreadCount = activeMessages.filter((m) => m.status === 'unread').length;
+
+  const handleSelectMessage = async (msg: PublicMessage) => {
     setSelectedMessage(msg);
     if (msg.status === 'unread') {
-      adminStore.updateMessageStatus(msg.id, 'read');
+      try {
+        await adminStore.updateMessageStatus(msg.id, 'read');
+      } catch {}
     }
   };
 
-  const handleStatusChange = (id: string, status: PublicMessage['status']) => {
-    adminStore.updateMessageStatus(id, status);
-    if (selectedMessage && selectedMessage.id === id) {
-      setSelectedMessage({ ...selectedMessage, status });
+  const handleStatusChange = async (id: string, status: PublicMessage['status']) => {
+    try {
+      await adminStore.updateMessageStatus(id, status);
+      if (selectedMessage && selectedMessage.id === id) {
+        setSelectedMessage({ ...selectedMessage, status });
+      }
+    } catch (err: any) {
+      alert(`Status Update Error: ${err.message || 'Unable to update status.'}`);
     }
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Delete message from "${name}"?`)) {
-      adminStore.deleteMessage(id);
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.message) return;
+    const { id } = deleteModal.message;
+    const isPermanent = deleteModal.permanent;
+    try {
+      await adminStore.deleteMessage(id, isPermanent);
       if (selectedMessage && selectedMessage.id === id) {
         setSelectedMessage(null);
       }
+      setDeleteModal({ isOpen: false, message: null, permanent: false });
+    } catch (err: any) {
+      alert(`Delete Error: ${err.message || 'Unable to delete message.'}`);
+    }
+  };
+
+  const handleRestore = async (msg: PublicMessage) => {
+    try {
+      await adminStore.restoreMessage(msg.id);
+      if (selectedMessage && selectedMessage.id === msg.id) {
+        setSelectedMessage({ ...msg, isDeleted: false, status: 'read' });
+      }
+    } catch (err: any) {
+      alert(`Restore Error: ${err.message || 'Unable to restore message.'}`);
     }
   };
 
@@ -133,7 +185,7 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            All ({messages.length})
+            All Active ({activeMessages.length})
           </button>
           <button
             type="button"
@@ -155,7 +207,7 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            Read ({messages.filter((m) => m.status === 'read').length})
+            Read ({activeMessages.filter((m) => m.status === 'read').length})
           </button>
           <button
             type="button"
@@ -166,7 +218,19 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
                 : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
             }`}
           >
-            Replied ({messages.filter((m) => m.status === 'replied').length})
+            Replied ({activeMessages.filter((m) => m.status === 'replied').length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('trash')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === 'trash'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'text-rose-700 hover:text-rose-800 hover:bg-rose-50'
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            Trash ({trashMessages.length})
           </button>
         </div>
 
@@ -189,12 +253,13 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
         <div className={`space-y-3.5 ${selectedMessage ? 'lg:col-span-5' : 'lg:col-span-12'}`}>
           {filteredMessages.length === 0 ? (
             <div className="p-12 text-center bg-white/60 rounded-3xl border border-dashed border-[#E5E7EB] text-[#596769]">
-              No messages found.
+              {statusFilter === 'trash' ? 'Trash is empty. Deleted messages will appear here for recovery.' : 'No messages found.'}
             </div>
           ) : (
             filteredMessages.map((msg) => {
               const isSelected = selectedMessage?.id === msg.id;
               const isUnread = msg.status === 'unread';
+              const isMsgDeleted = Boolean(msg.isDeleted) || msg.status === 'archived';
 
               return (
                 <div
@@ -203,6 +268,8 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
                   className={`p-5 rounded-[28px] border transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.03)] ${
                     isSelected
                       ? 'bg-white border-[#202526] shadow-[0_15px_35px_rgba(0,0,0,0.08)]'
+                      : isMsgDeleted
+                      ? 'bg-rose-50/40 border-rose-200 hover:border-rose-300'
                       : isUnread
                       ? 'bg-white/95 border-[#D8A9A8] hover:border-[#D8A9A8]'
                       : 'bg-white/80 border-[#E5E7EB] hover:border-black/20'
@@ -212,7 +279,11 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
                     <div className="flex items-center gap-2.5">
                       <div
                         className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                          isUnread ? 'bg-[#D8A9A8] animate-pulse shadow-[0_0_6px_#D8A9A8]' : 'bg-black/10'
+                          isMsgDeleted
+                            ? 'bg-rose-500'
+                            : isUnread
+                            ? 'bg-[#D8A9A8] animate-pulse shadow-[0_0_6px_#D8A9A8]'
+                            : 'bg-black/10'
                         }`}
                       />
                       <div>
@@ -244,14 +315,16 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
 
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-label-small font-medium uppercase tracking-wider ${
-                        msg.status === 'unread'
+                        isMsgDeleted
+                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                          : msg.status === 'unread'
                           ? 'bg-[#D8A9A8]/20 text-[#202526]'
                           : msg.status === 'replied'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-black/[0.04] text-[#596769]'
                       }`}
                     >
-                      {msg.status}
+                      {isMsgDeleted ? 'In Trash' : msg.status}
                     </span>
                   </div>
                 </div>
@@ -278,6 +351,11 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-label-small uppercase tracking-wider font-medium bg-[#D8A9A8]/20 text-[#202526] border border-[#D8A9A8]">
                     Inbound Lead Inquiry
                   </span>
+                  {Boolean(selectedMessage.isDeleted) && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-label-small uppercase tracking-wider font-medium bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
+                      <Archive className="w-3 h-3 text-rose-600" /> In Trash
+                    </span>
+                  )}
                   <span className="text-xs text-[#596769] font-strong">{selectedMessage.date}</span>
                 </div>
                 <h3 className="text-2xl font-praise text-[#202526] tracking-wide">
@@ -351,35 +429,105 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ messages }) 
               </div>
 
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleDelete(selectedMessage.id, selectedMessage.name)}
-                  className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
-                  title="Delete message"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {Boolean(selectedMessage.isDeleted) ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleRestore(selectedMessage)}
+                      className="px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-btn uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Restore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteModal({ isOpen: true, message: selectedMessage, permanent: true })}
+                      className="px-4 py-2.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-btn uppercase tracking-wider flex items-center gap-1.5 border border-rose-300 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete Forever
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteModal({ isOpen: true, message: selectedMessage, permanent: false })}
+                      className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
+                      title="Move message to Trash"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
 
-                <a
-                  href={`mailto:${selectedMessage.email}?subject=RE: ${encodeURIComponent(
-                    selectedMessage.projectType
-                  )} - AI Build Studio&body=Hi ${encodeURIComponent(
-                    selectedMessage.name
-                  )},\n\nThank you for reaching out to AI Build regarding your project.`}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => handleStatusChange(selectedMessage.id, 'replied')}
-                  className="px-6 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  Reply via Email
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                    <a
+                      href={`mailto:${selectedMessage.email}?subject=RE: ${encodeURIComponent(
+                        selectedMessage.projectType
+                      )} - AI Build Studio&body=Hi ${encodeURIComponent(
+                        selectedMessage.name
+                      )},\n\nThank you for reaching out to AI Build regarding your project.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => handleStatusChange(selectedMessage.id, 'replied')}
+                      className="px-6 py-3 rounded-full bg-[#202526] hover:bg-[#111314] text-white text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      Reply via Email
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && deleteModal.message && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-stone-200 shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-elegant text-[#202526]">
+                {deleteModal.permanent ? 'Permanently Delete Message?' : 'Move Message to Trash?'}
+              </h3>
+              <p className="text-xs text-[#596769] mt-1.5 leading-relaxed font-sans-clean">
+                {deleteModal.permanent ? (
+                  <>
+                    Are you sure you want to permanently delete the inquiry from{' '}
+                    <strong className="text-[#202526]">&quot;{deleteModal.message.name}&quot;</strong>? This
+                    action cannot be undone and will permanently remove this inquiry from the database.
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to move the inquiry from{' '}
+                    <strong className="text-[#202526]">&quot;{deleteModal.message.name}&quot;</strong> to the Trash?
+                    It can be safely restored anytime from the Trash tab.
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, message: null, permanent: false })}
+                className="px-4 py-2 rounded-xl text-xs font-btn font-medium uppercase tracking-wider text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl text-xs font-btn font-semibold uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-sm"
+              >
+                {deleteModal.permanent ? 'Permanently Delete' : 'Move to Trash'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { ContactButton } from './ContactButton';
 import { WebsiteContent } from '../types';
@@ -116,10 +116,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Brand Mark (Secret Owner Trigger on Triple-Click / Alt-Click) */}
         <div className="flex items-center gap-2.5 shrink-0">
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={`${badgeText} brand mark`}
             onClick={handleBrandClick}
-            className="px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 min-h-[36px] sm:min-h-[38px] rounded-full glass-pill flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none transition-all duration-300 hover:scale-105"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleBrandClick(e as unknown as React.MouseEvent);
+              }
+            }}
+            className="px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 min-h-[36px] sm:min-h-[38px] rounded-full glass-pill flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/50"
           >
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#D8A9A8] shadow-[0_0_8px_rgba(216,169,168,0.8)]" />
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#D8A9A8] shadow-[0_0_8px_rgba(216,169,168,0.8)]" aria-hidden="true" />
             <span className="font-bezoria text-xs sm:text-sm uppercase tracking-wider text-[#202526] font-normal">
               {badgeText}
             </span>

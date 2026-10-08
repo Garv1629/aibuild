@@ -1185,6 +1185,8 @@ export const GlobalScrollCharacter: React.FC<GlobalScrollCharacterProps> = ({
                       alt="AI Build 3D Studio Companion"
                       className="w-[125px] xs:w-[150px] sm:w-[330px] md:w-[390px] lg:w-[440px] h-auto object-contain pointer-events-none max-h-[30vh] xs:max-h-[34vh] sm:max-h-[58vh] relative z-10 block drop-shadow-[0_15px_30px_rgba(32,37,38,0.18)]"
                       loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                     />
                   )}

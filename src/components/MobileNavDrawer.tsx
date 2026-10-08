@@ -18,6 +18,8 @@ import {
 import { playStudioChime } from '../services/adminStore';
 import { useSmoothScroll } from './SmoothScrollProvider';
 
+import { copyToClipboard } from '../utils/helpers';
+
 interface MobileNavDrawerProps {
   isOpen: boolean;
   onOpen: () => void;
@@ -25,8 +27,10 @@ interface MobileNavDrawerProps {
   onOpenContact?: (projectType?: string, budget?: string, message?: string) => void;
   onOpenPrice?: () => void;
   onOpenEstimator?: () => void;
+  onOpenLegal?: (tab: 'privacy' | 'terms') => void;
   onSecretAdminTrigger?: () => void;
   badgeText?: string;
+  contactEmail?: string;
 }
 
 export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
@@ -36,8 +40,10 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onOpenContact,
   onOpenPrice,
   onOpenEstimator,
+  onOpenLegal,
   onSecretAdminTrigger,
   badgeText = 'ai.build_',
+  contactEmail = 'hello@aibuild.studio',
 }) => {
   const { scrollTo } = useSmoothScroll();
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -89,14 +95,12 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
     }, 120);
   };
 
-  const handleCopyEmail = (e: React.MouseEvent) => {
+  const handleCopyEmail = async (e: React.MouseEvent) => {
     e.stopPropagation();
     playStudioChime('click');
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText('garvchauhan0161@gmail.com');
-      setCopiedEmail(true);
-      setTimeout(() => setCopiedEmail(false), 2000);
-    }
+    await copyToClipboard(contactEmail);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
   };
 
   const handleBrandClick = (e: React.MouseEvent) => {
@@ -243,10 +247,19 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                 {/* Brand Tag (Secret Admin on Triple Click) */}
                 <div
                   id="mobile-drawer-brand"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${badgeText} Studio`}
                   onClick={handleBrandClick}
-                  className="flex items-center gap-2 cursor-pointer group"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleBrandClick(e as unknown as React.MouseEvent);
+                    }
+                  }}
+                  className="flex items-center gap-2 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/50 rounded-lg p-1"
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#D8A9A8] shadow-[0_0_8px_rgba(216,169,168,0.8)]" />
+                  <span className="w-2 h-2 rounded-full bg-[#D8A9A8] shadow-[0_0_8px_rgba(216,169,168,0.8)]" aria-hidden="true" />
                   <span className="font-bezoria text-sm uppercase tracking-wider text-[#202526]">
                     {badgeText}
                   </span>
@@ -265,9 +278,9 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                     playStudioChime('click');
                     onClose();
                   }}
-                  className="w-8 h-8 rounded-full bg-[#E7EBE9] hover:bg-[#CBDCDE] text-[#202526] flex items-center justify-center cursor-pointer transition-colors duration-200"
+                  className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-[#E7EBE9] hover:bg-[#CBDCDE] text-[#202526] flex items-center justify-center cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </motion.button>
               </div>
 
@@ -357,32 +370,52 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                 {/* Email Quick Action */}
                 <div className="flex items-center justify-between p-2 rounded-xl bg-[#E7EBE9]/50 border border-[#B8C1C0]/30 text-xs">
                   <a
-                    href="mailto:garvchauhan0161@gmail.com"
+                    href={`mailto:${contactEmail}`}
                     className="flex items-center gap-2 text-[#202526] font-body hover:underline truncate"
                   >
                     <Mail className="w-3.5 h-3.5 text-[#596769] shrink-0" />
-                    <span className="truncate">garvchauhan0161@gmail.com</span>
+                    <span className="truncate">{contactEmail}</span>
                   </a>
 
                   <button
                     type="button"
                     id="mobile-drawer-copy-email-btn"
-                    title="Copy Email"
+                    aria-label={copiedEmail ? "Email copied to clipboard" : "Copy email address"}
+                    title={copiedEmail ? "Email copied" : "Copy email"}
                     onClick={handleCopyEmail}
-                    className="p-1 rounded-md hover:bg-white text-[#596769] hover:text-[#202526] cursor-pointer transition-colors shrink-0"
+                    className="p-1.5 min-w-[32px] min-h-[32px] rounded-md hover:bg-white text-[#596769] hover:text-[#202526] cursor-pointer transition-colors shrink-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
                   >
                     {copiedEmail ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
                     ) : (
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                     )}
                   </button>
                 </div>
 
-                {/* Footer Metadata */}
-                <div className="flex items-center justify-between text-xs text-[#596769] uppercase tracking-wider font-mono pt-1">
-                  <span>AI Build Studio • 2026</span>
-                  <span>Fast Turnaround</span>
+                {/* Footer Metadata & Legal Links */}
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <div className="flex items-center justify-between text-xs text-[#596769] uppercase tracking-wider font-mono">
+                    <span>AI Build Studio • 2026</span>
+                    <span>Fast Turnaround</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-[#596769] font-body pt-0.5 border-t border-[#E7EBE9]/60">
+                    <button
+                      type="button"
+                      onClick={() => handleModalClick(() => onOpenLegal?.('privacy'))}
+                      className="hover:text-[#202526] underline-offset-2 hover:underline cursor-pointer"
+                    >
+                      Privacy Policy
+                    </button>
+                    <span className="text-[#B8C1C0]">•</span>
+                    <button
+                      type="button"
+                      onClick={() => handleModalClick(() => onOpenLegal?.('terms'))}
+                      className="hover:text-[#202526] underline-offset-2 hover:underline cursor-pointer"
+                    >
+                      Terms of Service
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.aside>

@@ -62,11 +62,15 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
 
   const words = useMemo(() => bio.split(' '), [bio]);
 
-  const pillars = content?.pillars || [
+  const rawPillars = content?.pillars || [
     { id: '1', title: 'Speed & Execution', subtitle: 'Rapid Prototype to Scale', icon: 'zap' },
     { id: '2', title: 'AI Engineering', subtitle: 'Agents, Models & Workflows', icon: 'cpu' },
     { id: '3', title: 'Interactive Polish', subtitle: '60fps Motion & 3D Polish', icon: 'sparkles' },
   ];
+
+  const pillars = useMemo(() => {
+    return rawPillars.filter((p: any) => !p.isHidden && !p.isDeleted && p.status !== 'hidden');
+  }, [rawPillars]);
 
   const deco = {
     moonUrl:
@@ -95,11 +99,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
         <motion.div
           style={{ y: yMoon, rotate: rotMoon }}
           className="hidden sm:block absolute top-12 left-4 sm:left-10 z-10 pointer-events-auto"
+          aria-hidden="true"
         >
           <Magnet padding={100} strength={3} activeTransition="transform 0.25s ease-out">
             <img
               src={deco.moonUrl}
-              alt="3D Decorative Moon"
+              alt=""
+              aria-hidden="true"
               className="w-14 sm:w-20 md:w-28 h-auto object-contain drop-shadow-[0_10px_20px_rgba(32,37,38,0.15)] pointer-events-none"
               loading="lazy"
               decoding="async"
@@ -114,11 +120,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
         <motion.div
           style={{ y: yLego, rotate: rotLego }}
           className="hidden sm:block absolute top-12 right-4 sm:right-10 z-10 pointer-events-auto"
+          aria-hidden="true"
         >
           <Magnet padding={100} strength={3} activeTransition="transform 0.25s ease-out">
             <img
               src={deco.legoUrl}
-              alt="3D Decorative Block"
+              alt=""
+              aria-hidden="true"
               className="w-14 sm:w-20 md:w-28 h-auto object-contain drop-shadow-[0_10px_20px_rgba(32,37,38,0.15)] pointer-events-none"
               loading="lazy"
               decoding="async"
@@ -133,11 +141,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
         <motion.div
           style={{ y: yShape, rotate: rotShape }}
           className="hidden sm:block absolute bottom-12 left-4 sm:left-10 z-10 pointer-events-auto"
+          aria-hidden="true"
         >
           <Magnet padding={100} strength={3} activeTransition="transform 0.25s ease-out">
             <img
               src={deco.shapeUrl}
-              alt="3D Decorative Shape"
+              alt=""
+              aria-hidden="true"
               className="w-12 sm:w-16 md:w-24 h-auto object-contain drop-shadow-[0_10px_20px_rgba(32,37,38,0.15)] pointer-events-none"
               loading="lazy"
               decoding="async"
@@ -152,11 +162,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ content }) => {
         <motion.div
           style={{ y: yGroup, rotate: rotGroup }}
           className="hidden sm:block absolute bottom-12 right-4 sm:right-10 z-10 pointer-events-auto"
+          aria-hidden="true"
         >
           <Magnet padding={100} strength={3} activeTransition="transform 0.25s ease-out">
             <img
               src={deco.groupUrl}
-              alt="3D Decorative Group"
+              alt=""
+              aria-hidden="true"
               className="w-14 sm:w-20 md:w-28 h-auto object-contain drop-shadow-[0_10px_20px_rgba(32,37,38,0.15)] pointer-events-none"
               loading="lazy"
               decoding="async"

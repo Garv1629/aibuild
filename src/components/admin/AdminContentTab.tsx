@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WebsiteContent } from '../../types';
 import { adminStore } from '../../services/adminStore';
+import { unsavedChanges } from '../../services/unsavedChanges';
 import { MediaUploader } from './MediaUploader';
 import { MultiMediaUploader } from './MultiMediaUploader';
 import { ServiceMediaManager } from './ServiceMediaManager';
@@ -22,6 +23,15 @@ import {
   Sun,
   Zap,
   X,
+  AlertCircle,
+  Loader2,
+  Archive,
+  AlertTriangle,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const PORTRAIT_PRESETS = [
@@ -45,44 +55,152 @@ interface AdminContentTabProps {
 
 export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => {
   const [formData, setFormDataState] = useState<WebsiteContent>(content);
-  const [isSaving, setIsSaving] = useState(false);
-  const [savedToast, setSavedToast] = useState(false);
+  const [savedBaseline, setSavedBaseline] = useState<WebsiteContent>(content);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isReverting, setIsReverting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'saving' | 'saved' | 'publishing' | 'published' | 'error' | null; text: string | null }>({ type: null, text: null });
   const [activeSubSection, setActiveSubSection] = useState<
     'hero' | 'lighting' | 'about' | 'services' | 'marquee' | 'contact'
   >('hero');
+  const [servicesView, setServicesView] = useState<'active' | 'trash'>('active');
+  const [deleteServiceModal, setDeleteServiceModal] = useState<{
+    isOpen: boolean;
+    serviceNumber: string | null;
+    serviceTitle: string | null;
+    permanent: boolean;
+  }>({
+    isOpen: false,
+    serviceNumber: null,
+    serviceTitle: null,
+    permanent: false,
+  });
 
-  // Synchronize state when content prop changes
+  // Track store publish status
+  const [publishStatus, setPublishStatus] = useState(() => adminStore.getPublishStatus());
+
+  // Detect dirty state comparing formData with savedBaseline
+  const isDirty = useMemo(() => {
+    try {
+      return JSON.stringify(formData) !== JSON.stringify(savedBaseline);
+    } catch {
+      return false;
+    }
+  }, [formData, savedBaseline]);
+
+  // Synchronize unsavedChanges manager with current dirty state
+  useEffect(() => {
+    unsavedChanges.setDirty('content', isDirty, {
+      label: 'Website Content & Media',
+      onDiscard: () => {
+        setFormDataState(savedBaseline);
+      },
+    });
+    return () => {
+      unsavedChanges.setDirty('content', false);
+    };
+  }, [isDirty, savedBaseline]);
+
+  // Synchronize state when content prop changes or store updates
   useEffect(() => {
     setFormDataState(content);
+    setSavedBaseline(content);
+    setPublishStatus(adminStore.getPublishStatus());
+    const unsub = adminStore.subscribe((state) => {
+      if (state.draftContent) {
+        setFormDataState(state.draftContent);
+        setSavedBaseline(state.draftContent);
+      }
+      setPublishStatus({
+        status: state.publishStatus || 'published',
+        publishedAt: state.publishedAt || null,
+        hasDraftChanges: Boolean(state.hasDraftChanges),
+      });
+    });
+    return unsub;
   }, [content]);
 
-  // Real-time synchronization: updates local state AND publishes directly to adminStore
-  // so any connected live preview or split-screen reflects keystrokes in real time
   const setFormData = (
     nextOrUpdater: WebsiteContent | ((prev: WebsiteContent) => WebsiteContent)
   ) => {
     setFormDataState((prev) => {
       const next = typeof nextOrUpdater === 'function' ? nextOrUpdater(prev) : nextOrUpdater;
-      adminStore.updateWebsiteContent(next);
       return next;
     });
   };
 
-  const handleSave = (e?: React.FormEvent | React.MouseEvent) => {
-    if (e && typeof e.preventDefault === 'function') {
-      e.preventDefault();
+  // 1. Save Draft (Persists draft to database without modifying public website)
+  const handleSaveDraft = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    setIsSavingDraft(true);
+    setStatusMessage({ type: 'saving', text: 'Saving draft to Supabase database...' });
+    try {
+      await adminStore.saveContentDraft(formData);
+      setSavedBaseline(formData);
+      unsavedChanges.setDirty('content', false);
+      setStatusMessage({ type: 'saved', text: 'Saved! Changes stored safely in Supabase (not yet live).' });
+      setTimeout(() => setStatusMessage({ type: null, text: null }), 4000);
+    } catch (err: any) {
+      // NEVER discard edits on error — user edits remain in formData
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to save draft. Your edits are preserved.' });
+      alert(`Save Draft Error: ${err.message || 'Failed to save draft. Your edits are preserved.'}`);
+    } finally {
+      setIsSavingDraft(false);
     }
-    setIsSaving(true);
-    adminStore.saveWebsiteContent(formData);
-    setSavedToast(true);
-    setTimeout(() => setIsSaving(false), 500);
-    setTimeout(() => setSavedToast(false), 3500);
   };
 
-  const handleResetDefaults = () => {
+  // 2. Publish to Live (Pushes draft directly live to public website)
+  const handlePublish = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    setIsPublishing(true);
+    setStatusMessage({ type: 'publishing', text: 'Publishing live to public website...' });
+    try {
+      await adminStore.publishContent(formData);
+      setSavedBaseline(formData);
+      unsavedChanges.setDirty('content', false);
+      setStatusMessage({ type: 'published', text: 'Published! Public website is now displaying the latest changes.' });
+      setTimeout(() => setStatusMessage({ type: null, text: null }), 4000);
+    } catch (err: any) {
+      // Keep formData preserved on error
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to publish changes. Your edits are preserved.' });
+      alert(`Publish Error: ${err.message || 'Failed to publish changes. Your edits are preserved.'}`);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // 3. Discard Draft / Revert to Live Published
+  const handleRevertDraft = async () => {
+    if (window.confirm('Discard all unpublished draft edits and revert to the currently live published version?')) {
+      setIsReverting(true);
+      try {
+        const published = await adminStore.revertContentDraft();
+        setFormDataState(published);
+        setSavedBaseline(published);
+        unsavedChanges.setDirty('content', false);
+        setStatusMessage({ type: 'saved', text: 'Draft discarded. Reverted to live published content.' });
+        setTimeout(() => setStatusMessage({ type: null, text: null }), 3000);
+      } catch (err: any) {
+        alert(`Revert Error: ${err.message || 'Failed to revert draft.'}`);
+      } finally {
+        setIsReverting(false);
+      }
+    }
+  };
+
+  const handleResetDefaults = async () => {
     if (window.confirm('Reset all website text and media content to initial factory defaults?')) {
-      adminStore.resetToDefaults();
-      setFormData(adminStore.getWebsiteContent());
+      try {
+        await adminStore.resetToDefaults();
+        const resetContent = adminStore.getWebsiteContent();
+        setFormDataState(resetContent);
+        setSavedBaseline(resetContent);
+        unsavedChanges.setDirty('content', false);
+        setStatusMessage({ type: 'published', text: 'Reset to factory defaults.' });
+        setTimeout(() => setStatusMessage({ type: null, text: null }), 3000);
+      } catch (err: any) {
+        alert(`Reset Error: ${err.message || 'Failed to reset defaults.'}`);
+      }
     }
   };
 
@@ -119,6 +237,55 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
     });
   };
 
+  // Service drag and drop reordering
+  const [draggedServiceIndex, setDraggedServiceIndex] = useState<number | null>(null);
+  const [dropTargetServiceIndex, setDropTargetServiceIndex] = useState<number | null>(null);
+
+  const moveService = (index: number, direction: 'up' | 'down') => {
+    const items = [...(formData.services?.items || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    const temp = items[index];
+    items[index] = items[targetIndex];
+    items[targetIndex] = temp;
+
+    setFormData({
+      ...formData,
+      services: {
+        heading: formData.services?.heading || 'WHAT WE DO',
+        subheading: formData.services?.subheading || '',
+        items,
+      },
+    });
+  };
+
+  const handleDropService = (sourceOriginalIndex: number, targetOriginalIndex: number) => {
+    if (sourceOriginalIndex === targetOriginalIndex) {
+      setDraggedServiceIndex(null);
+      setDropTargetServiceIndex(null);
+      return;
+    }
+
+    const items = [...(formData.services?.items || [])];
+    if (sourceOriginalIndex < 0 || sourceOriginalIndex >= items.length) return;
+    if (targetOriginalIndex < 0 || targetOriginalIndex >= items.length) return;
+
+    const [moved] = items.splice(sourceOriginalIndex, 1);
+    items.splice(targetOriginalIndex, 0, moved);
+
+    setDraggedServiceIndex(null);
+    setDropTargetServiceIndex(null);
+    setFormData({
+      ...formData,
+      services: {
+        heading: formData.services?.heading || 'WHAT WE DO',
+        subheading: formData.services?.subheading || '',
+        items,
+      },
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Top Action Header */}
@@ -136,38 +303,110 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 font-sans-clean">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-label-small uppercase tracking-wider font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Real-time Live Sync</span>
-          </div>
+          {/* Status Badge */}
+          {isSavingDraft || isPublishing ? (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-label-small uppercase tracking-wider font-semibold shadow-xs">
+              <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+              <span>Saving to Supabase...</span>
+            </div>
+          ) : statusMessage.type === 'error' ? (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-red-50 border border-red-300 text-red-800 text-xs font-label-small uppercase tracking-wider font-semibold shadow-xs">
+              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+              <span>Save Failed (Edits Kept)</span>
+            </div>
+          ) : isDirty ? (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-label-small uppercase tracking-wider font-bold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              <span>Unsaved changes</span>
+            </div>
+          ) : statusMessage.type === 'saved' ? (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-label-small uppercase tracking-wider font-semibold shadow-xs">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Saved (Draft)</span>
+            </div>
+          ) : statusMessage.type === 'published' || publishStatus.status === 'published' ? (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-label-small uppercase tracking-wider font-semibold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>Published (Live)</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-stone-50 border border-stone-200 text-stone-700 text-xs font-label-small uppercase tracking-wider font-semibold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-stone-400" />
+              <span>Saved</span>
+            </div>
+          )}
+
+          {/* Discard Draft button if modified */}
+          {(publishStatus.status === 'modified' || publishStatus.hasDraftChanges || isDirty) && (
+            <button
+              type="button"
+              onClick={handleRevertDraft}
+              disabled={isReverting}
+              className="px-3.5 py-2.5 rounded-full border border-red-200 bg-red-50/50 hover:bg-red-50 text-xs font-btn font-medium text-red-700 uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Discard Draft
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleResetDefaults}
-            className="px-4 py-2.5 rounded-full border border-[#E5E7EB] hover:bg-black/[0.04] text-xs font-btn font-medium text-[#596769] hover:text-[#202526] uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3.5 py-2.5 rounded-full border border-[#E5E7EB] hover:bg-black/[0.04] text-xs font-btn font-medium text-[#596769] hover:text-[#202526] uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Reset
           </button>
+
+          {/* Save Draft Button - Active ONLY when dirty */}
           <button
             type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            className={`px-6 py-3 rounded-full text-xs font-btn font-medium uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-              savedToast
+            onClick={handleSaveDraft}
+            disabled={!isDirty || isSavingDraft || isPublishing}
+            title={isDirty ? 'Save changes to Supabase draft' : 'No unsaved changes'}
+            className={`px-5 py-2.5 rounded-full border text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-2 shadow-xs transition-all ${
+              isDirty
+                ? 'border-amber-400 bg-amber-500 hover:bg-amber-600 text-white ring-2 ring-amber-300/60 shadow-md cursor-pointer hover:scale-105 active:scale-95'
+                : 'border-stone-200 bg-stone-100 text-stone-400 opacity-60 cursor-not-allowed'
+            }`}
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isDirty ? 'text-white' : 'text-stone-400'}`} />
+            <span>{isSavingDraft ? 'Saving Draft...' : isDirty ? 'Save Draft' : 'Saved'}</span>
+          </button>
+
+          {/* Publish to Live Button */}
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={isSavingDraft || isPublishing}
+            className={`px-6 py-2.5 rounded-full text-xs font-btn font-semibold uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50 ${
+              statusMessage.type === 'published'
                 ? 'bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-400'
                 : 'bg-[#202526] hover:bg-[#111314] text-white'
             }`}
           >
-            <Check className={`w-4 h-4 ${savedToast ? 'text-white stroke-[3]' : 'text-[#D8A9A8]'}`} />
-            <span>{savedToast ? 'Saved Live! ✓' : isSaving ? 'Saving Changes...' : 'Save Live Changes'}</span>
+            <Check className={`w-4 h-4 ${statusMessage.type === 'published' ? 'text-white stroke-[3]' : 'text-[#D8A9A8]'}`} />
+            <span>{isPublishing ? 'Publishing...' : statusMessage.type === 'published' ? 'Published Live! ✓' : 'Publish to Live'}</span>
           </button>
         </div>
       </div>
 
-      {savedToast && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-label-small font-medium uppercase tracking-wider flex items-center justify-between animate-fadeIn shadow-xs">
+      {statusMessage.text && (
+        <div className={`p-4 rounded-2xl text-xs font-label-small font-medium uppercase tracking-wider flex items-center justify-between animate-fadeIn shadow-xs border ${
+          statusMessage.type === 'error'
+            ? 'bg-red-50 border-red-200 text-red-700'
+            : statusMessage.type === 'saving' || statusMessage.type === 'publishing'
+            ? 'bg-amber-50 border-amber-200 text-amber-800'
+            : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+        }`}>
           <span className="flex items-center gap-2">
-            <Check className="w-4 h-4" /> Changes applied! Website live preview updated with new content and uploaded assets.
+            <Check className="w-4 h-4" /> {statusMessage.text}
           </span>
+          <button
+            type="button"
+            onClick={() => setStatusMessage({ type: null, text: null })}
+            className="text-stone-500 hover:text-stone-800 p-1"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
@@ -822,35 +1061,472 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
 
             {/* List of Disciplines / Services */}
             <div className="space-y-6 pt-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs uppercase tracking-[0.14em] font-label-small font-semibold text-[#202526]">
-                  Disciplines / Services Stack ({formData.services?.items?.length || 0})
-                </label>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 p-3 rounded-2xl border border-[#E5E7EB]">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setServicesView('active')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer ${
+                      servicesView === 'active'
+                        ? 'bg-[#202526] text-white shadow-xs'
+                        : 'text-[#596769] hover:text-[#202526] hover:bg-black/[0.04]'
+                    }`}
+                  >
+                    Active Disciplines ({(formData.services?.items || []).filter((s) => !s.isDeleted && !s.deletedAt).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setServicesView('trash')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-btn font-medium uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                      servicesView === 'trash'
+                        ? 'bg-rose-700 text-white shadow-xs'
+                        : 'text-rose-700 hover:text-rose-800 hover:bg-rose-50'
+                    }`}
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    Trash ({(formData.services?.items || []).filter((s) => Boolean(s.isDeleted) || Boolean(s.deletedAt)).length})
+                  </button>
+                </div>
+                <span className="text-[11px] text-[#596769] font-sans-clean">
+                  {servicesView === 'active' ? 'Items visible in live portfolio' : 'Deleted items hidden on public site'}
+                </span>
               </div>
 
+              {/* Service Items List */}
               <div className="space-y-6">
-                {(formData.services?.items || []).map((item, idx) => (
-                  <div
-                    key={item.number || idx}
-                    className="p-5 sm:p-7 rounded-2xl bg-[#F8F9FA] border border-[#E5E7EB] space-y-5 shadow-xs relative group"
-                  >
-                    {/* Header bar of each service item */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#D8A9A8] bg-[#202526] px-2.5 py-1 rounded-md">
-                          #{item.number || `0${idx + 1}`}
-                        </span>
-                        <h4 className="text-base font-semibold uppercase tracking-wider text-[#202526]">
-                          {item.title || 'Untitled Discipline'}
-                        </h4>
-                      </div>
+                {(formData.services?.items || [])
+                  .filter((s) => (servicesView === 'trash' ? Boolean(s.isDeleted) || Boolean(s.deletedAt) : !s.isDeleted && !s.deletedAt))
+                  .length === 0 ? (
+                  <div className="p-12 text-center bg-[#F8F9FA] rounded-2xl border border-dashed border-[#E5E7EB] text-xs text-[#596769]">
+                    {servicesView === 'trash' ? 'Trash is empty. Soft-deleted services will appear here for recovery.' : 'No active disciplines. Click "+ Add New Discipline" above to create one.'}
+                  </div>
+                ) : (
+                  (formData.services?.items || [])
+                    .map((item, originalIdx) => ({ item, originalIdx }))
+                    .filter(({ item }) => (servicesView === 'trash' ? Boolean(item.isDeleted) || Boolean(item.deletedAt) : !item.isDeleted && !item.deletedAt))
+                    .map(({ item, originalIdx }, displayIdx, listArr) => {
+                      const isItemDeleted = Boolean(item.isDeleted) || Boolean(item.deletedAt);
+                      const isBeingDragged = draggedServiceIndex === originalIdx;
+                      const isDropTarget = dropTargetServiceIndex === originalIdx;
+                      const canDrag = !isItemDeleted && servicesView !== 'trash';
 
-                      {(formData.services?.items || []).length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm(`Delete discipline "${item.title || item.number}"?`)) {
-                              const updated = (formData.services?.items || []).filter((_, i) => i !== idx);
+                      return (
+                        <div
+                          key={item.number || originalIdx}
+                          draggable={canDrag}
+                          onDragStart={(e) => {
+                            setDraggedServiceIndex(originalIdx);
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData('text/plain', String(originalIdx));
+                          }}
+                          onDragOver={(e) => {
+                            if (draggedServiceIndex !== null && draggedServiceIndex !== originalIdx) {
+                              e.preventDefault();
+                              e.dataTransfer.dropEffect = 'move';
+                              if (dropTargetServiceIndex !== originalIdx) {
+                                setDropTargetServiceIndex(originalIdx);
+                              }
+                            }
+                          }}
+                          onDragLeave={() => {
+                            if (dropTargetServiceIndex === originalIdx) {
+                              setDropTargetServiceIndex(null);
+                            }
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (draggedServiceIndex !== null) {
+                              handleDropService(draggedServiceIndex, originalIdx);
+                            }
+                          }}
+                          onDragEnd={() => {
+                            setDraggedServiceIndex(null);
+                            setDropTargetServiceIndex(null);
+                          }}
+                          className={`p-5 sm:p-7 rounded-2xl border space-y-5 shadow-xs relative group transition-all ${
+                            isBeingDragged ? 'opacity-40 scale-[0.99] border-dashed border-[#202526]' : ''
+                          } ${
+                            isDropTarget ? 'ring-2 ring-[#202526] ring-offset-2 border-[#202526] bg-[#202526]/[0.02]' : ''
+                          } ${
+                            isItemDeleted ? 'bg-rose-50/40 border-rose-200' : 'bg-[#F8F9FA] border-[#E5E7EB]'
+                          }`}
+                        >
+                          {/* Header bar of each service item */}
+                          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
+                            <div className="flex items-center gap-3">
+                              {/* Drag Handle */}
+                              {canDrag && (
+                                <div
+                                  className="flex items-center justify-center p-1 -ml-1 rounded-lg text-stone-400 hover:text-[#202526] hover:bg-black/[0.04] cursor-grab active:cursor-grabbing transition-colors shrink-0 select-none group/handle"
+                                  title="Drag to reorder this discipline"
+                                >
+                                  <GripVertical className="w-4 h-4 group-hover/handle:scale-110 transition-transform" />
+                                </div>
+                              )}
+
+                              <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#D8A9A8] bg-[#202526] px-2.5 py-1 rounded-md">
+                                #{item.number || `0${originalIdx + 1}`}
+                              </span>
+                              <h4 className="text-base font-semibold uppercase tracking-wider text-[#202526]">
+                                {item.title || 'Untitled Discipline'}
+                              </h4>
+                              {isItemDeleted ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-label-small uppercase tracking-wider font-semibold text-rose-800 bg-rose-100 border border-rose-300 flex items-center gap-1 shadow-xs">
+                                  <Archive className="w-3 h-3 text-rose-600" /> In Trash (Hidden)
+                                </span>
+                              ) : (item.isHidden || item.status === 'hidden' || item.status === 'unpublished') ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-label-small uppercase tracking-wider font-semibold text-amber-800 bg-amber-100 border border-amber-300 flex items-center gap-1 shadow-xs">
+                                  <EyeOff className="w-3 h-3 text-amber-600" /> Hidden (Offline)
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {/* Quick Move Up/Down */}
+                              {canDrag && (
+                                <div className="flex items-center bg-white border border-[#E5E7EB] rounded-lg p-0.5 mr-1 shadow-xs">
+                                  <button
+                                    type="button"
+                                    disabled={displayIdx === 0}
+                                    onClick={() => moveService(originalIdx, 'up')}
+                                    className="p-1 rounded text-[#596769] hover:text-[#202526] hover:bg-black/[0.04] disabled:opacity-30 cursor-pointer transition-colors"
+                                    title="Move Up"
+                                  >
+                                    <ArrowUp className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={displayIdx === listArr.length - 1}
+                                    onClick={() => moveService(originalIdx, 'down')}
+                                    className="p-1 rounded text-[#596769] hover:text-[#202526] hover:bg-black/[0.04] disabled:opacity-30 cursor-pointer transition-colors"
+                                    title="Move Down"
+                                  >
+                                    <ArrowDown className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
+
+                              {isItemDeleted ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = [...(formData.services?.items || [])];
+                                      updated[originalIdx] = { ...updated[originalIdx], isDeleted: false, deletedAt: null };
+                                      setFormData({
+                                        ...formData,
+                                        services: {
+                                          heading: formData.services?.heading || 'WHAT WE DO',
+                                          subheading: formData.services?.subheading || '',
+                                          items: updated,
+                                        },
+                                      });
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-btn uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                                  >
+                                    <RotateCcw className="w-3.5 h-3.5" /> Restore
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setDeleteServiceModal({
+                                        isOpen: true,
+                                        serviceNumber: item.number,
+                                        serviceTitle: item.title,
+                                        permanent: true,
+                                      });
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 text-xs font-btn uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Delete Forever
+                                  </button>
+                                </>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  {/* Quick Published / Hidden Toggle */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = [...(formData.services?.items || [])];
+                                      const isCurrentlyHidden = Boolean(
+                                        updated[originalIdx].isHidden ||
+                                          updated[originalIdx].status === 'hidden' ||
+                                          updated[originalIdx].status === 'unpublished'
+                                      );
+                                      const nextHidden = !isCurrentlyHidden;
+                                      updated[originalIdx] = {
+                                        ...updated[originalIdx],
+                                        isHidden: nextHidden,
+                                        status: nextHidden ? 'hidden' : 'published',
+                                      };
+                                      setFormData({
+                                        ...formData,
+                                        services: {
+                                          heading: formData.services?.heading || 'WHAT WE DO',
+                                          subheading: formData.services?.subheading || '',
+                                          items: updated,
+                                        },
+                                      });
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-btn uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border shadow-xs ${
+                                      item.isHidden || item.status === 'hidden' || item.status === 'unpublished'
+                                        ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300'
+                                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300'
+                                    }`}
+                                    title={
+                                      item.isHidden || item.status === 'hidden' || item.status === 'unpublished'
+                                        ? 'Discipline is hidden from public site. Click to publish.'
+                                        : 'Discipline is published live. Click to hide.'
+                                    }
+                                  >
+                                    {item.isHidden || item.status === 'hidden' || item.status === 'unpublished' ? (
+                                      <>
+                                        <EyeOff className="w-3.5 h-3.5 text-amber-600" /> Hidden
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Eye className="w-3.5 h-3.5 text-emerald-600" /> Published
+                                      </>
+                                    )}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setDeleteServiceModal({
+                                        isOpen: true,
+                                        serviceNumber: item.number,
+                                        serviceTitle: item.title,
+                                        permanent: false,
+                                      });
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-btn uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                                    title="Move to Trash (Safe Delete)"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Move to Trash
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                            {/* Number & Title */}
+                            <div className="sm:col-span-3">
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Number Badge
+                              </label>
+                              <input
+                                type="text"
+                                value={item.number}
+                                onChange={(e) => {
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], number: e.target.value };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] font-mono text-center font-bold focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+
+                            <div className="sm:col-span-5">
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Discipline Title
+                              </label>
+                              <input
+                                type="text"
+                                value={item.title}
+                                onChange={(e) => {
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], title: e.target.value };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="Discipline Title (e.g. UGC ADS)"
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] font-bold uppercase tracking-wider focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+
+                            <div className="sm:col-span-4">
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Turnaround SLA
+                              </label>
+                              <input
+                                type="text"
+                                value={item.turnaround || ''}
+                                onChange={(e) => {
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], turnaround: e.target.value };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="e.g. 3–7 days"
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] font-mono focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Tagline & Short Description */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Tagline Statement
+                              </label>
+                              <input
+                                type="text"
+                                value={item.tagline || ''}
+                                onChange={(e) => {
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], tagline: e.target.value };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="Performance-driven content that feels native to the feed."
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Short Overview Description
+                              </label>
+                              <input
+                                type="text"
+                                value={item.description}
+                                onChange={(e) => {
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], description: e.target.value };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="Ads people actually want to watch."
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#596769] focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Extended Specs: We Create, Process, Deliverables */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                            <div>
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                We Create (Line Separated)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={(item.weCreate || []).join('\n')}
+                                onChange={(e) => {
+                                  const lines = e.target.value.split('\n').filter((l) => l.trim() !== '');
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], weCreate: lines };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="Product UGC&#10;Creator-style ads&#10;Hook variations"
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl p-2.5 text-xs text-[#202526] font-sans-clean resize-none focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Process Steps (Line Separated)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={(item.process || []).join('\n')}
+                                onChange={(e) => {
+                                  const lines = e.target.value.split('\n').filter((l) => l.trim() !== '');
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], process: lines };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="Brief&#10;Concept&#10;Script&#10;Edit"
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl p-2.5 text-xs text-[#202526] font-sans-clean resize-none focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
+                                Deliverables (Line Separated)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={(item.deliverables || []).join('\n')}
+                                onChange={(e) => {
+                                  const lines = e.target.value.split('\n').filter((l) => l.trim() !== '');
+                                  const updated = [...(formData.services?.items || [])];
+                                  updated[originalIdx] = { ...updated[originalIdx], deliverables: lines };
+                                  setFormData({
+                                    ...formData,
+                                    services: {
+                                      heading: formData.services?.heading || 'WHAT WE DO',
+                                      subheading: formData.services?.subheading || '',
+                                      items: updated,
+                                    },
+                                  });
+                                }}
+                                placeholder="9:16 vertical video&#10;Multiple hooks&#10;Ad-ready exports"
+                                className="w-full bg-white border border-[#E5E7EB] rounded-xl p-2.5 text-xs text-[#202526] font-sans-clean resize-none focus:outline-none focus:border-[#D8A9A8]"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Multi-Media Continuous Reel Manager (Videos & Photos with zero-cut playback) */}
+                          <ServiceMediaManager
+                            disciplineTitle={item.title || 'Discipline'}
+                            items={item.mediaItems || (item.videoUrl ? [{ id: `init-${originalIdx}`, url: item.videoUrl, type: 'video', poster: item.videoPoster, title: item.title }] : [])}
+                            onChange={(mediaList) => {
+                              const updated = [...(formData.services?.items || [])];
+                              const firstVid = mediaList.find((m) => m.type === 'video');
+                              const firstImg = mediaList.find((m) => m.type === 'image');
+                              updated[originalIdx] = {
+                                ...updated[originalIdx],
+                                mediaItems: mediaList,
+                                videoUrl: firstVid ? firstVid.url : (mediaList[0]?.url || ''),
+                                videoPoster: firstImg ? firstImg.url : (firstVid?.poster || updated[originalIdx].videoPoster || ''),
+                              };
                               setFormData({
                                 ...formData,
                                 services: {
@@ -859,245 +1535,89 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
                                   items: updated,
                                 },
                               });
-                            }
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-btn uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                      {/* Number & Title */}
-                      <div className="sm:col-span-3">
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Number Badge
-                        </label>
-                        <input
-                          type="text"
-                          value={item.number}
-                          onChange={(e) => {
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], number: e.target.value };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] font-mono text-center font-bold focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-5">
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Discipline Title
-                        </label>
-                        <input
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => {
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], title: e.target.value };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="Discipline Title (e.g. UGC ADS)"
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] font-bold uppercase tracking-wider focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-4">
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Turnaround SLA
-                        </label>
-                        <input
-                          type="text"
-                          value={item.turnaround || ''}
-                          onChange={(e) => {
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], turnaround: e.target.value };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="e.g. 3–7 days"
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] font-mono focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Tagline & Short Description */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Tagline Statement
-                        </label>
-                        <input
-                          type="text"
-                          value={item.tagline || ''}
-                          onChange={(e) => {
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], tagline: e.target.value };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="Performance-driven content that feels native to the feed."
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#202526] focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Short Overview Description
-                        </label>
-                        <input
-                          type="text"
-                          value={item.description}
-                          onChange={(e) => {
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], description: e.target.value };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="Ads people actually want to watch."
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs text-[#596769] focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Extended Specs: We Create, Process, Deliverables */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                      <div>
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          We Create (Line Separated)
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={(item.weCreate || []).join('\n')}
-                          onChange={(e) => {
-                            const lines = e.target.value.split('\n').filter((l) => l.trim() !== '');
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], weCreate: lines };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="Product UGC&#10;Creator-style ads&#10;Hook variations"
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl p-2.5 text-xs text-[#202526] font-sans-clean resize-none focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Process Steps (Line Separated)
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={(item.process || []).join('\n')}
-                          onChange={(e) => {
-                            const lines = e.target.value.split('\n').filter((l) => l.trim() !== '');
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], process: lines };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="Brief&#10;Concept&#10;Script&#10;Edit"
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl p-2.5 text-xs text-[#202526] font-sans-clean resize-none focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] uppercase font-label-small font-medium text-[#596769] mb-1">
-                          Deliverables (Line Separated)
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={(item.deliverables || []).join('\n')}
-                          onChange={(e) => {
-                            const lines = e.target.value.split('\n').filter((l) => l.trim() !== '');
-                            const updated = [...(formData.services?.items || [])];
-                            updated[idx] = { ...updated[idx], deliverables: lines };
-                            setFormData({
-                              ...formData,
-                              services: {
-                                heading: formData.services?.heading || 'WHAT WE DO',
-                                subheading: formData.services?.subheading || '',
-                                items: updated,
-                              },
-                            });
-                          }}
-                          placeholder="9:16 vertical video&#10;Multiple hooks&#10;Ad-ready exports"
-                          className="w-full bg-white border border-[#E5E7EB] rounded-xl p-2.5 text-xs text-[#202526] font-sans-clean resize-none focus:outline-none focus:border-[#D8A9A8]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Multi-Media Continuous Reel Manager (Videos & Photos with zero-cut playback) */}
-                    <ServiceMediaManager
-                      disciplineTitle={item.title || 'Discipline'}
-                      items={item.mediaItems || (item.videoUrl ? [{ id: `init-${idx}`, url: item.videoUrl, type: 'video', poster: item.videoPoster, title: item.title }] : [])}
-                      onChange={(mediaList) => {
-                        const updated = [...(formData.services?.items || [])];
-                        const firstVid = mediaList.find((m) => m.type === 'video');
-                        const firstImg = mediaList.find((m) => m.type === 'image');
-                        updated[idx] = {
-                          ...updated[idx],
-                          mediaItems: mediaList,
-                          videoUrl: firstVid ? firstVid.url : (mediaList[0]?.url || ''),
-                          videoPoster: firstImg ? firstImg.url : (firstVid?.poster || updated[idx].videoPoster || ''),
-                        };
-                        setFormData({
-                          ...formData,
-                          services: {
-                            heading: formData.services?.heading || 'WHAT WE DO',
-                            subheading: formData.services?.subheading || '',
-                            items: updated,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
-                ))}
+                            }}
+                          />
+                        </div>
+                      );
+                    })
+                )}
               </div>
+
+              {/* Service Delete Confirmation Modal */}
+              {deleteServiceModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                  <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-stone-200 shadow-2xl space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+
+                    <div>
+                      <h3 className="text-xl font-elegant text-[#202526]">
+                        {deleteServiceModal.permanent ? 'Permanently Remove Discipline?' : 'Move Discipline to Trash?'}
+                      </h3>
+                      <p className="text-xs text-[#596769] mt-1.5 leading-relaxed font-sans-clean">
+                        {deleteServiceModal.permanent ? (
+                          <>
+                            Are you sure you want to permanently remove{' '}
+                            <strong className="text-[#202526]">&quot;{deleteServiceModal.serviceTitle || deleteServiceModal.serviceNumber}&quot;</strong>?
+                            This action cannot be undone.
+                          </>
+                        ) : (
+                          <>
+                            Are you sure you want to move{' '}
+                            <strong className="text-[#202526]">&quot;{deleteServiceModal.serviceTitle || deleteServiceModal.serviceNumber}&quot;</strong> to the Trash?
+                            It will be hidden from the public website upon saving/publishing, but remains safely recoverable anytime from the Trash tab.
+                          </>
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-100">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteServiceModal({ isOpen: false, serviceNumber: null, serviceTitle: null, permanent: false })}
+                        className="px-4 py-2 rounded-xl text-xs font-btn font-medium uppercase tracking-wider text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!deleteServiceModal.serviceNumber) return;
+                          const num = deleteServiceModal.serviceNumber;
+                          if (deleteServiceModal.permanent) {
+                            const updated = (formData.services?.items || []).filter((s) => s.number !== num);
+                            setFormData({
+                              ...formData,
+                              services: {
+                                heading: formData.services?.heading || 'WHAT WE DO',
+                                subheading: formData.services?.subheading || '',
+                                items: updated,
+                              },
+                            });
+                          } else {
+                            const updated = (formData.services?.items || []).map((s) =>
+                              s.number === num ? { ...s, isDeleted: true, deletedAt: new Date().toISOString() } : s
+                            );
+                            setFormData({
+                              ...formData,
+                              services: {
+                                heading: formData.services?.heading || 'WHAT WE DO',
+                                subheading: formData.services?.subheading || '',
+                                items: updated,
+                              },
+                            });
+                          }
+                          setDeleteServiceModal({ isOpen: false, serviceNumber: null, serviceTitle: null, permanent: false });
+                        }}
+                        className="px-4 py-2 rounded-xl text-xs font-btn font-semibold uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-sm"
+                      >
+                        {deleteServiceModal.permanent ? 'Permanently Delete' : 'Move to Trash'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1190,46 +1710,26 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({ content }) => 
         )}
 
         {/* Bottom Save Bar */}
-        <div className="flex items-center justify-end gap-3 pt-4">
+        <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB] mt-6">
           <button
             type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            className={`px-7 py-3.5 rounded-full text-xs font-btn font-bold uppercase tracking-wider flex items-center gap-2.5 shadow-lg transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-              savedToast
-                ? 'bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-400'
-                : 'bg-[#202526] hover:bg-[#111314] text-white'
-            }`}
+            onClick={handleSaveDraft}
+            disabled={isSavingDraft || isPublishing}
+            className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white border border-[#CBDCDE] text-[#202526] hover:bg-[#F8F9FA] transition-all cursor-pointer shadow-xs disabled:opacity-50"
           >
-            <Check className={`w-4 h-4 ${savedToast ? 'text-white stroke-[3]' : 'text-[#D8A9A8]'}`} />
-            <span>{savedToast ? 'Saved Successfully to Live Site! ✓' : isSaving ? 'Saving Changes...' : 'Save All Content Changes'}</span>
+            {isSavingDraft ? 'Saving Draft...' : 'Save Draft'}
+          </button>
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={isPublishing || isSavingDraft}
+            className="px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#202526] hover:bg-[#111314] text-white flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Check className="w-3.5 h-3.5 text-[#D8A9A8]" />
+            <span>{isPublishing ? 'Publishing Live...' : 'Publish Changes'}</span>
           </button>
         </div>
       </div>
-
-      {/* Global Fixed Floating Notification - Always visible regardless of scroll position */}
-      {savedToast && (
-        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm sm:max-w-md p-4 rounded-2xl bg-[#202526] text-white border-2 border-emerald-500/60 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 pointer-events-auto">
-          <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40">
-            <Check className="w-5 h-5 stroke-[2.5]" />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-white">
-              Changes Saved Live!
-            </p>
-            <p className="text-[11px] text-[#CBDCDE] font-sans-clean mt-0.5">
-              All website content, videos &amp; settings permanently stored.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSavedToast(false)}
-            className="text-[#CBDCDE] hover:text-white p-1 cursor-pointer transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
     </div>
   );
 };

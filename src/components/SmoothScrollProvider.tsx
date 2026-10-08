@@ -61,13 +61,17 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (anchor) {
         const href = anchor.getAttribute('href');
         if (href && href.length > 1) {
-          const targetElement = document.querySelector(href);
-          if (targetElement) {
-            e.preventDefault();
-            lenis.scrollTo(targetElement as HTMLElement, {
-              offset: 0,
-              duration: 1.4,
-            });
+          try {
+            const targetElement = document.querySelector(href);
+            if (targetElement) {
+              e.preventDefault();
+              lenis.scrollTo(targetElement as HTMLElement, {
+                offset: 0,
+                duration: 1.4,
+              });
+            }
+          } catch {
+            // Ignore invalid selector syntax gracefully
           }
         }
       }

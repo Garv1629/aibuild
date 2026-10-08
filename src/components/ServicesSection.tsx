@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { FadeIn } from './FadeIn';
 import { ServiceItem } from '../types';
@@ -387,8 +387,20 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
   onOpenEstimator,
 }) => {
   const heading = content?.heading || 'WHAT WE DO';
-  const services =
+  const rawServices =
     content?.items && content.items.length > 0 ? content.items : defaultServicesData;
+
+  const services = useMemo(() => {
+    return rawServices.filter(
+      (s) =>
+        !s.isDeleted &&
+        !s.deletedAt &&
+        !s.isHidden &&
+        s.status !== 'hidden' &&
+        s.status !== 'unpublished' &&
+        s.status !== 'archived'
+    );
+  }, [rawServices]);
 
   const [expandedNumbers, setExpandedNumbers] = useState<string[]>([]);
   const [hoveredService, setHoveredService] = useState<string | null>(null);
@@ -546,14 +558,17 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
 
                       <button
                         type="button"
+                        id={`specs-btn-${service.number}`}
+                        aria-expanded={isExpanded}
+                        aria-controls={`specs-section-${service.number}`}
                         onClick={() => toggleExpand(service.number)}
                         className={`inline-flex items-center shrink-0 gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full text-xs font-label-small font-medium ${style.pillBg} ${style.border} border text-[#202526] hover:bg-[#E7EBE9]/90 transition-colors cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]/40`}
                       >
                         <span>{isExpanded ? 'Hide Specs' : 'View Specs'}</span>
                         {isExpanded ? (
-                          <ChevronUp className="w-3.5 h-3.5" />
+                          <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
                         ) : (
-                          <ChevronDown className="w-3.5 h-3.5" />
+                          <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
                         )}
                       </button>
                     </div>
@@ -574,6 +589,9 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                 <AnimatePresence initial={false}>
                   {isExpanded && (
                     <motion.div
+                      id={`specs-section-${service.number}`}
+                      role="region"
+                      aria-labelledby={`specs-btn-${service.number}`}
                       initial={{ opacity: 0, height: 0, scale: 0.99 }}
                       animate={{
                         opacity: 1,

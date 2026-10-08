@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Copy, Check, Sparkles, Send, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, Mail, Copy, Check, Sparkles, Send, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ContactButton } from './ContactButton';
 import { adminStore, playStudioChime } from '../services/adminStore';
 import { WebsiteContent } from '../types';
+
+import { copyToClipboard } from '../utils/helpers';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -26,6 +28,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submittedData, setSubmittedData] = useState<{
     name: string;
     projectType: string;
@@ -43,7 +46,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
   // Handle body scroll locking & Escape key hygiene
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setErrorMessage(null);
+      return;
+    }
 
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -83,8 +89,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     contactContent?.ctaSubtext ||
     'Have an AI product, bespoke web experience, or automated system to engineer? Let\'s talk.';
 
-  const copyEmail = () => {
-    navigator.clipboard.writeText(email);
+  const copyEmail = async () => {
+    await copyToClipboard(email);
     setCopied(true);
     playStudioChime('click');
     setTimeout(() => setCopied(false), 2000);
@@ -133,13 +139,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     }, 120);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
+    try {
       // Store submission summary for animated success card
       setSubmittedData({
         name: formState.name || 'Client',
@@ -148,7 +155,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       });
 
       // Register message in real-time admin store
-      adminStore.addMessage({
+      await adminStore.addMessage({
         name: formState.name || 'Direct Visitor',
         email: formState.email,
         company: formState.company || 'Private Client',
@@ -163,7 +170,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
       setIsSubmitting(false);
       setSent(true);
-    }, 450);
+    } catch (err: any) {
+      console.error('[ContactModal] Submit error:', err);
+      setIsSubmitting(false);
+      setErrorMessage(err?.message || 'Transmission failed. Please check your connection and try again.');
+      playStudioChime('alert');
+    }
   };
 
   const handleResetAndClose = () => {
@@ -209,6 +221,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           {/* Modal Card with Frosted Glassmorphism and Grain */}
           <motion.div
             data-lenis-prevent
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-modal-title"
             initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
@@ -219,10 +234,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             <button
               type="button"
               onClick={sent ? handleResetAndClose : onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer z-20"
-              aria-label="Close modal"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-[#CBDCDE] hover:bg-[#AFC7C5] text-[#202526] border border-[#B8C1C0] transition-colors cursor-pointer z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
+              aria-label="Close contact modal"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
 
             {/* Success State with Subtle Animated Check-Mark & Positive Feedback */}
@@ -380,7 +395,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.08em] text-[#202526] font-bold bg-[#CBDCDE] border border-[#AFC7C5] mb-2 shadow-xs">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#D8A9A8]" /> AI Build (ai.build_)
                   </span>
-                  <h3 className="font-heading font-black text-3xl sm:text-4xl uppercase tracking-tight text-[#202526]">
+                  <h3 id="contact-modal-title" className="font-heading font-black text-3xl sm:text-4xl uppercase tracking-tight text-[#202526]">
                     {ctaHeadline}
                   </h3>
                   <p className="text-sm sm:text-base text-[#596769] mt-1 font-normal">
@@ -400,66 +415,82 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   </div>
                   <button
                     type="button"
+                    aria-label={copied ? "Email copied to clipboard" : "Copy email address"}
                     onClick={copyEmail}
-                    className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold px-3 py-1.5 rounded-lg bg-[#E7EBE9] hover:bg-[#AFC7C5] transition-all shrink-0 cursor-pointer text-[#202526] border border-[#B8C1C0]"
+                    className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold px-3 py-1.5 rounded-lg bg-[#E7EBE9] hover:bg-[#AFC7C5] transition-all shrink-0 cursor-pointer text-[#202526] border border-[#B8C1C0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526]"
                   >
-                    {copied ? <Check className="w-3.5 h-3.5 text-[#596769]" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied ? <Check className="w-3.5 h-3.5 text-[#596769]" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5" aria-hidden="true" />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+                  {errorMessage && (
+                    <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" aria-hidden="true" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
+                      <label htmlFor="contact-form-name" className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
                         Your Name
                       </label>
                       <input
+                        id="contact-form-name"
                         required
                         type="text"
+                        autoComplete="name"
                         placeholder="Alex Mercer"
                         value={formState.name}
                         onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                        className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors"
+                        className="w-full min-h-[44px] bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
+                      <label htmlFor="contact-form-email" className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
                         Your Email
                       </label>
                       <input
+                        id="contact-form-email"
                         required
                         type="email"
+                        autoComplete="email"
+                        inputMode="email"
                         placeholder="alex@company.com"
                         value={formState.email}
                         onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                        className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors"
+                        className="w-full min-h-[44px] bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
+                      <label htmlFor="contact-form-company" className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
                         Company (Optional)
                       </label>
                       <input
+                        id="contact-form-company"
                         type="text"
+                        autoComplete="organization"
                         placeholder="Acme AI"
                         value={formState.company}
                         onChange={(e) => setFormState({ ...formState, company: e.target.value })}
-                        className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors"
+                        className="w-full min-h-[44px] bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
+                      <label htmlFor="contact-form-budget" className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
                         Target Budget
                       </label>
                       <select
+                        id="contact-form-budget"
                         value={formState.budget}
                         onChange={(e) => setFormState({ ...formState, budget: e.target.value })}
-                        className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-sm text-[#202526] focus:outline-none focus:border-[#202526] transition-colors"
+                        className="w-full min-h-[44px] bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[#202526] focus:outline-none focus:border-[#202526] transition-colors cursor-pointer"
                       >
                         <option value="$10,000 - $25,000">$10,000 - $25,000</option>
                         <option value="$25,000 - $50,000+">$25,000 - $50,000+</option>
@@ -470,13 +501,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
+                    <label htmlFor="contact-form-scope" className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
                       Service Scope
                     </label>
                     <select
+                      id="contact-form-scope"
                       value={formState.projectType}
                       onChange={(e) => setFormState({ ...formState, projectType: e.target.value })}
-                      className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-sm text-[#202526] focus:outline-none focus:border-[#202526] transition-colors"
+                      className="w-full min-h-[44px] bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[#202526] focus:outline-none focus:border-[#202526] transition-colors cursor-pointer"
                     >
                       <option value="01 - UGC ADS">01 - UGC ADS (Social-first creative)</option>
                       <option value="02 - AI VIDEOS">02 - AI VIDEOS (Cinematic visuals built with AI)</option>
@@ -486,16 +518,17 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
+                    <label htmlFor="contact-form-message" className="block text-xs uppercase tracking-wider font-semibold text-[#596769] mb-1.5">
                       Project Brief
                     </label>
                     <textarea
+                      id="contact-form-message"
                       required
                       rows={3}
                       placeholder="Tell AI Build about your product vision, timeline, and goals..."
                       value={formState.message}
                       onChange={(e) => setFormState({ ...formState, message: e.target.value })}
-                      className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors resize-none"
+                      className="w-full bg-[#E7EBE9] border border-[#B8C1C0] rounded-xl px-4 py-2.5 text-base sm:text-sm text-[#202526] placeholder:text-[#596769]/60 focus:outline-none focus:border-[#202526] transition-colors resize-none"
                     />
                   </div>
 

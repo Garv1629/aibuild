@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Layers, Monitor, Cpu, ExternalLink, Video, Maximize2 } from 'lucide-react';
 import { ProjectItem } from '../types';
@@ -18,10 +18,17 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   onOpenContact,
 }) => {
-  const [lightboxMedia, setLightboxMedia] = React.useState<{ url: string; isVideo: boolean; title?: string } | null>(null);
+  const [lightboxMedia, setLightboxMedia] = useState<{ url: string; isVideo: boolean; title?: string } | null>(null);
+  const [activeRatio, setActiveRatio] = useState<'16:9' | '9:16'>(() => resolveProjectAspectRatio(project));
+
+  useEffect(() => {
+    if (project) {
+      setActiveRatio(resolveProjectAspectRatio(project));
+    }
+  }, [project]);
 
   // Handle body scroll locking & Escape key hygiene
-  React.useEffect(() => {
+  useEffect(() => {
     if (!project) return;
 
     const originalOverflow = document.body.style.overflow;
@@ -48,14 +55,6 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
   if (!project) return null;
 
   const isVideo = project.mediaType === 'video' && Boolean(project.videoUrl);
-  const [activeRatio, setActiveRatio] = React.useState<'16:9' | '9:16'>(() => resolveProjectAspectRatio(project));
-
-  React.useEffect(() => {
-    if (project) {
-      setActiveRatio(resolveProjectAspectRatio(project));
-    }
-  }, [project]);
-
   const isVertical = activeRatio === '9:16';
 
   return (
@@ -73,6 +72,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
         {/* Modal Window with Frosted Glassmorphism and Grain */}
         <motion.div
           data-lenis-prevent
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="project-modal-title"
           initial={{ opacity: 0, scale: 0.95, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 30 }}
@@ -110,7 +112,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                   </span>
                 )}
               </div>
-              <h3 className="font-heading font-normal text-3xl sm:text-5xl uppercase tracking-tight text-[#202526]">
+              <h3 id="project-modal-title" className="font-heading font-normal text-3xl sm:text-5xl uppercase tracking-tight text-[#202526]">
                 {project.title}
               </h3>
               <p className="text-sm sm:text-base text-[#596769] mt-2 max-w-2xl font-body font-normal">
@@ -156,6 +158,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               } flex flex-col gap-4`}
             >
               <div
+                role={project.col1Image1 && project.col1Image1.trim() ? "button" : undefined}
+                tabIndex={project.col1Image1 && project.col1Image1.trim() ? 0 : undefined}
+                aria-label={project.col1Image1 && project.col1Image1.trim() ? `Open ${project.title} detail view 1 in fullscreen` : undefined}
                 onClick={() => {
                   if (project.col1Image1 && project.col1Image1.trim()) {
                     setLightboxMedia({
@@ -165,7 +170,17 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     });
                   }
                 }}
-                className={`rounded-2xl overflow-hidden bg-[#181C1D] border border-[#AFC7C5] shadow-md flex-1 min-h-[150px] relative group ${
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && project.col1Image1 && project.col1Image1.trim()) {
+                    e.preventDefault();
+                    setLightboxMedia({
+                      url: project.col1Image1,
+                      isVideo: isVideoMedia(project.col1Image1),
+                      title: `${project.title} — Detail 01`,
+                    });
+                  }
+                }}
+                className={`rounded-2xl overflow-hidden bg-[#181C1D] border border-[#AFC7C5] shadow-md flex-1 min-h-[150px] relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526] ${
                   project.col1Image1 && project.col1Image1.trim() ? 'cursor-pointer' : ''
                 }`}
               >
@@ -201,6 +216,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
 
               <div
+                role={project.col1Image2 && project.col1Image2.trim() ? "button" : undefined}
+                tabIndex={project.col1Image2 && project.col1Image2.trim() ? 0 : undefined}
+                aria-label={project.col1Image2 && project.col1Image2.trim() ? `Open ${project.title} detail view 2 in fullscreen` : undefined}
                 onClick={() => {
                   if (project.col1Image2 && project.col1Image2.trim()) {
                     setLightboxMedia({
@@ -210,7 +228,17 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     });
                   }
                 }}
-                className={`rounded-2xl overflow-hidden bg-[#181C1D] border border-[#AFC7C5] shadow-md flex-1 min-h-[150px] relative group ${
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && project.col1Image2 && project.col1Image2.trim()) {
+                    e.preventDefault();
+                    setLightboxMedia({
+                      url: project.col1Image2,
+                      isVideo: isVideoMedia(project.col1Image2),
+                      title: `${project.title} — Detail 02`,
+                    });
+                  }
+                }}
+                className={`rounded-2xl overflow-hidden bg-[#181C1D] border border-[#AFC7C5] shadow-md flex-1 min-h-[150px] relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202526] ${
                   project.col1Image2 && project.col1Image2.trim() ? 'cursor-pointer' : ''
                 }`}
               >

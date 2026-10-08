@@ -296,6 +296,7 @@ export const InteractiveCursorGrid: React.FC<InteractiveCursorGridProps> = ({
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       className={`fixed inset-0 w-full h-full pointer-events-none z-0 ${className}`}
       style={{
         mixBlendMode: 'normal',

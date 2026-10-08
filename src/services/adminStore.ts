@@ -10,6 +10,7 @@ import {
   EstimatorSettings,
   CharacterLightingPresetId,
   CharacterLightingSettings,
+  ContentPublishStatus,
 } from '../types';
 import {
   sanitizeInput,
@@ -20,8 +21,25 @@ import {
   initializeSecurity,
 } from './security';
 import { DEFAULT_LIGHTING_PRESET } from '../utils/lightingPresets';
-import { setIndexedDbItem, getIndexedDbItem } from './indexedDbStore';
 import { isVideoMedia } from '../utils/mediaUpload';
+import { api } from './api';
+import {
+  initialProjects,
+  initialWebsiteContent,
+  initialReviews,
+  initialMessages,
+  initialSavedQuotes,
+  initialEstimatorSettings,
+} from '../../server/seedData';
+
+export {
+  initialProjects,
+  initialWebsiteContent,
+  initialReviews,
+  initialMessages,
+  initialSavedQuotes,
+  initialEstimatorSettings,
+};
 
 export const normalizeProjectCategory = (
   category: string
@@ -33,7 +51,8 @@ export const normalizeProjectCategory = (
   return 'WEBSITE BUILDING';
 };
 
-export const resolveProjectAspectRatio = (project: Partial<ProjectItem>): '16:9' | '9:16' => {
+export const resolveProjectAspectRatio = (project?: Partial<ProjectItem> | null): '16:9' | '9:16' => {
+  if (!project) return '16:9';
   // 1. Explicit user override from Admin Settings
   if (project.aspectRatio === '9:16') return '9:16';
   if (project.aspectRatio === '16:9') return '16:9';
@@ -95,1191 +114,139 @@ export const resolveProjectAspectRatio = (project: Partial<ProjectItem>): '16:9'
   return '16:9';
 };
 
-export const initialProjects: ProjectItem[] = [
-  // 01: UGC ADS
-  {
-    id: 'ugc-01',
-    number: '01',
-    title: 'GlowLab Direct UGC',
-    category: 'UGC ADS',
-    tagline: 'High-converting TikTok & Instagram Reels UGC campaign with 8 dynamic hook variations and creator-led storytelling.',
-    col1Image1: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-ugc1-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85',
-        title: 'Direct Product Demo Hook',
-      },
-      {
-        id: 'm-ugc1-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85',
-        title: 'Dynamic Creator Lifestyle Reel',
-      },
-      {
-        id: 'm-ugc1-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85',
-        title: 'Verified Creator Showcase',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://instagram.com',
-    aspectRatio: '9:16',
-    techStack: ['9:16 Vertical', '8 Hook Variations', '4.8x ROAS', 'Direct-Response Creative'],
-    featured: true,
-  },
-  {
-    id: 'ugc-02',
-    number: '02',
-    title: 'Apex Fit Creator Series',
-    category: 'UGC ADS',
-    aspectRatio: '9:16',
-    tagline: 'Viral fitness & supplement UGC creator ad package engineered for Meta and TikTok paid performance channels.',
-    col1Image1: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-ugc2-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=85',
-        title: 'High-Impact Workout Reel',
-      },
-      {
-        id: 'm-ugc2-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1000&q=85',
-        title: 'Supplement Unboxing & Taste Test',
-      },
-      {
-        id: 'm-ugc2-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?auto=format&fit=crop&w=1000&q=85',
-        title: 'Athlete Performance Stills',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://tiktok.com',
-    techStack: ['Creator Production', 'TikTok Ads', 'Meta Reels', 'Ad-Ready Exports'],
-    featured: true,
-  },
-  {
-    id: 'ugc-03',
-    number: '03',
-    title: 'Velox Hydration Direct UGC',
-    category: 'UGC ADS',
-    tagline: 'High-velocity beverage & wellness TikTok UGC with multiple creator perspectives and direct conversion hooks.',
-    col1Image1: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-ugc3-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1400&q=85',
-        title: 'Electrolyte Dissolve Test Hook',
-      },
-      {
-        id: 'm-ugc3-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=1000&q=85',
-        title: 'Morning Routine Direct Testimonial',
-      },
-      {
-        id: 'm-ugc3-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1000&q=85',
-        title: 'Packaging & Ingredients Close-up',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://tiktok.com',
-    techStack: ['9:16 Creator Video', 'Meta Ad Export', 'Direct Response', 'A/B Hook Variations'],
-    featured: true,
-  },
-  {
-    id: 'ugc-04',
-    number: '04',
-    title: 'Lumora Beauty Creator Ads',
-    category: 'UGC ADS',
-    tagline: 'Viral unboxing, before/after demonstration & creator testimonial package built for TikTok Spark Ads.',
-    col1Image1: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-ugc4-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1400&q=85',
-        title: 'Skin Glow Transformation Hook',
-      },
-      {
-        id: 'm-ugc4-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=1000&q=85',
-        title: 'Outdoor Clean Beauty Routine',
-      },
-      {
-        id: 'm-ugc4-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1000&q=85',
-        title: 'Texture & Application Macro',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://instagram.com',
-    techStack: ['TikTok Spark Ads', 'Reels Hook Engine', 'Creator Network', 'UGC Scaling'],
-    featured: true,
-  },
-
-  // 02: AI VIDEOS
-  {
-    id: 'aiv-01',
-    number: '03',
-    title: 'Aura Chrono AI Commercial',
-    category: 'AI VIDEOS',
-    tagline: 'Cinematic luxury timepiece commercial generated end-to-end with generative AI visual models and spatial audio.',
-    col1Image1: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-aiv1-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
-        title: 'Neural Mechanical Core',
-      },
-      {
-        id: 'm-aiv1-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85',
-        title: 'Temporal Warp Sequence',
-      },
-      {
-        id: 'm-aiv1-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=85',
-        title: 'Watch Bezel & Sapphire Glass Polish',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://vimeo.com',
-    techStack: ['Gen-3 Visuals', '4K Master', 'Cinematic Sound Design', 'AI Commercial'],
-    featured: true,
-  },
-  {
-    id: 'aiv-02',
-    number: '04',
-    title: 'NeoCyber Spatial Film',
-    category: 'AI VIDEOS',
-    tagline: 'Photorealistic AI automotive & concept reveal film crafted with custom diffusion pipelines and hyper-real texturing.',
-    col1Image1: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-aiv2-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1400&q=85',
-        title: 'Hyperspeed Aerodynamic Flow',
-      },
-      {
-        id: 'm-aiv2-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=85',
-        title: 'Cockpit Telemetry Synthesis',
-      },
-      {
-        id: 'm-aiv2-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1000&q=85',
-        title: 'Cyberpunk Concept Silhouette',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://youtube.com',
-    techStack: ['Diffusion VFX', '16:9 & 9:16', 'Custom LoRA', 'Virtual Production'],
-    featured: true,
-  },
-
-  // 03: WEBSITE BUILDING
-  {
-    id: 'web-01',
-    number: '05',
-    title: 'TrustAI Verification Hub',
-    category: 'WEBSITE BUILDING',
-    tagline: 'AI trust & verification platform engineered for high-security compliance and intelligent verification.',
-    col1Image1: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-web1-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1400&q=85',
-        title: 'Interactive Analytics & Verification UI',
-      },
-      {
-        id: 'm-web1-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1000&q=85',
-        title: 'Distributed Identity Validation Mesh',
-      },
-      {
-        id: 'm-web1-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=85',
-        title: 'Zero-Trust Protocol Visualizer',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://trustai.india.mesh.network',
-    techStack: ['React', 'TypeScript', 'Tailwind', 'AI Verification API'],
-    featured: true,
-  },
-  {
-    id: 'web-02',
-    number: '06',
-    title: 'Luminex 3D Studio',
-    category: 'WEBSITE BUILDING',
-    tagline: 'Award-winning interactive brand experience with 3D WebGL scenes, fluid Lenis motion, and responsive performance.',
-    col1Image1: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-web2-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=1400&q=85',
-        title: '3D WebGL Interactive Architecture',
-      },
-      {
-        id: 'm-web2-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=85',
-        title: 'Dynamic Lighting & Spatial Shader Canvas',
-      },
-      {
-        id: 'm-web2-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=85',
-        title: 'Responsive Mobile Fluid Canvas',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://motionsites.ai',
-    techStack: ['Three.js', 'Next.js', 'Framer Motion', 'Sub-second CDN'],
-    featured: true,
-  },
-
-  // 04: AUTOMATION
-  {
-    id: 'aut-01',
-    number: '07',
-    title: 'RentOS AI Autonomous Flow',
-    category: 'AUTOMATION',
-    tagline: 'AI-powered rental management platform with automated lease processing and tenant intelligence.',
-    col1Image1: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-aut1-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=85',
-        title: 'Autonomous Multi-Agent Processing Pipeline',
-      },
-      {
-        id: 'm-aut1-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=85',
-        title: 'Instant Automated Document Extraction',
-      },
-      {
-        id: 'm-aut1-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1000&q=85',
-        title: 'Tenant Intelligence Dashboard',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://app.rentos.cloud',
-    techStack: ['Full-Stack', 'Node.js', 'Vite', 'Agentic Automation'],
-    featured: true,
-  },
-  {
-    id: 'aut-02',
-    number: '08',
-    title: 'GovtJob Discovery Engine',
-    category: 'AUTOMATION',
-    tagline: 'Automated government-job discovery, eligibility analysis & intelligent application pipeline.',
-    col1Image1: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=85',
-    col1Image2: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1000&q=85',
-    col2Image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=85',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-    mediaType: 'video',
-    mediaItems: [
-      {
-        id: 'm-aut2-1',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=85',
-        title: 'Automated Scraping & Eligibility Parser',
-      },
-      {
-        id: 'm-aut2-2',
-        type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-        poster: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=85',
-        title: 'Real-Time Notification & Auto-Dispatch',
-      },
-      {
-        id: 'm-aut2-3',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1000&q=85',
-        title: 'Application Tracking Telemetry',
-        duration: 4,
-      },
-    ],
-    liveUrl: 'https://stage.govtjob.engine.gov',
-    techStack: ['Next.js', 'AI Extraction', 'Workflow Engine'],
-    featured: true,
-  },
-];
-
-export const initialWebsiteContent: WebsiteContent = {
-  hero: {
-    headline: 'AI BUILD',
-    subtext: 'AI-POWERED EXPERIENCES & DIGITAL PRODUCTS FROM IDEA TO LAUNCH',
-    badgeText: 'ai.build_',
-    subBadge: 'Full-Stack & AI Agents',
-    portraitUrl: 'https://shrug-person-78902957.figma.site/_components/v2/d24c01ad3a56fc65e942a1f501eb73db42d7cf9a/Rectangle_40443.81459862.png',
-    portraitMediaType: 'image',
-  },
-  marquee: {
-    row1Images: [
-      'https://motionsites.ai/assets/hero-space-voyage-preview-eECLH3Yc.gif',
-      'https://motionsites.ai/assets/hero-codenest-preview-Cgppc2qV.gif',
-      'https://motionsites.ai/assets/hero-vex-ventures-preview-BczMFIiw.gif',
-      'https://motionsites.ai/assets/hero-stellar-ai-v2-preview-DjvxjG3C.gif',
-      'https://motionsites.ai/assets/hero-asme-preview-B_nGDnTP.gif',
-      'https://motionsites.ai/assets/hero-transform-data-preview-Cx5OU29N.gif',
-      'https://motionsites.ai/assets/hero-vitara-preview-Cjz2QYyU.gif',
-      'https://motionsites.ai/assets/hero-terra-preview-BFjrCr7T.gif',
-      'https://motionsites.ai/assets/hero-skyelite-preview-DHaZIgUv.gif',
-      'https://motionsites.ai/assets/hero-aethera-preview-DknSlcTa.gif',
-      'https://motionsites.ai/assets/hero-designpro-preview-D8c5_een.gif',
-    ],
-    row2Images: [
-      'https://motionsites.ai/assets/hero-stellar-ai-preview-D3HL6bw1.gif',
-      'https://motionsites.ai/assets/hero-xportfolio-preview-D4A8maiC.gif',
-      'https://motionsites.ai/assets/hero-orbit-web3-preview-BXt4OttD.gif',
-      'https://motionsites.ai/assets/hero-nexora-preview-cx5HmUgo.gif',
-      'https://motionsites.ai/assets/hero-evr-ventures-preview-DZxeVFEX.gif',
-      'https://motionsites.ai/assets/hero-planet-orbit-preview-DWAP8Z1P.gif',
-      'https://motionsites.ai/assets/hero-new-era-preview-CocuDUm9.gif',
-      'https://motionsites.ai/assets/hero-wealth-preview-B70idl_u.gif',
-      'https://motionsites.ai/assets/hero-luminex-preview-CxOP7ce6.gif',
-      'https://motionsites.ai/assets/hero-celestia-preview-0yO3jXO8.gif',
-    ],
-  },
-  about: {
-    heading: 'About',
-    subPill: 'Studio Philosophy & Mission',
-    bio: "AI Build is an AI-first digital studio that combines modern frontend engineering, bold design direction, and artificial intelligence to dramatically compress the distance between an ambitious idea and a production-ready digital product. Let's build something incredible together!",
-    pillars: [
-      {
-        id: '1',
-        title: 'AI Native',
-        subtitle: 'Agentic Workflows',
-        icon: 'cpu',
-      },
-      {
-        id: '2',
-        title: 'High Craft',
-        subtitle: 'Tactile UI & Motion',
-        icon: 'layers',
-      },
-      {
-        id: '3',
-        title: 'Velocity',
-        subtitle: 'Idea to Launch',
-        icon: 'zap',
-      },
-    ],
-    decorativeAssets: {
-      moonUrl: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/moon_icon.11395d36.png',
-      legoUrl: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/lego_icon-1.703bb594.png',
-      shapeUrl: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/p59_1.4659672e.png',
-      groupUrl: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/Group_134-1.2e04f3ce.png',
-    },
-  },
-  services: {
-    heading: 'WHAT WE DO',
-    subheading: 'We create. We build. We automate.',
-    items: [
-      {
-        number: '01',
-        title: 'UGC ADS',
-        description: 'Ads people actually want to watch.',
-        tagline: 'Performance-driven content that feels native to the feed.',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-        videoPoster: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-        mediaItems: [
-          {
-            id: 'm-ugc-1',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-            title: 'Creator Product Demonstration',
-          },
-          {
-            id: 'm-ugc-2',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-doing-gymnastics-exercises-in-nature-41566-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
-            title: 'Dynamic Social Hook Creative',
-          },
-          {
-            id: 'm-ugc-3',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-showing-a-product-to-the-camera-43666-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
-            title: 'High-Conversion Ad Reel',
-          },
-        ],
-        weCreate: [
-          'Product UGC',
-          'Creator-style ads',
-          'Hook variations',
-          'Product demonstrations',
-          'Testimonial-style creatives',
-          'Paid social creatives',
-        ],
-        process: [
-          'Brief',
-          'Concept',
-          'Script',
-          'Storyboard',
-          'Generate / Shoot',
-          'Edit',
-          'Variations',
-        ],
-        turnaround: '3–7 days',
-        deliverables: [
-          '9:16 vertical video',
-          'Multiple hooks',
-          'Multiple versions',
-          'Ad-ready exports',
-        ],
-      },
-      {
-        number: '02',
-        title: 'AI VIDEOS',
-        description: 'Cinematic content, generated at the speed of an idea.',
-        tagline: 'From a single idea to cinematic visual content built with AI.',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-        videoPoster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
-        mediaItems: [
-          {
-            id: 'm-ai-1',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
-            title: 'AI Neural Pulse Cinema',
-          },
-          {
-            id: 'm-ai-2',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-abstract-tunnel-with-glowing-lines-41584-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=80',
-            title: 'Hyperspeed Latent Space Tunnel',
-          },
-          {
-            id: 'm-ai-3',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
-            title: 'Generative Sci-Fi Sequences',
-          },
-        ],
-        weCreate: [
-          'Product films',
-          'Cinematic ads',
-          'AI commercials',
-          'Social videos',
-          'Brand films',
-          'Concept visuals',
-          'Motion sequences',
-        ],
-        process: [
-          'Concept',
-          'Visual Direction',
-          'Storyboard',
-          'Generation',
-          'Editing',
-          'Sound',
-          'Final Master',
-        ],
-        turnaround: '3–10 days',
-        deliverables: [
-          '4K / 1080p',
-          '9:16 · 16:9 · 1:1',
-          'Social + campaign formats',
-        ],
-      },
-      {
-        number: '03',
-        title: 'WEBSITE BUILDING',
-        description: 'Websites that make your brand look expensive.',
-        tagline: 'High-performance interactive websites engineered with modern React, motion, and AI integrations.',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-        videoPoster: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80',
-        mediaItems: [
-          {
-            id: 'm-web-1',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80',
-            title: 'Interactive Web Dashboard',
-          },
-          {
-            id: 'm-web-2',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=80',
-            title: 'Cloud Edge Infrastructure',
-          },
-          {
-            id: 'm-web-3',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-31911-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80',
-            title: 'Responsive 3D Motion Prototype',
-          },
-        ],
-        weCreate: [
-          'Conversion landing pages',
-          'Interactive Web3/AI web apps',
-          'Custom headless CMS setups',
-          'High-speed bespoke frontend',
-          '3D & interactive animations',
-          'Full-stack integrations',
-        ],
-        process: [
-          'Discovery & Wireframing',
-          'UI/UX Architecture',
-          'Interactive Prototyping',
-          'Production Codebase',
-          'Speed & SEO Optimization',
-          'Global CDN Deployment',
-        ],
-        turnaround: '1–3 weeks',
-        deliverables: [
-          'Production React / Next / Vite codebase',
-          'Responsive mobile-first build',
-          'Lighthouse 95+ performance',
-          'Self-hosted CMS control',
-        ],
-      },
-      {
-        number: '04',
-        title: 'AUTOMATIONS',
-        description: 'Less repetitive work. More things getting done.',
-        tagline: 'Intelligent multi-agent systems and custom workflows that run your operations automatically.',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-        videoPoster: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
-        mediaItems: [
-          {
-            id: 'm-auto-1',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
-            title: 'Distributed Compute Pipeline',
-          },
-          {
-            id: 'm-auto-2',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-with-glowing-signals-31910-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=80',
-            title: 'Autonomous Event Routing & Webhooks',
-          },
-          {
-            id: 'm-auto-3',
-            type: 'video',
-            url: 'https://assets.mixkit.co/videos/preview/mixkit-server-room-with-racks-of-servers-and-cables-31518-large.mp4',
-            poster: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
-            title: '24/7 Agent Telemetry & Self-Healing',
-          },
-        ],
-        weCreate: [
-          'Autonomous agent workflows',
-          'CRM & pipeline synchronization',
-          'LLM content & lead pipelines',
-          'Custom API webhooks',
-          'Customer support AI bots',
-          'Internal ops tooling',
-        ],
-        process: [
-          'Workflow Audit',
-          'Architecture Blueprint',
-          'Agent & API Pipeline Build',
-          'Testing & Edge-case Handling',
-          'Deployment & Monitoring',
-          'Knowledge Base Sync',
-        ],
-        turnaround: '5–14 days',
-        deliverables: [
-          'End-to-end automated pipelines',
-          'Real-time telemetry & alerts',
-          'Documentation & training',
-          'Zero-downtime failovers',
-        ],
-      },
-    ],
-  },
-  contact: {
-    email: 'hello@aibuild.studio',
-    statusBadge: 'Studio Accepting Q3/Q4 Projects',
-    ctaHeadline: "Let's Build",
-    ctaSubtext: 'Have an AI product, bespoke web experience, or automated system to engineer? Let’s talk.',
-  },
-  characterLighting: {
-    activePreset: DEFAULT_LIGHTING_PRESET,
-    customIntensity: 1.0,
-    rimLightBoost: 1.0,
-    enableSpecularHotspot: true,
-    enableFresnelRim: true,
-    enablePerformanceMode: true,
-    performanceModeBehavior: 'adaptive',
-  },
-};
-
-export const initialReviews: PublicReview[] = [
-  {
-    id: 'rev-1',
-    author: 'Alexandre Renard',
-    role: 'Founder & CEO',
-    company: 'HyperQuant AI',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    rating: 5,
-    comment: 'The speed and visual fidelity produced by AI Build is extraordinary. They turned our complex AI risk engine concept into a jaw-dropping web product in under 3 weeks.',
-    date: 'August 24, 2026',
-    status: 'approved',
-    isFeatured: true,
-    projectReferenced: 'TrustAI India',
-  },
-  {
-    id: 'rev-2',
-    author: 'Elena Rostova',
-    role: 'Head of Product',
-    company: 'Vanguard Zurich',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80',
-    rating: 5,
-    comment: 'Flawless execution! The tactile feel, buttery smooth scroll physics, and custom design tokens exceeded every internal benchmark. Our clients love the portal.',
-    date: 'August 18, 2026',
-    status: 'approved',
-    isFeatured: true,
-    projectReferenced: 'RentOS AI',
-  },
-  {
-    id: 'rev-3',
-    author: 'Kenji Takahashi',
-    role: 'Engineering Director',
-    company: 'NeoTokyo Mesh',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    rating: 5,
-    comment: 'Outstanding technical rigor. Their agentic pipeline and custom UI components delivered production-grade reliability on Day 1.',
-    date: 'August 12, 2026',
-    status: 'approved',
-    isFeatured: true,
-    projectReferenced: 'GovtJob Engine',
-  },
-  {
-    id: 'rev-4',
-    author: 'Sophia Chen',
-    role: 'Design Principal',
-    company: 'Aetheria Labs',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-    rating: 5,
-    comment: 'True craftsmanship. The typography pairings and dark mode atmospheric glow make the entire product feel like luxury high-fashion hardware.',
-    date: 'August 05, 2026',
-    status: 'approved',
-    isFeatured: true,
-  },
-  {
-    id: 'rev-5',
-    author: 'Marcus Vance',
-    role: 'Managing Director',
-    company: 'Summit Capital',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-    rating: 4,
-    comment: 'Very impressive turn-around time and crisp UI interactions. Looking forward to our next AI ecosystem launch with them.',
-    date: 'July 29, 2026',
-    status: 'approved',
-    isFeatured: false,
-  },
-];
-
-export const initialMessages: PublicMessage[] = [
-  {
-    id: 'msg-1',
-    name: 'Siddharth Rao',
-    email: 'siddharth@hyperquant.ai',
-    company: 'HyperQuant Technologies',
-    projectType: '01 - AI Products & Autonomous Agents',
-    budget: '$25,000 - $50,000+',
-    message: 'We require a real-time autonomous financial agent with multi-modal voice processing and automated risk auditing.',
-    date: 'Today at 10:45 AM',
-    status: 'unread',
-  },
-  {
-    id: 'msg-2',
-    name: 'Marcus Vance',
-    email: 'marcus@vanguardcapital.ch',
-    company: 'Vanguard Private Equity Zurich',
-    projectType: '03 - Intelligent Web & Mobile Ecosystems',
-    budget: '$50,000+',
-    message: 'Need a top-tier bespoke investor portal with institutional security, interactive charts, and live biometric signature flow.',
-    date: 'Yesterday at 3:20 PM',
-    status: 'read',
-  },
-  {
-    id: 'msg-3',
-    name: 'Clara Dupond',
-    email: 'clara@lumiere-paris.fr',
-    company: 'Lumière Studio Paris',
-    projectType: '02 - Bespoke Digital Experiences',
-    budget: '$15,000 - $25,000',
-    message: 'Looking for a high-end luxury e-commerce experience with fluid motion, custom 3D web shaders, and seamless checkout.',
-    date: 'Aug 28, 2026',
-    status: 'replied',
-  },
-  {
-    id: 'msg-4',
-    name: 'Sarah Jenkins',
-    email: 'sarah@beaconhealth.co',
-    company: 'Beacon Health USA',
-    projectType: '01 - AI Products & Autonomous Agents',
-    budget: '$50,000+',
-    message: 'HIPAA-compliant medical triage conversational assistant with real-time patient queue orchestration.',
-    date: 'Aug 25, 2026',
-    status: 'read',
-  },
-];
-
-export const initialSavedQuotes: SavedScopeQuote[] = [
-  {
-    id: 'sq-101',
-    clientName: 'Sarah Jenkins',
-    clientEmail: 's.jenkins@nexusfintech.io',
-    serviceCategory: '02 - AI VIDEOS',
-    budgetRange: '$4,800 – $6,400',
-    turnaroundTime: '6 – 9 Business Days',
-    deliverables: [
-      '3x 30s Cinematic AI Video Master(s)',
-      'Bespoke Spatial Audio & Foley Soundscape',
-      'Neural Voice Clone & Multilingual Dubbing',
-      'Ad-Ready 4K Resolution & Multi-Aspect Exports',
-    ],
-    notes: 'For Series A launch campaign trailer across TikTok & YouTube.',
-    createdAt: 'Aug 29, 2026',
-    status: 'sent',
-  },
-  {
-    id: 'sq-102',
-    clientName: 'Marcus Vance',
-    clientEmail: 'marcus@lumina.design',
-    serviceCategory: '03 - WEBSITE & AUTOMATIONS',
-    budgetRange: '$12,500 – $18,000',
-    turnaroundTime: '12 – 18 Business Days',
-    deliverables: [
-      'Full-Stack React Web Application with Scalable Architecture',
-      '3D WebGL / Interactive Canvas Experience',
-      'Custom Owner CMS & Media Management Suite',
-      'Cloud Database & Secure Multi-Role Auth',
-    ],
-    notes: 'Bespoke immersive portfolio and customer self-service portal.',
-    createdAt: 'Aug 27, 2026',
-    status: 'accepted',
-  },
-];
-
-export const initialEstimatorSettings: EstimatorSettings = {
-  isEnabled: true,
-  modalTitle: 'Scope Estimator & Pricing Simulator',
-  modalSubtitle: 'Configure your project deliverables, assets, fidelity, and timeline to receive an instant commercial scope estimate.',
-  rushSurchargePercentage: 25,
-  categories: {
-    ugcAds: {
-      enabled: true,
-      title: 'UGC Performance Ads',
-      number: '01',
-      basePriceAiPersona: 650,
-      basePriceRealCreator: 1100,
-      hookVariationPrice: 180,
-      minAds: 1,
-      maxAds: 12,
-      defaultAdCount: 4,
-      defaultHooks: 3,
-    },
-    aiVideo: {
-      enabled: true,
-      title: 'Cinematic AI & 3D Video',
-      number: '02',
-      basePriceCinematic: 1400,
-      basePriceHyper3D: 2200,
-      spatialAudioPricePerVideo: 350,
-      voiceClonePricePerVideo: 250,
-      minVideos: 1,
-      maxVideos: 10,
-      defaultVideoCount: 2,
-    },
-    webAutomation: {
-      enabled: true,
-      title: 'Web Platforms & AI Automation',
-      number: '03',
-      landingPagePriceMin: 3800,
-      landingPagePriceMax: 6500,
-      fullAppPriceMin: 7500,
-      fullAppPriceMax: 14000,
-      aiPipelinePriceMin: 9500,
-      aiPipelinePriceMax: 18500,
-      canvas3DAddonPrice: 1200,
-      adminCmsAddonPrice: 800,
-      databaseAuthAddonPrice: 1100,
-    },
-  },
-};
-
 export interface AdminStoreState {
   projects: ProjectItem[];
   websiteContent: WebsiteContent;
+  publishedContent?: WebsiteContent;
+  draftContent?: WebsiteContent;
+  publishStatus?: ContentPublishStatus;
+  publishedAt?: string | null;
+  hasDraftChanges?: boolean;
   reviews: PublicReview[];
   messages: PublicMessage[];
   savedQuotes: SavedScopeQuote[];
   estimatorSettings: EstimatorSettings;
+  isSyncing?: boolean;
 }
 
 class AdminDataStore {
-  private projects: ProjectItem[] = [];
-  private websiteContent: WebsiteContent = initialWebsiteContent;
-  private reviews: PublicReview[] = [];
-  private messages: PublicMessage[] = [];
-  private savedQuotes: SavedScopeQuote[] = [];
-  private estimatorSettings: EstimatorSettings = initialEstimatorSettings;
+  private projects: ProjectItem[] = initialProjects as unknown as ProjectItem[];
+  private websiteContent: WebsiteContent = initialWebsiteContent as unknown as WebsiteContent;
+  private publishedContent: WebsiteContent = initialWebsiteContent as unknown as WebsiteContent;
+  private draftContent: WebsiteContent = initialWebsiteContent as unknown as WebsiteContent;
+  private publishStatus: ContentPublishStatus = 'published';
+  private publishedAt: string | null = null;
+  private hasDraftChanges = false;
+  private reviews: PublicReview[] = initialReviews as unknown as PublicReview[];
+  private messages: PublicMessage[] = initialMessages as unknown as PublicMessage[];
+  private savedQuotes: SavedScopeQuote[] = initialSavedQuotes as unknown as SavedScopeQuote[];
+  private estimatorSettings: EstimatorSettings = initialEstimatorSettings as unknown as EstimatorSettings;
   private listeners: Array<(state: AdminStoreState) => void> = [];
+  private isSyncing = false;
+  private initialFetchPromise: Promise<void> | null = null;
 
   constructor() {
-    this.loadFromStorage();
+    this.initialFetchPromise = this.fetchFromDatabase();
+  }
+
+  public async fetchFromDatabase(): Promise<void> {
+    this.isSyncing = true;
+    try {
+      const [adminSettingsRes, projects, reviews, messages, quotes, estimator] = await Promise.allSettled([
+        api.getSiteSettingsAdmin(),
+        api.getProjects(true, true),
+        api.getReviews(true, true),
+        api.getMessages(true),
+        api.getSavedQuotes(true),
+        api.getEstimatorSettings(),
+      ]);
+
+      if (adminSettingsRes.status === 'fulfilled' && adminSettingsRes.value) {
+        const s = adminSettingsRes.value;
+        this.publishStatus = s.status || 'published';
+        this.publishedAt = s.publishedAt || null;
+        this.hasDraftChanges = Boolean(s.hasDraftChanges);
+        this.publishedContent = (s.published || initialWebsiteContent) as unknown as WebsiteContent;
+        this.draftContent = (s.draft || s.published || initialWebsiteContent) as unknown as WebsiteContent;
+        this.websiteContent = this.draftContent;
+      } else {
+        // Fallback to basic public getSiteSettings
+        const publicSettings = await api.getSiteSettings().catch(() => null);
+        if (publicSettings) {
+          this.websiteContent = {
+            ...initialWebsiteContent,
+            ...publicSettings,
+          };
+          this.publishedContent = this.websiteContent;
+          this.draftContent = this.websiteContent;
+        }
+      }
+
+      if (projects.status === 'fulfilled' && Array.isArray(projects.value) && projects.value.length > 0) {
+        this.projects = projects.value;
+      }
+
+      if (reviews.status === 'fulfilled' && Array.isArray(reviews.value)) {
+        this.reviews = reviews.value;
+      }
+
+      if (messages.status === 'fulfilled' && Array.isArray(messages.value)) {
+        this.messages = messages.value;
+      }
+
+      if (quotes.status === 'fulfilled' && Array.isArray(quotes.value)) {
+        this.savedQuotes = quotes.value;
+      }
+
+      if (estimator.status === 'fulfilled' && estimator.value) {
+        this.estimatorSettings = {
+          ...initialEstimatorSettings,
+          ...estimator.value,
+          categories: {
+            ...initialEstimatorSettings.categories,
+            ...(estimator.value.categories || {}),
+          },
+        };
+      }
+    } catch (err) {
+      console.warn('[AdminStore] Error fetching from database backend, using fallback:', err);
+    } finally {
+      this.isSyncing = false;
+      this.notifyListeners();
+    }
   }
 
   public getState(): AdminStoreState {
     return {
       projects: this.projects,
       websiteContent: this.websiteContent,
+      publishedContent: this.publishedContent,
+      draftContent: this.draftContent,
+      publishStatus: this.publishStatus,
+      publishedAt: this.publishedAt,
+      hasDraftChanges: this.hasDraftChanges,
       reviews: this.reviews,
       messages: this.messages,
       savedQuotes: this.savedQuotes,
       estimatorSettings: this.estimatorSettings,
+      isSyncing: this.isSyncing,
     };
   }
 
-  private loadFromStorage() {
-    try {
-      // Clean up bloated legacy storage keys to maximize available browser storage
-      try {
-        localStorage.removeItem('ai_build_projects_v3');
-        localStorage.removeItem('ai_build_projects_v2');
-        localStorage.removeItem('ai_build_content_v2');
-      } catch {}
-
-      const localProjectsTs = Number(
-        localStorage.getItem('ai_build_projects_v5_ts') ||
-        localStorage.getItem('ai_build_projects_v4_ts') ||
-        '0'
-      );
-      const storedProjects =
-        localStorage.getItem('ai_build_projects_v5') ||
-        localStorage.getItem('ai_build_projects_v4') ||
-        localStorage.getItem('ai_build_projects_v3') ||
-        localStorage.getItem('ai_build_projects_v2');
-      if (storedProjects) {
-        try {
-          const parsed = JSON.parse(storedProjects) as ProjectItem[];
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const normalized = parsed.map((p) => {
-              const defaultProj = initialProjects.find((d) => d.id === p.id);
-              const mediaItems =
-                p.mediaItems && p.mediaItems.length > 0
-                  ? p.mediaItems
-                  : defaultProj?.mediaItems && defaultProj.mediaItems.length > 0
-                  ? defaultProj.mediaItems
-                  : [
-                      ...(p.videoUrl ? [{ id: `m-${p.id}-v`, type: 'video' as const, url: p.videoUrl, poster: p.col2Image, title: p.title }] : []),
-                      ...(p.col2Image ? [{ id: `m-${p.id}-img`, type: 'image' as const, url: p.col2Image, title: `${p.title} Showcase`, duration: 4 }] : []),
-                    ];
-
-              return {
-                ...p,
-                category: normalizeProjectCategory(p.category),
-                aspectRatio: p.aspectRatio || 'auto',
-                mediaItems,
-              };
-            });
-
-            // Guarantee every single default project from initialProjects exists
-            const existingIds = new Set(normalized.map((p) => p.id));
-            const missingDefaults = initialProjects.filter((p) => !existingIds.has(p.id));
-
-            this.projects = [...normalized, ...missingDefaults];
-          } else {
-            this.projects = initialProjects;
-          }
-        } catch {
-          this.projects = initialProjects;
-        }
-      } else {
-        this.projects = initialProjects;
-      }
-
-      const localContentTs = Number(
-        localStorage.getItem('ai_build_content_v5_ts') ||
-        localStorage.getItem('ai_build_content_v4_ts') ||
-        '0'
-      );
-      const storedContent =
-        localStorage.getItem('ai_build_content_v5') ||
-        localStorage.getItem('ai_build_content_v4') ||
-        localStorage.getItem('ai_build_content_v2');
-      if (storedContent) {
-        try {
-          const parsed = JSON.parse(storedContent);
-          this.websiteContent = {
-            ...initialWebsiteContent,
-            ...parsed,
-            hero: {
-              ...initialWebsiteContent.hero,
-              ...(parsed.hero || {}),
-            },
-            about: {
-              ...initialWebsiteContent.about,
-              ...(parsed.about || {}),
-            },
-            contact: {
-              ...initialWebsiteContent.contact,
-              ...(parsed.contact || {}),
-            },
-            marquee: {
-              ...initialWebsiteContent.marquee,
-              ...(parsed.marquee || {}),
-            },
-            characterLighting: {
-              ...initialWebsiteContent.characterLighting!,
-              ...(parsed.characterLighting || {}),
-            },
-            services: (parsed.services && Array.isArray(parsed.services.items) && parsed.services.items.length > 0)
-              ? {
-                  heading: parsed.services.heading || initialWebsiteContent.services.heading,
-                  subheading: parsed.services.subheading ?? initialWebsiteContent.services.subheading,
-                  items: parsed.services.items,
-                }
-              : initialWebsiteContent.services,
-          };
-        } catch (e) {
-          console.error('Failed to parse stored content:', e);
-          this.websiteContent = initialWebsiteContent;
-        }
-      } else {
-        this.websiteContent = initialWebsiteContent;
-      }
-
-      // Check IndexedDB asynchronously for durable media & large payloads
-      if (typeof window !== 'undefined') {
-        getIndexedDbItem<{ timestamp?: number; content?: WebsiteContent } | WebsiteContent>('ai_build_content_v5')
-          .then((dbResult) => {
-            if (!dbResult) return;
-            const isWrapped = dbResult && typeof dbResult === 'object' && 'timestamp' in dbResult && 'content' in dbResult;
-            const dbTs = isWrapped ? (dbResult as any).timestamp : 0;
-            const dbContent = isWrapped ? (dbResult as any).content : (dbResult as WebsiteContent);
-
-            if (
-              dbTs >= localContentTs &&
-              dbContent &&
-              dbContent.services &&
-              Array.isArray(dbContent.services.items) &&
-              dbContent.services.items.length > 0
-            ) {
-              this.websiteContent = {
-                ...this.websiteContent,
-                ...dbContent,
-              };
-              this.notifyListenersOnly();
-            }
-          })
-          .catch(() => {});
-
-        getIndexedDbItem<{ timestamp?: number; projects?: ProjectItem[] } | ProjectItem[]>('ai_build_projects_v5')
-          .then((dbResult) => {
-            if (!dbResult) return;
-            const isWrapped = dbResult && typeof dbResult === 'object' && 'timestamp' in dbResult && 'projects' in dbResult;
-            const dbTs = isWrapped ? (dbResult as any).timestamp : 0;
-            const dbProjects = isWrapped ? (dbResult as any).projects : (dbResult as ProjectItem[]);
-
-            if (dbTs >= localProjectsTs && Array.isArray(dbProjects) && dbProjects.length > 0) {
-              this.projects = dbProjects;
-              this.notifyListenersOnly();
-            }
-          })
-          .catch(() => {});
-      }
-
-      const storedReviews = localStorage.getItem('ai_build_reviews_v2');
-      this.reviews = storedReviews ? JSON.parse(storedReviews) : initialReviews;
-
-      const storedMessages = localStorage.getItem('ai_build_messages_v2');
-      this.messages = storedMessages ? JSON.parse(storedMessages) : initialMessages;
-
-      const storedQuotes = localStorage.getItem('ai_build_quotes_v2');
-      this.savedQuotes = storedQuotes ? JSON.parse(storedQuotes) : initialSavedQuotes;
-
-      const storedEstimatorSettings = localStorage.getItem('ai_build_estimator_settings_v2');
-      if (storedEstimatorSettings) {
-        const parsedSettings = JSON.parse(storedEstimatorSettings);
-        this.estimatorSettings = {
-          ...initialEstimatorSettings,
-          ...parsedSettings,
-          categories: {
-            ugcAds: {
-              ...initialEstimatorSettings.categories.ugcAds,
-              ...(parsedSettings.categories?.ugcAds || {}),
-            },
-            aiVideo: {
-              ...initialEstimatorSettings.categories.aiVideo,
-              ...(parsedSettings.categories?.aiVideo || {}),
-            },
-            webAutomation: {
-              ...initialEstimatorSettings.categories.webAutomation,
-              ...(parsedSettings.categories?.webAutomation || {}),
-            },
-          },
-        };
-      } else {
-        this.estimatorSettings = initialEstimatorSettings;
-      }
-    } catch {
-      this.projects = initialProjects;
-      this.websiteContent = initialWebsiteContent;
-      this.reviews = initialReviews;
-      this.messages = initialMessages;
-      this.savedQuotes = initialSavedQuotes;
-      this.estimatorSettings = initialEstimatorSettings;
-    }
-  }
-
-  private saveToStorage() {
-    const now = Date.now();
-
-    // 1. Projects (isolated so content quota doesn't block projects)
-    try {
-      localStorage.setItem('ai_build_projects_v5', JSON.stringify(this.projects));
-      localStorage.setItem('ai_build_projects_v5_ts', now.toString());
-    } catch (err) {
-      console.warn('localStorage projects save warning (might exceed quota), storing lightweight fallback:', err);
-      try {
-        // Strip heavy base64 strings (>50KB) from localStorage copy so metadata & URLs always persist
-        const lightweight = this.projects.map((p) => ({
-          ...p,
-          mediaItems: (p.mediaItems || []).map((m) => ({
-            ...m,
-            url: m.url && m.url.startsWith('data:') && m.url.length > 50000 ? '' : m.url,
-          })),
-        }));
-        localStorage.setItem('ai_build_projects_v5', JSON.stringify(lightweight));
-        localStorage.setItem('ai_build_projects_v5_ts', now.toString());
-      } catch (innerErr) {
-        console.warn('Failed to write lightweight projects to localStorage:', innerErr);
-      }
-    }
-
-    // 2. Website Content
-    try {
-      localStorage.setItem('ai_build_content_v5', JSON.stringify(this.websiteContent));
-      localStorage.setItem('ai_build_content_v5_ts', now.toString());
-    } catch (err) {
-      console.warn('localStorage content save warning (might exceed quota):', err);
-    }
-
-    // 3. Reviews & Messages
-    try {
-      localStorage.setItem('ai_build_reviews_v2', JSON.stringify(this.reviews));
-      localStorage.setItem('ai_build_messages_v2', JSON.stringify(this.messages));
-    } catch {}
-
-    // 4. Quotes & Estimator Settings
-    try {
-      localStorage.setItem('ai_build_quotes_v2', JSON.stringify(this.savedQuotes));
-      localStorage.setItem('ai_build_estimator_settings_v2', JSON.stringify(this.estimatorSettings));
-    } catch {}
-
-    // Always mirror full unpruned datasets to IndexedDB for large media support & resilient offline persistence
-    setIndexedDbItem('ai_build_content_v5', { timestamp: now, content: this.websiteContent }).catch(() => {});
-    setIndexedDbItem('ai_build_projects_v5', { timestamp: now, projects: this.projects }).catch(() => {});
-  }
-
-  private notifyListenersOnly() {
+  private notifyListeners() {
     const currentState = this.getState();
-    this.listeners.forEach((listener) => listener(currentState));
-  }
-
-  private notify() {
-    this.saveToStorage();
-    const currentState = this.getState();
-    this.listeners.forEach((listener) => listener(currentState));
+    this.listeners.forEach((listener) => {
+      try {
+        listener(currentState);
+      } catch (err) {
+        console.error('[AdminStore] Listener error:', err);
+      }
+    });
   }
 
   public subscribe(listener: (state: AdminStoreState) => void) {
     this.listeners.push(listener);
+    listener(this.getState());
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
     };
@@ -1294,46 +261,242 @@ class AdminDataStore {
     return await updateOwnerPasscode(currentPin, newPin);
   }
 
-  // --- PROJECTS API ---
+  // --- PROJECTS API (DRAFT & PUBLISH) ---
   public getProjects(): ProjectItem[] {
     return [...this.projects];
   }
 
-  public addProject(project: Omit<ProjectItem, 'id'> | ProjectItem) {
-    const id = 'id' in project && project.id ? project.id : `proj-${Date.now()}`;
+  public async addProject(project: Omit<ProjectItem, 'id'> | ProjectItem): Promise<ProjectItem> {
+    const tempId = 'id' in project && project.id ? project.id : `proj-${Date.now()}`;
     const newProject: ProjectItem = {
       ...project,
-      id,
-      number: project.number || `0${this.projects.length + 1}`,
-      tagline: project.tagline || 'Engineered with bespoke AI architecture & fluid motion.',
+      id: tempId,
+      number: project.number || (this.projects.length + 1 < 10 ? `0${this.projects.length + 1}` : `${this.projects.length + 1}`),
+      title: sanitizeInput(project.title || 'Untitled Project', 120),
+      category: project.category || 'UGC ADS',
+      tagline: sanitizeInput(project.tagline || '', 250),
+      col1Image1: project.col1Image1 || '',
+      col1Image2: project.col1Image2 || '',
+      col2Image: project.col2Image || '',
+      videoUrl: project.videoUrl || '',
+      mediaType: project.mediaType || (project.videoUrl ? 'video' : 'image'),
+      mediaItems: project.mediaItems || [],
+      liveUrl: project.liveUrl || '',
+      techStack: project.techStack || ['React', 'TypeScript', 'Tailwind'],
+      featured: project.featured !== undefined ? project.featured : true,
+      aspectRatio: project.aspectRatio || 'auto',
+      status: project.status || 'published',
+      published: project.status ? project.status === 'published' : true,
     };
+
     this.projects = [newProject, ...this.projects];
-    this.notify();
-    return newProject;
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.createProject(newProject);
+      this.projects = this.projects.map((p) => (p.id === tempId ? persisted : p));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to save project to database:', err);
+      this.projects = this.projects.filter((p) => p.id !== tempId);
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public updateProject(id: string, updates: Partial<ProjectItem>) {
-    this.projects = this.projects.map((p) => (p.id === id ? { ...p, ...updates } : p));
-    this.notify();
+  public async updateProject(id: string, updates: Partial<ProjectItem>): Promise<ProjectItem> {
+    const previous = this.projects.find((p) => p.id === id);
+    if (!previous) throw new Error(`Project with ID ${id} not found`);
+
+    const updated = {
+      ...previous,
+      ...updates,
+      title: updates.title !== undefined ? sanitizeInput(updates.title, 120) : previous.title,
+      tagline: updates.tagline !== undefined ? sanitizeInput(updates.tagline, 250) : previous.tagline,
+    };
+
+    this.projects = this.projects.map((p) => (p.id === id ? updated : p));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.updateProject(id, updates);
+      this.projects = this.projects.map((p) => (p.id === id ? persisted : p));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to update project in database:', err);
+      this.projects = this.projects.map((p) => (p.id === id ? previous : p));
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public deleteProject(id: string) {
-    this.projects = this.projects.filter((p) => p.id !== id);
-    this.notify();
+  public async publishProject(id: string): Promise<ProjectItem> {
+    const previous = this.projects.find((p) => p.id === id);
+    if (!previous) throw new Error(`Project with ID ${id} not found`);
+
+    const updated: ProjectItem = {
+      ...previous,
+      status: 'published',
+      published: true,
+      publishedAt: new Date().toISOString(),
+    };
+
+    this.projects = this.projects.map((p) => (p.id === id ? updated : p));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.publishProject(id);
+      this.projects = this.projects.map((p) => (p.id === id ? persisted : p));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      this.projects = this.projects.map((p) => (p.id === id ? previous : p));
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public reorderProjects(newOrder: ProjectItem[]) {
+  public async unpublishProject(id: string): Promise<ProjectItem> {
+    const previous = this.projects.find((p) => p.id === id);
+    if (!previous) throw new Error(`Project with ID ${id} not found`);
+
+    const updated: ProjectItem = {
+      ...previous,
+      status: 'unpublished',
+      published: false,
+    };
+
+    this.projects = this.projects.map((p) => (p.id === id ? updated : p));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.unpublishProject(id);
+      this.projects = this.projects.map((p) => (p.id === id ? persisted : p));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      this.projects = this.projects.map((p) => (p.id === id ? previous : p));
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async draftProject(id: string): Promise<ProjectItem> {
+    const previous = this.projects.find((p) => p.id === id);
+    if (!previous) throw new Error(`Project with ID ${id} not found`);
+
+    const updated: ProjectItem = {
+      ...previous,
+      status: 'draft',
+      published: false,
+    };
+
+    this.projects = this.projects.map((p) => (p.id === id ? updated : p));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.draftProject(id);
+      this.projects = this.projects.map((p) => (p.id === id ? persisted : p));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      this.projects = this.projects.map((p) => (p.id === id ? previous : p));
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async deleteProject(id: string, permanent = false): Promise<void> {
+    const previous = [...this.projects];
+    if (!permanent) {
+      this.projects = this.projects.map((p) =>
+        p.id === id ? { ...p, isDeleted: true, status: 'archived' as const } : p
+      );
+    } else {
+      this.projects = this.projects.filter((p) => p.id !== id);
+    }
+    this.notifyListeners();
+
+    try {
+      await api.deleteProject(id, permanent);
+      addAuditLog(
+        'PROJECT_DELETE',
+        `${permanent ? 'Permanently deleted' : 'Moved to trash (soft-delete)'} project ${id}`,
+        'warning'
+      );
+    } catch (err) {
+      console.error('[AdminStore] Failed to delete project from database:', err);
+      this.projects = previous;
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async restoreProject(id: string): Promise<ProjectItem> {
+    const previous = [...this.projects];
+    this.projects = this.projects.map((p) =>
+      p.id === id ? { ...p, isDeleted: false, status: 'published' as const } : p
+    );
+    this.notifyListeners();
+
+    try {
+      const restored = await api.restoreProject(id);
+      this.projects = this.projects.map((p) => (p.id === id ? restored : p));
+      this.notifyListeners();
+      addAuditLog('PROJECT_RESTORE', `Restored project "${restored.title}" from trash`, 'info');
+      return restored;
+    } catch (err) {
+      console.error('[AdminStore] Failed to restore project:', err);
+      this.projects = previous;
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async reorderProjects(newOrder: ProjectItem[]): Promise<ProjectItem[]> {
+    const previous = [...this.projects];
     this.projects = newOrder;
-    this.notify();
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.reorderProjects(newOrder);
+      this.projects = persisted;
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to reorder projects in database:', err);
+      this.projects = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  // --- WEBSITE CONTENT API ---
+  // --- WEBSITE CONTENT (DRAFT & PUBLISH) API ---
   public getWebsiteContent(): WebsiteContent {
     return { ...this.websiteContent };
   }
 
-  public updateWebsiteContent(updates: Partial<WebsiteContent>) {
-    this.websiteContent = {
+  public getPublishedContent(): WebsiteContent {
+    return { ...this.publishedContent };
+  }
+
+  public getDraftContent(): WebsiteContent {
+    return { ...this.draftContent };
+  }
+
+  public getPublishStatus(): { status: ContentPublishStatus; publishedAt: string | null; hasDraftChanges: boolean } {
+    return {
+      status: this.publishStatus,
+      publishedAt: this.publishedAt,
+      hasDraftChanges: this.hasDraftChanges,
+    };
+  }
+
+  public async saveContentDraft(updates: Partial<WebsiteContent>): Promise<WebsiteContent> {
+    const previous = { ...this.websiteContent };
+    const merged = {
       ...this.websiteContent,
       ...updates,
       hero: { ...this.websiteContent.hero, ...(updates.hero || {}) },
@@ -1352,30 +515,91 @@ class AdminDataStore {
         ...(updates.characterLighting || {}),
       },
     };
-    this.notify();
+
+    this.draftContent = merged as unknown as WebsiteContent;
+    this.websiteContent = merged as unknown as WebsiteContent;
+    this.publishStatus = 'modified';
+    this.hasDraftChanges = true;
+    this.notifyListeners();
+
+    try {
+      const res = await api.saveSiteSettingsDraft(updates);
+      this.draftContent = (res.draft || merged) as unknown as WebsiteContent;
+      this.publishedContent = (res.published || this.publishedContent) as unknown as WebsiteContent;
+      this.websiteContent = this.draftContent;
+      this.publishStatus = res.status || 'modified';
+      this.publishedAt = res.publishedAt || this.publishedAt;
+      this.hasDraftChanges = Boolean(res.hasDraftChanges);
+      this.notifyListeners();
+      return this.draftContent;
+    } catch (err) {
+      console.error('[AdminStore] Failed to save draft to database:', err);
+      this.websiteContent = previous;
+      this.draftContent = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public saveWebsiteContent(content: WebsiteContent) {
-    this.updateWebsiteContent(content);
-    this.saveToStorage();
+  public async publishContent(content?: Partial<WebsiteContent>): Promise<WebsiteContent> {
+    const payload = content || this.websiteContent;
+    try {
+      const res = await api.publishSiteSettings(payload);
+      this.publishedContent = (res.published || payload) as unknown as WebsiteContent;
+      this.draftContent = this.publishedContent;
+      this.websiteContent = this.publishedContent;
+      this.publishStatus = 'published';
+      this.publishedAt = res.publishedAt || new Date().toISOString();
+      this.hasDraftChanges = false;
+      this.notifyListeners();
+      return this.publishedContent;
+    } catch (err) {
+      console.error('[AdminStore] Failed to publish website content to database:', err);
+      throw err;
+    }
+  }
+
+  public async revertContentDraft(): Promise<WebsiteContent> {
+    try {
+      const res = await api.revertSiteSettingsDraft();
+      this.publishedContent = (res.published || initialWebsiteContent) as unknown as WebsiteContent;
+      this.draftContent = this.publishedContent;
+      this.websiteContent = this.publishedContent;
+      this.publishStatus = 'published';
+      this.publishedAt = res.publishedAt || this.publishedAt;
+      this.hasDraftChanges = false;
+      this.notifyListeners();
+      return this.publishedContent;
+    } catch (err) {
+      console.error('[AdminStore] Failed to revert draft in database:', err);
+      throw err;
+    }
+  }
+
+  public async updateWebsiteContent(updates: Partial<WebsiteContent>): Promise<WebsiteContent> {
+    return await this.saveContentDraft(updates);
+  }
+
+  public async saveWebsiteContent(content: WebsiteContent): Promise<WebsiteContent> {
+    return await this.publishContent(content);
   }
 
   // --- 3D CHARACTER LIGHTING PRESETS API ---
   public getCharacterLighting(): CharacterLightingSettings {
-    return this.websiteContent.characterLighting || initialWebsiteContent.characterLighting!;
+    return (this.websiteContent.characterLighting || initialWebsiteContent.characterLighting!) as unknown as CharacterLightingSettings;
   }
 
-  public updateLightingPreset(
+  public async updateLightingPreset(
     presetId: CharacterLightingPresetId,
     customOptions?: Partial<CharacterLightingSettings>
-  ) {
+  ): Promise<CharacterLightingSettings> {
     const currentLighting = this.getCharacterLighting();
     const newLighting: CharacterLightingSettings = {
       ...currentLighting,
       ...customOptions,
       activePreset: presetId,
     };
-    this.updateWebsiteContent({
+    await this.updateWebsiteContent({
       characterLighting: newLighting,
     });
     addAuditLog('CONTENT_UPDATE', `3D Character lighting preset set to "${presetId}"`, 'info');
@@ -1404,10 +628,11 @@ class AdminDataStore {
     return { average, count: approved.length, breakdown };
   }
 
-  public addReview(review: Omit<PublicReview, 'id' | 'date'> & { date?: string }) {
+  public async addReview(review: Omit<PublicReview, 'id' | 'date'> & { date?: string }): Promise<PublicReview> {
+    const tempId = `rev-${Date.now()}`;
     const newRev: PublicReview = {
       ...review,
-      id: `rev-${Date.now()}`,
+      id: tempId,
       author: sanitizeInput(review.author || 'Verified Client', 80),
       role: sanitizeInput(review.role || 'Client', 80),
       company: sanitizeInput(review.company || 'Digital Studio', 80),
@@ -1417,29 +642,101 @@ class AdminDataStore {
       isFeatured: review.isFeatured ?? false,
     };
     this.reviews = [newRev, ...this.reviews];
-    this.notify();
-    return newRev;
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.createReview(newRev);
+      this.reviews = this.reviews.map((r) => (r.id === tempId ? persisted : r));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to save review to database:', err);
+      this.reviews = this.reviews.filter((r) => r.id !== tempId);
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public updateReview(id: string, updates: Partial<PublicReview>) {
+  public async updateReview(id: string, updates: Partial<PublicReview>): Promise<PublicReview> {
+    const previous = this.reviews.find((r) => r.id === id);
+    if (!previous) throw new Error(`Review ${id} not found`);
+
+    this.reviews = this.reviews.map((r) => (r.id === id ? { ...r, ...updates } : r));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.updateReview(id, updates);
+      this.reviews = this.reviews.map((r) => (r.id === id ? persisted : r));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to update review in database:', err);
+      this.reviews = this.reviews.map((r) => (r.id === id ? previous : r));
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async deleteReview(id: string, permanent = false): Promise<void> {
+    const previous = [...this.reviews];
+    if (!permanent) {
+      this.reviews = this.reviews.map((r) =>
+        r.id === id ? { ...r, isDeleted: true, status: 'archived' as const } : r
+      );
+    } else {
+      this.reviews = this.reviews.filter((r) => r.id !== id);
+    }
+    this.notifyListeners();
+
+    try {
+      await api.deleteReview(id, permanent);
+      addAuditLog('REVIEW_DELETE', `${permanent ? 'Permanently deleted' : 'Moved to trash'} review ${id}`, 'warning');
+    } catch (err) {
+      console.error('[AdminStore] Failed to delete review from database:', err);
+      this.reviews = previous;
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async restoreReview(id: string): Promise<PublicReview> {
+    const previous = [...this.reviews];
     this.reviews = this.reviews.map((r) =>
-      r.id === id
-        ? {
-            ...r,
-            ...updates,
-            author: updates.author ? sanitizeInput(updates.author, 80) : r.author,
-            role: updates.role ? sanitizeInput(updates.role, 80) : r.role,
-            company: updates.company ? sanitizeInput(updates.company, 80) : r.company,
-            comment: updates.comment ? sanitizeInput(updates.comment, 1000) : r.comment,
-          }
-        : r
+      r.id === id ? { ...r, isDeleted: false, status: 'approved' as const } : r
     );
-    this.notify();
+    this.notifyListeners();
+
+    try {
+      const restored = await api.restoreReview(id);
+      this.reviews = this.reviews.map((r) => (r.id === id ? restored : r));
+      this.notifyListeners();
+      addAuditLog('REVIEW_RESTORE', `Restored review by "${restored.author}" from trash`, 'info');
+      return restored;
+    } catch (err) {
+      console.error('[AdminStore] Failed to restore review:', err);
+      this.reviews = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public deleteReview(id: string) {
-    this.reviews = this.reviews.filter((r) => r.id !== id);
-    this.notify();
+  public async reorderReviews(newOrder: PublicReview[]): Promise<PublicReview[]> {
+    const previous = [...this.reviews];
+    this.reviews = newOrder.map((r, idx) => ({ ...r, displayOrder: idx }));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.reorderReviews(newOrder);
+      this.reviews = persisted;
+      this.notifyListeners();
+      addAuditLog('REVIEW_REORDER', `Reordered ${newOrder.length} reviews and testimonials`, 'info');
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to reorder reviews in database:', err);
+      this.reviews = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
   // --- PUBLIC MESSAGES / INQUIRIES API ---
@@ -1447,10 +744,11 @@ class AdminDataStore {
     return [...this.messages];
   }
 
-  public addMessage(msg: Omit<PublicMessage, 'id' | 'date' | 'status'> & { date?: string }) {
+  public async addMessage(msg: Omit<PublicMessage, 'id' | 'date' | 'status'> & { date?: string }): Promise<PublicMessage> {
+    const tempId = `msg-${Date.now()}`;
     const newMsg: PublicMessage = {
       ...msg,
-      id: `msg-${Date.now()}`,
+      id: tempId,
       name: sanitizeInput(msg.name || 'Direct Visitor', 80),
       email: sanitizeEmail(msg.email || ''),
       company: sanitizeInput(msg.company || 'Private Client', 80),
@@ -1461,18 +759,82 @@ class AdminDataStore {
       status: 'unread',
     };
     this.messages = [newMsg, ...this.messages];
-    this.notify();
-    return newMsg;
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.createMessage(newMsg);
+      this.messages = this.messages.map((m) => (m.id === tempId ? persisted : m));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to submit message to database:', err);
+      this.messages = this.messages.filter((m) => m.id !== tempId);
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public updateMessageStatus(id: string, status: PublicMessage['status']) {
+  public async updateMessageStatus(id: string, status: PublicMessage['status']): Promise<PublicMessage> {
+    const previous = this.messages.find((m) => m.id === id);
+    if (!previous) throw new Error(`Message ${id} not found`);
+
     this.messages = this.messages.map((m) => (m.id === id ? { ...m, status } : m));
-    this.notify();
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.updateMessageStatus(id, status);
+      this.messages = this.messages.map((m) => (m.id === id ? persisted : m));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to update message status in database:', err);
+      this.messages = this.messages.map((m) => (m.id === id ? previous : m));
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public deleteMessage(id: string) {
-    this.messages = this.messages.filter((m) => m.id !== id);
-    this.notify();
+  public async deleteMessage(id: string, permanent = false): Promise<void> {
+    const previous = [...this.messages];
+    if (!permanent) {
+      this.messages = this.messages.map((m) =>
+        m.id === id ? { ...m, isDeleted: true, status: 'archived' as const } : m
+      );
+    } else {
+      this.messages = this.messages.filter((m) => m.id !== id);
+    }
+    this.notifyListeners();
+
+    try {
+      await api.deleteMessage(id, permanent);
+      addAuditLog('INQUIRY_DELETE', `${permanent ? 'Permanently deleted' : 'Moved to trash'} message ${id}`, 'info');
+    } catch (err) {
+      console.error('[AdminStore] Failed to delete message from database:', err);
+      this.messages = previous;
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async restoreMessage(id: string): Promise<PublicMessage> {
+    const previous = [...this.messages];
+    this.messages = this.messages.map((m) =>
+      m.id === id ? { ...m, isDeleted: false, status: 'read' as const } : m
+    );
+    this.notifyListeners();
+
+    try {
+      const restored = await api.restoreMessage(id);
+      this.messages = this.messages.map((m) => (m.id === id ? restored : m));
+      this.notifyListeners();
+      addAuditLog('INQUIRY_RESTORE', `Restored message from "${restored.name}" from trash`, 'info');
+      return restored;
+    } catch (err) {
+      console.error('[AdminStore] Failed to restore message:', err);
+      this.messages = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
   // --- SAVED SCOPE QUOTES / ESTIMATOR PROPOSALS API ---
@@ -1480,10 +842,11 @@ class AdminDataStore {
     return [...this.savedQuotes];
   }
 
-  public addSavedQuote(quote: Omit<SavedScopeQuote, 'id' | 'createdAt'> & { createdAt?: string }) {
+  public async addSavedQuote(quote: Omit<SavedScopeQuote, 'id' | 'createdAt'> & { createdAt?: string }): Promise<SavedScopeQuote> {
+    const tempId = `sq-${Date.now()}`;
     const newQuote: SavedScopeQuote = {
       ...quote,
-      id: `sq-${Date.now()}`,
+      id: tempId,
       clientName: sanitizeInput(quote.clientName || 'Unnamed Client', 80),
       clientEmail: quote.clientEmail ? sanitizeEmail(quote.clientEmail) : undefined,
       serviceCategory: quote.serviceCategory || '01 - UGC ADS',
@@ -1495,28 +858,125 @@ class AdminDataStore {
       status: quote.status || 'draft',
     };
     this.savedQuotes = [newQuote, ...this.savedQuotes];
-    this.notify();
-    return newQuote;
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.createSavedQuote(newQuote);
+      this.savedQuotes = this.savedQuotes.map((q) => (q.id === tempId ? persisted : q));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to save quote to database:', err);
+      this.savedQuotes = this.savedQuotes.filter((q) => q.id !== tempId);
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public updateSavedQuote(id: string, updates: Partial<SavedScopeQuote>) {
+  public async updateSavedQuote(id: string, updates: Partial<SavedScopeQuote>): Promise<SavedScopeQuote> {
+    const previous = this.savedQuotes.find((q) => q.id === id);
+    if (!previous) throw new Error(`Saved Quote ${id} not found`);
+
+    this.savedQuotes = this.savedQuotes.map((q) => (q.id === id ? { ...q, ...updates } : q));
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.updateSavedQuote(id, updates);
+      this.savedQuotes = this.savedQuotes.map((q) => (q.id === id ? persisted : q));
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to update quote in database:', err);
+      this.savedQuotes = this.savedQuotes.map((q) => (q.id === id ? previous : q));
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async deleteSavedQuote(id: string, permanent = false): Promise<void> {
+    const previous = [...this.savedQuotes];
+    if (!permanent) {
+      this.savedQuotes = this.savedQuotes.map((q) =>
+        q.id === id ? { ...q, isDeleted: true, status: 'archived' as const } : q
+      );
+    } else {
+      this.savedQuotes = this.savedQuotes.filter((q) => q.id !== id);
+    }
+    this.notifyListeners();
+
+    try {
+      await api.deleteSavedQuote(id, permanent);
+      addAuditLog('QUOTE_DELETE', `${permanent ? 'Permanently deleted' : 'Moved to trash'} quote ${id}`, 'info');
+    } catch (err) {
+      console.error('[AdminStore] Failed to delete quote from database:', err);
+      this.savedQuotes = previous;
+      this.notifyListeners();
+      throw err;
+    }
+  }
+
+  public async restoreSavedQuote(id: string): Promise<SavedScopeQuote> {
+    const previous = [...this.savedQuotes];
     this.savedQuotes = this.savedQuotes.map((q) =>
-      q.id === id
-        ? {
-            ...q,
-            ...updates,
-            clientName: updates.clientName ? sanitizeInput(updates.clientName, 80) : q.clientName,
-            clientEmail: updates.clientEmail ? sanitizeEmail(updates.clientEmail) : q.clientEmail,
-            notes: updates.notes !== undefined ? sanitizeInput(updates.notes, 1000) : q.notes,
-          }
-        : q
+      q.id === id ? { ...q, isDeleted: false, status: 'draft' as const } : q
     );
-    this.notify();
+    this.notifyListeners();
+
+    try {
+      const restored = await api.restoreSavedQuote(id);
+      this.savedQuotes = this.savedQuotes.map((q) => (q.id === id ? restored : q));
+      this.notifyListeners();
+      addAuditLog('QUOTE_RESTORE', `Restored proposal quote for "${restored.clientName}" from trash`, 'info');
+      return restored;
+    } catch (err) {
+      console.error('[AdminStore] Failed to restore quote:', err);
+      this.savedQuotes = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public deleteSavedQuote(id: string) {
-    this.savedQuotes = this.savedQuotes.filter((q) => q.id !== id);
-    this.notify();
+  // --- SERVICES SAFE DELETION & RESTORATION ---
+  public async softDeleteService(serviceNumber: string): Promise<void> {
+    const services = this.websiteContent.services?.items || [];
+    const updatedItems = services.map((s) =>
+      s.number === serviceNumber ? { ...s, isDeleted: true, deletedAt: new Date().toISOString() } : s
+    );
+    await this.saveContentDraft({
+      services: {
+        heading: this.websiteContent.services?.heading || 'WHAT WE DO',
+        subheading: this.websiteContent.services?.subheading || '',
+        items: updatedItems,
+      },
+    });
+    addAuditLog('SERVICE_DELETE', `Moved service #${serviceNumber} to trash in draft`, 'warning');
+  }
+
+  public async restoreService(serviceNumber: string): Promise<void> {
+    const services = this.websiteContent.services?.items || [];
+    const updatedItems = services.map((s) =>
+      s.number === serviceNumber ? { ...s, isDeleted: false, deletedAt: null } : s
+    );
+    await this.saveContentDraft({
+      services: {
+        heading: this.websiteContent.services?.heading || 'WHAT WE DO',
+        subheading: this.websiteContent.services?.subheading || '',
+        items: updatedItems,
+      },
+    });
+    addAuditLog('SERVICE_RESTORE', `Restored service #${serviceNumber} from trash in draft`, 'info');
+  }
+
+  public async reorderServices(newOrder: ServiceItem[]): Promise<void> {
+    const updatedItems = newOrder.map((s, idx) => ({ ...s, displayOrder: idx }));
+    await this.saveContentDraft({
+      services: {
+        heading: this.websiteContent.services?.heading || 'WHAT WE DO',
+        subheading: this.websiteContent.services?.subheading || '',
+        items: updatedItems,
+      },
+    });
+    addAuditLog('SERVICE_REORDER', `Reordered ${newOrder.length} services/disciplines in draft`, 'info');
   }
 
   // --- ESTIMATOR CMS CONFIGURATION API ---
@@ -1524,7 +984,8 @@ class AdminDataStore {
     return { ...this.estimatorSettings };
   }
 
-  public updateEstimatorSettings(updates: Partial<EstimatorSettings>) {
+  public async updateEstimatorSettings(updates: Partial<EstimatorSettings>): Promise<EstimatorSettings> {
+    const previous = { ...this.estimatorSettings };
     this.estimatorSettings = {
       ...this.estimatorSettings,
       ...updates,
@@ -1546,25 +1007,57 @@ class AdminDataStore {
       },
     };
     addAuditLog('CONTENT_UPDATE', 'Interactive Scope Estimator settings & pricing rates updated', 'info');
-    this.notify();
+    this.notifyListeners();
+
+    try {
+      const persisted = await api.updateEstimatorSettings(updates);
+      this.estimatorSettings = persisted;
+      this.notifyListeners();
+      return persisted;
+    } catch (err) {
+      console.error('[AdminStore] Failed to update estimator settings in database:', err);
+      this.estimatorSettings = previous;
+      this.notifyListeners();
+      throw err;
+    }
   }
 
-  public resetEstimatorSettings() {
-    this.estimatorSettings = initialEstimatorSettings;
-    addAuditLog('CONTENT_UPDATE', 'Scope Estimator settings restored to default rates', 'warning');
-    this.notify();
+  public async resetEstimatorSettings(): Promise<void> {
+    await this.updateEstimatorSettings(initialEstimatorSettings);
   }
 
   // --- RESET DEFAULTS ---
-  public resetToDefaults() {
-    this.projects = initialProjects;
-    this.websiteContent = initialWebsiteContent;
-    this.reviews = initialReviews;
-    this.messages = initialMessages;
-    this.savedQuotes = initialSavedQuotes;
-    this.estimatorSettings = initialEstimatorSettings;
-    addAuditLog('DATA_RESET', 'Website content & database restored to factory defaults', 'critical');
-    this.notify();
+  // ===================== VERSION HISTORY =====================
+  public async getVersions(entityType = 'all', limit = 50): Promise<any[]> {
+    try {
+      return await api.getVersions(entityType, limit);
+    } catch (err) {
+      console.warn('[AdminStore] Failed to fetch version history:', err);
+      return [];
+    }
+  }
+
+  public async restoreVersion(versionId: string): Promise<any> {
+    try {
+      const res = await api.restoreVersion(versionId);
+      await this.fetchFromDatabase();
+      addAuditLog('VERSION_RESTORE', `Restored content from snapshot version ID: ${versionId}`, 'warning');
+      return res;
+    } catch (err) {
+      console.error('[AdminStore] Failed to restore version:', err);
+      throw err;
+    }
+  }
+
+  public async resetToDefaults(): Promise<void> {
+    try {
+      await api.resetToDefaults();
+      await this.fetchFromDatabase();
+      addAuditLog('DATA_RESET', 'Website content & database restored to factory defaults', 'critical');
+    } catch (err) {
+      console.error('[AdminStore] Failed to reset database to defaults:', err);
+      throw err;
+    }
   }
 }
 
@@ -1617,4 +1110,3 @@ export function playStudioChime(type: 'click' | 'success' | 'alert' = 'click') {
     // AudioContext blocked or not supported in environment
   }
 }
-
