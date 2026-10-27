@@ -1,0 +1,6 @@
+{
+  "name": "AI Build — Web Development, AI Videos, UGC Videos & E-books",
+  "description": "AI Build is a digital-first studio providing high-performance Web Development, cinematic AI Videos, high-converting UGC Videos, and editorial E-books.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

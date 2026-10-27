@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>AI Build — Web Development, AI Videos, UGC Videos &amp; E-books</title>
+    <meta name="description" content="AI Build provides premier digital services: high-performance Web Development, cinematic AI Videos, authentic viral UGC Videos, and publication-ready E-books." />
+    <meta property="og:title" content="AI Build — Web Development, AI Videos, UGC Videos &amp; E-books" />
+    <meta property="og:description" content="Build Smarter. Create Faster. Think Beyond. Premium Web Development, AI Videos, UGC Videos, and E-books." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      window.addEventListener('error', function(e) {
+        console.error('Captured Global Error:', e.error || e.message);
+        var el = document.getElementById('debug-error-overlay');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'debug-error-overlay';
+          el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999999;background:#b91c1c;color:#fff;padding:16px;font-family:monospace;font-size:12px;white-space:pre-wrap;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+          document.body.appendChild(el);
+        }
+        el.innerText = 'Application Error:\n' + (e.error ? (e.error.stack || e.error.message) : e.message);
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled Rejection:', e.reason);
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
