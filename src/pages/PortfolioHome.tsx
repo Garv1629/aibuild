@@ -91,7 +91,7 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false 
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text-primary font-body antialiased selection:bg-white/20 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-bg text-text-primary font-body antialiased selection:bg-white/20 selection:text-white relative overflow-x-clip">
       {/* Liquid Glass Ambient Refraction Meshes */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true">
         <div className="absolute -top-[10%] -left-[10%] w-[600px] sm:w-[850px] h-[600px] sm:h-[850px] rounded-full bg-gradient-to-br from-cyan-400/30 via-blue-600/20 to-transparent blur-[120px] pointer-events-none" />

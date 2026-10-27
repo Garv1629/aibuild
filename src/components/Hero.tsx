@@ -156,13 +156,16 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
 
   // Clicking "See Works" scrolls past the pinned container to the next section
   const handleSeeWorks = () => {
-    if (!containerRef.current) {
+    const workEl = document.getElementById('work');
+    if (workEl) {
+      workEl.scrollIntoView({ behavior: 'smooth' });
+    } else if (containerRef.current) {
+      const containerTop = window.scrollY + containerRef.current.getBoundingClientRect().top;
+      const targetY = containerTop + containerRef.current.offsetHeight + 10;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    } else {
       onSeeWorks();
-      return;
     }
-    const containerTop = window.scrollY + containerRef.current.getBoundingClientRect().top;
-    const targetY = containerTop + containerRef.current.offsetHeight + 10;
-    window.scrollTo({ top: targetY, behavior: 'smooth' });
   };
 
   // Active service details from CMS or curated list
@@ -183,7 +186,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
       {/* Sticky viewport frame pinned for the entire 360vh scroll track */}
       <div
         ref={heroContentRef}
-        className="sticky top-0 w-full h-[100dvh] flex flex-col justify-between items-center text-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-6 sm:pb-8 px-4 sm:px-6"
+        className="sticky top-0 w-full h-screen h-[100dvh] flex flex-col justify-between items-center text-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-6 sm:pb-8 px-4 sm:px-6"
       >
         {/* Background HLS Video */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
@@ -213,7 +216,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
           >
             <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-sky-400 animate-pulse" />
             <p className="text-[10px] sm:text-xs text-sky-300 uppercase tracking-[0.22em] sm:tracking-[0.28em] font-medium font-mono">
-              {activeBadge} • {activeStats}
+              AI-POWERED DIGITAL INNOVATION • {activeBadge}
             </p>
           </div>
 
@@ -243,7 +246,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
           </p>
 
           {/* 4 Offered Services Badges — Interactive & Synchronized to Scroll */}
-          <div className="blur-in flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mb-3 sm:mb-5 max-w-xl">
+          <div className="blur-in flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mb-5 sm:mb-7 max-w-xl">
             {roles.map((role, idx) => {
               const isActive = roleIndex === idx;
               return (
@@ -270,18 +273,6 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
             })}
           </div>
 
-          {/* Step Progress Track through the 4 Services */}
-          <div className="blur-in flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 text-[10px] sm:text-xs font-mono text-muted/80 tracking-widest uppercase">
-            <span className="text-white/60">Service {roleIndex + 1} of {roles.length}</span>
-            <div className="w-20 sm:w-28 h-1.5 rounded-full bg-white/10 overflow-hidden relative">
-              <div
-                className="h-full accent-gradient rounded-full transition-all duration-150"
-                style={{ width: `${Math.round(((roleIndex + 1) / roles.length) * 100)}%` }}
-              />
-            </div>
-            <span className="text-sky-300 font-semibold">{activeRole}</span>
-          </div>
-
           {/* CTA Buttons - Apple visionOS Liquid Glass Style */}
           <div className="blur-in inline-flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
             {/* "See Works": Solid Glass Button */}
@@ -306,12 +297,10 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
           </div>
         </div>
 
-        {/* Bottom Scroll Indicator & Stage Helper */}
+        {/* Bottom Scroll Indicator */}
         <div className="relative z-10 flex flex-col items-center pb-1 sm:pb-2 select-none">
-          <span className="text-[9px] sm:text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1.5 hidden sm:inline-block">
-            {scrollProgress < 0.92
-              ? `Scroll to transition services (${roleIndex + 1}/${roles.length}) ↓`
-              : 'All 4 services explored • Continue scrolling to works ↓'}
+          <span className="text-[9px] sm:text-[10px] font-mono text-white/50 uppercase tracking-[0.25em] mb-1.5">
+            SCROLL
           </span>
           <div className="w-px h-6 sm:h-8 bg-stroke relative overflow-hidden">
             <div className="w-full h-1/2 accent-gradient animate-scroll-down" />
