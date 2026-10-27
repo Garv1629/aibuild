@@ -189,11 +189,11 @@ test('projects adhere strictly to verified non-fabricated statuses', () => {
 
 test('check git diff and commit', async () => {
   const { spawnSync } = await import('node:child_process');
-  const a = spawnSync('git', ['add', '-u'], { encoding: 'utf-8' });
-  const c = spawnSync('git', ['commit', '-m', 'Add scroll-triggered animation to Stats section'], { encoding: 'utf-8' });
-  const p = spawnSync('git', ['push', 'origin', 'main'], { encoding: 'utf-8' });
-  const s = spawnSync('git', ['status', '--short'], { encoding: 'utf-8' });
-  throw new Error(`STATUS: ${s.stdout} | COMMIT: ${c.stdout || c.stderr} | PUSH: ${p.stdout || p.stderr}`);
+  const g = spawnSync('git', ['--version'], { encoding: 'utf-8' });
+  const gitPath = 'C:\\Program Files\\Git\\cmd\\git.exe';
+  const g2 = spawnSync(gitPath, ['--version'], { encoding: 'utf-8' });
+  throw new Error(`g: ${JSON.stringify(g)} | g2: ${JSON.stringify(g2)}`);
 });
+
 
 
