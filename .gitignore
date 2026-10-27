@@ -11,4 +11,5 @@ scratch_test.js
 scan_report.json
 clean.js
 bun.lock
+extract.js
 

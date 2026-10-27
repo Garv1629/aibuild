@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import gsap from 'gsap';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
-import { SERVICES } from '../utils/portfolio.ts';
+import { SERVICES, getServiceIndexFromScroll } from '../utils/portfolio.ts';
 
 const getActiveGsap = () => {
   if (typeof window !== 'undefined' && (window as any).gsap) {
@@ -31,7 +31,6 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
   const heroContentRef = useRef<HTMLDivElement | null>(null);
 
   const [roleIndex, setRoleIndex] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Background HLS video setup
   useEffect(() => {
@@ -112,12 +111,8 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
         // Scrolled distance within this pinned container
         const scrolled = Math.max(0, -rect.top);
         const progress = Math.max(0, Math.min(1, scrolled / scrollableDistance));
-        setScrollProgress(progress);
-
-        // Map progress to each of the 4 services (0..roles.length-1)
-        const total = roles.length;
-        const index = Math.min(total - 1, Math.floor(progress * total));
-        setRoleIndex(index);
+        const index = getServiceIndexFromScroll(progress, roles.length);
+        setRoleIndex((prev) => (prev !== index ? index : prev));
       }
     };
 
@@ -139,7 +134,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [roles]);
+  }, [roles.length]);
 
   // Direct clicking on any pill smoothly scrolls to that service's phase
   const handleSelectService = (idx: number) => {

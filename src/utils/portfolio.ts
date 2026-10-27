@@ -24,6 +24,7 @@ export interface Project {
   workflow: string;
   demoType?: 'interactive-device' | 'video-reel' | 'decision-tool' | 'motion-preview' | 'ugc-player' | 'ebook-reader';
   videoUrl?: string;
+  video?: string;
   videoList?: ProjectVideo[];
 }
 

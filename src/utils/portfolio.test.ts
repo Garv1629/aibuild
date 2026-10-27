@@ -75,6 +75,61 @@ test('getServiceIndexFromScroll maps scroll progression to the 4 services sequen
   assert.equal(getServiceIndexFromScroll(1.5, 4), 3);
 });
 
+test('hero scroll simulation: stationary, forward, reverse, and unpinning', () => {
+  const scrollableDistance = 2080; // 360vh - 100vh on an 800px viewport
+  let currentScroll = 0;
+  let activeIndex = 0;
+
+  const simulateScroll = (newScroll: number) => {
+    currentScroll = Math.max(0, newScroll);
+    const progress = Math.max(0, Math.min(1, currentScroll / scrollableDistance));
+    const nextIndex = getServiceIndexFromScroll(progress, 4);
+    if (nextIndex !== activeIndex) {
+      activeIndex = nextIndex;
+    }
+  };
+
+  // 1. Initial state at top of page (Stationary for 10s: scroll does not change)
+  simulateScroll(0);
+  assert.equal(activeIndex, 0); // Web Development
+  // Stationary check: time passes with 0 scroll change
+  assert.equal(activeIndex, 0);
+
+  // 2. Slow forward scroll through services
+  simulateScroll(300); // within Service 0
+  assert.equal(activeIndex, 0); // Web Development
+
+  simulateScroll(600); // crosses 0.25 threshold
+  assert.equal(activeIndex, 1); // AI Videos
+
+  // 3. Stop between services (stationary check)
+  simulateScroll(800);
+  assert.equal(activeIndex, 1);
+  // Stationary at 800px: activeIndex remains 1
+  assert.equal(activeIndex, 1);
+
+  simulateScroll(1100); // crosses 0.50 threshold
+  assert.equal(activeIndex, 2); // UGC Videos
+
+  simulateScroll(1600); // crosses 0.75 threshold
+  assert.equal(activeIndex, 3); // E-books
+
+  // 4. Reverse scrolling upwards
+  simulateScroll(1200); // back to UGC Videos
+  assert.equal(activeIndex, 2);
+
+  simulateScroll(700); // back to AI Videos
+  assert.equal(activeIndex, 1);
+
+  simulateScroll(200); // back to Web Development
+  assert.equal(activeIndex, 0);
+
+  // 5. Complete all 4 services and unpin past container
+  simulateScroll(2100); // past 2080px scrollable distance
+  assert.equal(activeIndex, 3); // Remains on 4th service as container scrolls out of view
+  assert.ok(currentScroll > scrollableDistance); // Hero unpinned, revealing #work section
+});
+
 test('filterProjects correctly filters projects by the 4 offered services', () => {
   assert.equal(filterProjects(PROJECTS, 'All').length, 4);
   
