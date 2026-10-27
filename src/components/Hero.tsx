@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import gsap from 'gsap';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
-import { SERVICES, getServiceIndexFromScroll } from '../utils/portfolio.ts';
+import { SERVICES, SERVICE_HIGHLIGHTS, getServiceIndexFromScroll } from '../utils/portfolio.ts';
 
 const getActiveGsap = () => {
   if (typeof window !== 'undefined' && (window as any).gsap) {
@@ -232,16 +232,21 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
             <span>.</span>
           </div>
 
-          {/* Dynamic Service Description */}
-          <p
+          {/* Dynamic Service Description & Feature Highlight */}
+          <div
             key={activeRole + '-desc'}
-            className="blur-in text-xs sm:text-sm md:text-base text-muted max-w-xl mb-3 sm:mb-5 leading-relaxed line-clamp-3 sm:line-clamp-none px-2 sm:px-0 animate-role-fade-in"
+            className="blur-in max-w-xl mb-3 sm:mb-5 animate-role-fade-in text-center px-2 sm:px-0"
           >
-            {activeDesc}
-          </p>
+            <p className="font-mono text-[11px] sm:text-xs text-sky-300 font-medium mb-1.5 tracking-wide">
+              {SERVICE_HIGHLIGHTS[activeRole] || activeDesc}
+            </p>
+            <p className="text-xs sm:text-sm text-muted/80 leading-relaxed line-clamp-2 sm:line-clamp-none">
+              {activeDesc}
+            </p>
+          </div>
 
           {/* 4 Offered Services Badges — Interactive & Synchronized to Scroll */}
-          <div className="blur-in flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mb-5 sm:mb-7 max-w-xl">
+          <div className="blur-in flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mb-5 sm:mb-6 max-w-xl">
             {roles.map((role, idx) => {
               const isActive = roleIndex === idx;
               return (
@@ -292,13 +297,41 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
           </div>
         </div>
 
-        {/* Bottom Scroll Indicator */}
-        <div className="relative z-10 flex flex-col items-center pb-1 sm:pb-2 select-none">
-          <span className="text-[9px] sm:text-[10px] font-mono text-white/50 uppercase tracking-[0.25em] mb-1.5">
-            SCROLL
-          </span>
-          <div className="w-px h-6 sm:h-8 bg-stroke relative overflow-hidden">
-            <div className="w-full h-1/2 accent-gradient animate-scroll-down" />
+        {/* Real-Time HUD Indicator: SERVICE 01 / 04, dynamic segmented progress bar & scroll cues */}
+        <div className="relative z-10 flex flex-col items-center pb-2 sm:pb-3 select-none">
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 rounded-full liquid-glass-pill mb-1.5">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-sky-300 font-semibold">
+              SERVICE 0{roleIndex + 1} / 0{roles.length}
+            </span>
+            {/* 4-Segmented Dynamic Progress Bar */}
+            <div className="flex items-center gap-1" aria-hidden="true">
+              {roles.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    idx === roleIndex
+                      ? 'w-6 bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]'
+                      : idx < roleIndex
+                      ? 'w-3 bg-sky-500/60'
+                      : 'w-3 bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] sm:text-xs font-mono text-white/80 hidden sm:inline font-medium">
+              • {activeRole}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] sm:text-[10px] font-mono text-white/50 uppercase tracking-[0.2em]">
+              {roleIndex < roles.length - 1
+                ? `Scroll down to transition services ↓`
+                : 'All 4 services explored • Continue scrolling to works ↓'}
+            </span>
+            <div className="w-px h-3.5 sm:h-4 bg-stroke relative overflow-hidden inline-block">
+              <div className="w-full h-1/2 accent-gradient animate-scroll-down" />
+            </div>
           </div>
         </div>
       </div>

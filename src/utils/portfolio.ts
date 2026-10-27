@@ -180,6 +180,13 @@ export const ROLES = [
   'E-books',
 ] as const;
 
+export const SERVICE_HIGHLIGHTS: Record<string, string> = {
+  'Web Development': 'Modern Web Apps • Responsive Real Estate Portals • Animated UI Systems',
+  'AI Videos': 'Cinematic Product Commercials • 4K AI Video • Visual Effects & Teasers',
+  'UGC Videos': 'High-Converting 9:16 Ads • Viral 3-Second Hooks • Reels & TikTok Creatives',
+  'E-books': 'Digital Publications • Interactive PDF / ePub • 3D Book Launch Mockups',
+};
+
 export const SERVICES: ServiceOffering[] = [
   {
     id: 'web-development',
