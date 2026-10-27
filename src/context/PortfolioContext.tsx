@@ -21,6 +21,8 @@ import {
   JOURNAL_ENTRIES,
   EXPLORATIONS,
   STATS,
+  Review,
+  REVIEWS,
 } from '../utils/portfolio.ts';
 
 export interface PortfolioData {
@@ -36,6 +38,7 @@ export interface PortfolioData {
   journalEntries: JournalEntry[];
   explorations: ExplorationItem[];
   stats: BrandPrincipleStat[];
+  reviews: Review[];
   siteTexts: SiteTexts;
 }
 
@@ -55,6 +58,7 @@ export const DEFAULT_PORTFOLIO_DATA: PortfolioData = {
   journalEntries: [...JOURNAL_ENTRIES],
   explorations: [...EXPLORATIONS],
   stats: [...STATS],
+  reviews: [...REVIEWS],
   siteTexts: { ...DEFAULT_SITE_TEXTS },
 };
 
@@ -80,6 +84,11 @@ interface PortfolioContextType {
   updateService: (id: string, updated: Partial<ServiceOffering>) => void;
   // Stats
   updateStat: (index: number, updated: Partial<BrandPrincipleStat>) => void;
+  // Reviews
+  addReview: (review: Omit<Review, 'id' | 'date'> & { id?: string; date?: string; status?: 'approved' | 'pending' }) => void;
+  updateReview: (id: string, updated: Partial<Review>) => void;
+  verifyReview: (id: string, approve?: boolean) => void;
+  deleteReview: (id: string) => void;
   // Backup & Restore
   resetToDefaults: () => void;
   exportDataJSON: () => string;
@@ -104,6 +113,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             journalEntries: Array.isArray(parsed.journalEntries) ? parsed.journalEntries : DEFAULT_PORTFOLIO_DATA.journalEntries,
             explorations: Array.isArray(parsed.explorations) ? parsed.explorations : DEFAULT_PORTFOLIO_DATA.explorations,
             stats: Array.isArray(parsed.stats) && parsed.stats.length > 0 ? parsed.stats : DEFAULT_PORTFOLIO_DATA.stats,
+            reviews: Array.isArray(parsed.reviews) && parsed.reviews.length > 0
+              ? parsed.reviews.map((r: Review) => ({ ...r, status: r.status || 'approved' }))
+              : DEFAULT_PORTFOLIO_DATA.reviews,
             siteTexts: {
               ...DEFAULT_SITE_TEXTS,
               ...(parsed.siteTexts || {}),
@@ -315,6 +327,45 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   };
 
+  // Reviews
+  const addReview = (newReview: Omit<Review, 'id' | 'date'> & { id?: string; date?: string; status?: 'approved' | 'pending' }) => {
+    const isApproved = newReview.status === 'approved';
+    const review: Review = {
+      ...newReview,
+      id: newReview.id || `rev-${Date.now()}`,
+      date: newReview.date || 'Just now',
+      status: newReview.status || 'pending',
+      verified: isApproved ? true : (newReview.verified ?? false),
+    };
+    setData((prev) => ({
+      ...prev,
+      reviews: [review, ...prev.reviews],
+    }));
+  };
+
+  const updateReview = (id: string, updated: Partial<Review>) => {
+    setData((prev) => ({
+      ...prev,
+      reviews: prev.reviews.map((r) => (r.id === id ? { ...r, ...updated } : r)),
+    }));
+  };
+
+  const verifyReview = (id: string, approve: boolean = true) => {
+    setData((prev) => ({
+      ...prev,
+      reviews: prev.reviews.map((r) =>
+        r.id === id ? { ...r, status: approve ? 'approved' : 'pending', verified: approve } : r
+      ),
+    }));
+  };
+
+  const deleteReview = (id: string) => {
+    setData((prev) => ({
+      ...prev,
+      reviews: prev.reviews.filter((r) => r.id !== id),
+    }));
+  };
+
   // Reset
   const resetToDefaults = () => {
     setData(DEFAULT_PORTFOLIO_DATA);
@@ -362,6 +413,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deleteExploration,
         updateService,
         updateStat,
+        addReview,
+        updateReview,
+        verifyReview,
+        deleteReview,
         resetToDefaults,
         exportDataJSON,
         importDataJSON,

@@ -38,12 +38,13 @@ export const Journal: React.FC<JournalProps> = ({
               </span>
             </div>
 
-            <h2 className="text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal">
+            {/* Heading */}
+            <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal">
               {data.siteTexts?.journalHeading || 'Recent'}{' '}
               <span className="font-display italic">{data.siteTexts?.journalHeadingItalic || 'thoughts'}</span>
             </h2>
 
-            <p className="text-xs sm:text-sm md:text-base text-muted max-w-lg mt-2 sm:mt-3 leading-relaxed">
+            <p className="text-xs sm:text-sm md:text-base text-muted max-w-lg mt-1.5 sm:mt-3 leading-relaxed">
               {data.siteTexts?.journalSubtext ||
                 'Articles and strategic breakdowns covering Web Development, AI Videos, viral UGC Videos, and digital E-book publishing.'}
             </p>
@@ -84,7 +85,7 @@ export const Journal: React.FC<JournalProps> = ({
                   onSelectArticle(entry);
                 }
               }}
-              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 p-3.5 sm:p-4 sm:pr-8 liquid-glass liquid-glass-gloss rounded-2xl sm:rounded-full transition-all duration-300 cursor-pointer hover:border-white/30 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1.5px_rgba(255,255,255,0.45)] hover:scale-[1.01]"
+              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 p-3 xs:p-3.5 sm:p-4 sm:pr-8 liquid-glass liquid-glass-gloss rounded-2xl sm:rounded-full transition-all duration-300 cursor-pointer hover:border-white/30 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1.5px_rgba(255,255,255,0.45)] hover:scale-[1.01]"
             >
               {/* Left side: Thumbnail + Title */}
               <div className="flex items-center gap-3 sm:gap-6 min-w-0">
@@ -93,6 +94,7 @@ export const Journal: React.FC<JournalProps> = ({
                     src={entry.image}
                     alt={entry.title}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 </div>

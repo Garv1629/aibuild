@@ -12,4 +12,9 @@ scan_report.json
 clean.js
 bun.lock
 extract.js
-
+check_diff.mjs
+git-runner.mjs
+git_push.bat
+push.js
+test_runner.cjs
+test_out.json

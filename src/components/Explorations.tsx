@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExplorationItem } from '../utils/portfolio.ts';
@@ -42,6 +42,22 @@ export const Explorations: React.FC<ExplorationsProps> = ({
 
   const col1Items = explorations.filter((item) => item.column === 1);
   const col2Items = explorations.filter((item) => item.column === 2);
+
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsLargeScreen(e.matches);
+    setIsLargeScreen(mql.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const activeGsap = getActiveGsap();
@@ -121,7 +137,7 @@ export const Explorations: React.FC<ExplorationsProps> = ({
           </div>
 
           {/* Heading */}
-          <h2 className="text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal mb-3">
+          <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal mb-2.5 sm:mb-3">
             {data.siteTexts?.explorationsHeading || 'Visual'}{' '}
             <span className="font-display italic">{data.siteTexts?.explorationsHeadingItalic || 'playground'}</span>
           </h2>
@@ -258,143 +274,145 @@ export const Explorations: React.FC<ExplorationsProps> = ({
       </div>
 
       {/* DESKTOP BACKGROUND LAYER (>= 1024px): Parallax Columns */}
-      <div className="hidden lg:block relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 -mt-[100vh] pointer-events-none">
-        <div className="grid grid-cols-2 gap-6 sm:gap-16 md:gap-32 lg:gap-48">
-          {/* Column 1 (Left Flank) */}
-          <div ref={col1Ref} className="flex flex-col gap-24 sm:gap-36 md:gap-48 items-start">
-            {col1Items.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => onSelectExploration(item)}
-                style={{ transform: `rotate(${item.rotation}deg)` }}
-                className="pointer-events-auto group aspect-square w-full max-w-[320px] rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-2xl transition-all duration-500 hover:scale-105 hover:rotate-0 hover:z-20 relative"
-                tabIndex={0}
-                role="button"
-                aria-label={`View exploration: ${item.title}`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onSelectExploration(item);
-                  }
-                }}
-              >
-                {/* Media Container: Live Looping Video or Image */}
-                {item.video ? (
-                  <video
-                    src={item.video}
-                    poster={item.image}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="auto"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                ) : (
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                )}
-
-                {/* Media Format Badge */}
-                <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+      {isLargeScreen && (
+        <div className="hidden lg:block relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 -mt-[100vh] pointer-events-none">
+          <div className="grid grid-cols-2 gap-6 sm:gap-16 md:gap-32 lg:gap-48">
+            {/* Column 1 (Left Flank) */}
+            <div ref={col1Ref} className="flex flex-col gap-24 sm:gap-36 md:gap-48 items-start">
+              {col1Items.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => onSelectExploration(item)}
+                  style={{ transform: `rotate(${item.rotation}deg)` }}
+                  className="pointer-events-auto group aspect-square w-full max-w-[320px] rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-2xl transition-all duration-500 hover:scale-105 hover:rotate-0 hover:z-20 relative"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View exploration: ${item.title}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectExploration(item);
+                    }
+                  }}
+                >
+                  {/* Media Container: Live Looping Video or Image */}
                   {item.video ? (
-                    <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                      <span className="text-sky-300 font-semibold">VIDEO</span>
-                    </>
+                    <video
+                      src={item.video}
+                      poster={item.image}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                   ) : (
-                    <span>IMAGE</span>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                   )}
-                  <span className="text-zinc-500">•</span>
-                  <span>{item.category.toUpperCase()}</span>
+
+                  {/* Media Format Badge */}
+                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+                    {item.video ? (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                        <span className="text-sky-300 font-semibold">VIDEO</span>
+                      </>
+                    ) : (
+                      <span>IMAGE</span>
+                    )}
+                    <span className="text-zinc-500">•</span>
+                    <span>{item.category.toUpperCase()}</span>
+                  </div>
+
+                  {/* Halftone & dark hover scrim */}
+                  <div className="halftone-overlay absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-5 z-20">
+                    <span className="text-[11px] font-mono text-sky-300 uppercase tracking-wider">
+                      {item.category}
+                    </span>
+                    <h4 className="text-white text-base sm:text-lg font-medium leading-tight">
+                      {item.title}
+                    </h4>
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                {/* Halftone & dark hover scrim */}
-                <div className="halftone-overlay absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-5 z-20">
-                  <span className="text-[11px] font-mono text-sky-300 uppercase tracking-wider">
-                    {item.category}
-                  </span>
-                  <h4 className="text-white text-base sm:text-lg font-medium leading-tight">
-                    {item.title}
-                  </h4>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Column 2 (Right Flank) */}
-          <div ref={col2Ref} className="flex flex-col gap-24 sm:gap-36 md:gap-48 items-end pt-32 sm:pt-52">
-            {col2Items.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => onSelectExploration(item)}
-                style={{ transform: `rotate(${item.rotation}deg)` }}
-                className="pointer-events-auto group aspect-square w-full max-w-[320px] rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-2xl transition-all duration-500 hover:scale-105 hover:rotate-0 hover:z-20 relative"
-                tabIndex={0}
-                role="button"
-                aria-label={`View exploration: ${item.title}`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onSelectExploration(item);
-                  }
-                }}
-              >
-                {/* Media Container: Live Looping Video or Image */}
-                {item.video ? (
-                  <video
-                    src={item.video}
-                    poster={item.image}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="auto"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                ) : (
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                )}
-
-                {/* Media Format Badge */}
-                <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+            {/* Column 2 (Right Flank) */}
+            <div ref={col2Ref} className="flex flex-col gap-24 sm:gap-36 md:gap-48 items-end pt-32 sm:pt-52">
+              {col2Items.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => onSelectExploration(item)}
+                  style={{ transform: `rotate(${item.rotation}deg)` }}
+                  className="pointer-events-auto group aspect-square w-full max-w-[320px] rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-2xl transition-all duration-500 hover:scale-105 hover:rotate-0 hover:z-20 relative"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View exploration: ${item.title}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectExploration(item);
+                    }
+                  }}
+                >
+                  {/* Media Container: Live Looping Video or Image */}
                   {item.video ? (
-                    <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                      <span className="text-sky-300 font-semibold">VIDEO</span>
-                    </>
+                    <video
+                      src={item.video}
+                      poster={item.image}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                   ) : (
-                    <span>IMAGE</span>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                   )}
-                  <span className="text-zinc-500">•</span>
-                  <span>{item.category.toUpperCase()}</span>
-                </div>
 
-                {/* Halftone & dark hover scrim */}
-                <div className="halftone-overlay absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-5 z-20">
-                  <span className="text-[11px] font-mono text-sky-300 uppercase tracking-wider">
-                    {item.category}
-                  </span>
-                  <h4 className="text-white text-base sm:text-lg font-medium leading-tight">
-                    {item.title}
-                  </h4>
+                  {/* Media Format Badge */}
+                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+                    {item.video ? (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                        <span className="text-sky-300 font-semibold">VIDEO</span>
+                      </>
+                    ) : (
+                      <span>IMAGE</span>
+                    )}
+                    <span className="text-zinc-500">•</span>
+                    <span>{item.category.toUpperCase()}</span>
+                  </div>
+
+                  {/* Halftone & dark hover scrim */}
+                  <div className="halftone-overlay absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-5 z-20">
+                    <span className="text-[11px] font-mono text-sky-300 uppercase tracking-wider">
+                      {item.category}
+                    </span>
+                    <h4 className="text-white text-base sm:text-lg font-medium leading-tight">
+                      {item.title}
+                    </h4>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 };

@@ -7,7 +7,7 @@ let data = { time: Date.now() };
 
 try {
   data.add = execSync('git add -A', { shell: 'powershell.exe', encoding: 'utf-8' });
-  data.commit = execSync('git commit -m "Add scroll-triggered animation to Stats section"', { shell: 'powershell.exe', encoding: 'utf-8' });
+  data.commit = execSync('git commit -m "Update principles section to borderless connected line"', { shell: 'powershell.exe', encoding: 'utf-8' });
   data.push = execSync('git push origin main', { shell: 'powershell.exe', encoding: 'utf-8' });
 } catch (e) {
   data.err = e.message;

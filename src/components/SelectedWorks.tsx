@@ -48,44 +48,25 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
             </div>
 
             {/* Heading: "Featured projects" — italic word in font-display italic */}
-            <h2 className="text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal">
+            <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal">
               {data.siteTexts?.worksHeading || 'Featured'}{' '}
               <span className="font-display italic">{data.siteTexts?.worksHeadingItalic || 'projects'}</span>
             </h2>
 
             {/* Subtext */}
-            <p className="text-xs sm:text-sm md:text-base text-muted max-w-lg mt-2 sm:mt-3 leading-relaxed">
+            <p className="text-xs sm:text-sm md:text-base text-muted max-w-lg mt-1.5 sm:mt-3 leading-relaxed">
               {data.siteTexts?.worksSubtext ||
                 'Explore featured projects across Web Development, AI Videos, UGC Videos, and E-books developed through modern workflows and generative pipelines.'}
             </p>
           </div>
-
-          {/* "View all work" button (desktop only, hidden md:inline-flex) */}
-          <div className="hidden md:inline-flex relative group rounded-full p-[2px] transition-transform duration-300 hover:scale-105 shrink-0">
-            <span
-              className="absolute inset-0 rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-              aria-hidden="true"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setActiveCategory('All');
-                onViewAllWork();
-              }}
-              className="relative z-10 rounded-full text-xs font-medium uppercase tracking-wider px-5 py-2.5 bg-surface text-text-primary border border-stroke group-hover:border-transparent transition-all flex items-center gap-2 cursor-pointer font-mono"
-            >
-              <span>{data.siteTexts?.worksButtonText || 'View all work'}</span>
-              <span className="transition-transform group-hover:translate-x-1">→</span>
-            </button>
-          </div>
         </motion.div>
 
         {/* Category Filter Pills: Apple Liquid Glass Dock */}
-        <div className="flex justify-start md:justify-center mb-6 sm:mb-10 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex justify-start md:justify-center mb-6 sm:mb-10 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 touch-pan-x">
           <div
             role="tablist"
             aria-label="Filter projects by category"
-            className="liquid-glass liquid-glass-gloss rounded-full p-1 sm:p-1.5 flex items-center gap-1 sm:gap-1.5 shadow-2xl relative"
+            className="liquid-glass liquid-glass-gloss rounded-full p-1 sm:p-1.5 flex items-center gap-1 sm:gap-1.5 shadow-2xl relative shrink-0"
           >
             {PROJECT_CATEGORIES.map((category) => {
               const count = filterProjects(projects, category).length;
@@ -160,7 +141,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     transition: { duration: 0.25, ease: 'easeOut' },
                   }}
                   onClick={() => onSelectProject(project)}
-                  className={`group relative liquid-glass-card rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer min-h-[320px] sm:min-h-[380px] md:min-h-[460px] flex flex-col justify-end p-5 sm:p-6 md:p-8 ${colSpanClass}`}
+                  className={`group relative liquid-glass-card rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer min-h-[280px] xs:min-h-[320px] sm:min-h-[380px] md:min-h-[460px] flex flex-col justify-end p-3.5 xs:p-5 sm:p-6 md:p-8 ${colSpanClass}`}
                   tabIndex={0}
                   role="button"
                   aria-label={`View project details for ${project.title}`}
@@ -176,6 +157,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                   src={project.image}
                   alt={project.title}
                   loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
                 />
 
@@ -187,13 +169,13 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
 
                 {/* Base subtle dark gradient vignette */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"
+                  className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 md:group-hover:opacity-30 pointer-events-none"
                   aria-hidden="true"
                 />
 
                 {/* Liquid Glass Status pill in top left */}
-                <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10">
-                  <span className="liquid-glass-pill text-[11px] font-mono px-3 py-1 rounded-full text-white flex items-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45)]">
+                <div className="absolute top-3.5 xs:top-4 sm:top-6 left-3.5 xs:left-4 sm:left-6 z-10">
+                  <span className="liquid-glass-pill text-[10px] xs:text-[11px] font-mono px-2.5 xs:px-3 py-0.5 xs:py-1 rounded-full text-white flex items-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45)]">
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         project.status === 'In Progress'
@@ -206,20 +188,20 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                 </div>
 
                 {/* Normal card meta - Apple visionOS Docked Liquid Glass Shelf */}
-                <div className="relative z-10 liquid-glass liquid-glass-gloss rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-300 group-hover:opacity-15 flex flex-col gap-1 shadow-2xl">
+                <div className="relative z-10 liquid-glass liquid-glass-gloss rounded-xl sm:rounded-2xl p-3.5 xs:p-4 sm:p-5 transition-all duration-300 md:group-hover:opacity-15 flex flex-col gap-0.5 xs:gap-1 shadow-2xl">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] sm:text-[11px] text-sky-300 uppercase tracking-[0.2em] font-medium font-mono">
                       {project.category}
                     </span>
                     <span className="text-[10px] sm:text-[11px] font-mono text-white/50">{project.year}</span>
                   </div>
-                  <h3 className="text-lg sm:text-2xl md:text-3xl text-text-primary font-medium tracking-tight">
+                  <h3 className="text-base xs:text-lg sm:text-2xl md:text-3xl text-text-primary font-medium tracking-tight">
                     {project.title}
                   </h3>
                 </div>
 
-                {/* Liquid Glass Hover overlay: visionOS frosted backdrop */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-2xl flex flex-col justify-between p-5 sm:p-6 md:p-8 z-20 pointer-events-none border border-white/20 rounded-2xl sm:rounded-3xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
+                {/* Liquid Glass Hover overlay: visionOS frosted backdrop (desktop only) */}
+                <div className="hidden md:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-2xl flex-col justify-between p-5 sm:p-6 md:p-8 z-20 pointer-events-none border border-white/20 rounded-2xl sm:rounded-3xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
                   <div className="flex items-center justify-between w-full">
                     <span className="text-xs text-sky-300 uppercase tracking-[0.25em] font-mono font-medium">
                       {project.category}
@@ -260,27 +242,6 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
           })}
           </AnimatePresence>
         </motion.div>
-
-        {/* Mobile View All Work Button */}
-        <div className="flex md:hidden justify-center mt-8">
-          <div className="relative group rounded-full p-[1.5px] transition-transform duration-300 hover:scale-105 active:scale-95">
-            <span
-              className="absolute inset-0 rounded-full accent-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-              aria-hidden="true"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setActiveCategory('All');
-                onViewAllWork();
-              }}
-              className="relative z-10 rounded-full text-xs font-mono uppercase tracking-wider px-6 py-3 bg-surface text-text-primary border border-stroke group-hover:border-transparent transition-all flex items-center gap-2 cursor-pointer shadow-lg"
-            >
-              <span>View all projects</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
       </div>
     </section>
 );
