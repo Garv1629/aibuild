@@ -6,7 +6,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
+import { getServiceIndexFromScroll } from '../utils/portfolio.ts';
+
+const getActiveGsap = () => {
+  if (typeof window !== 'undefined' && (window as any).gsap) {
+    return (window as any).gsap;
+  }
+  return gsap;
+};
+
+const getActiveScrollTrigger = () => {
+  if (typeof window !== 'undefined' && (window as any).ScrollTrigger) {
+    return (window as any).ScrollTrigger;
+  }
+  return ScrollTrigger;
+};
 
 interface HeroProps {
   onSeeWorks: () => void;
@@ -20,8 +36,10 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const heroContentRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<any>(null);
 
   const [roleIndex, setRoleIndex] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Background HLS video setup
   useEffect(() => {
@@ -53,7 +71,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
 
   // GSAP Entrance animation
   useEffect(() => {
-    const activeGsap = (typeof window !== 'undefined' && (window as any).gsap) || gsap;
+    const activeGsap = getActiveGsap();
     if (!activeGsap || !activeGsap.context) return;
 
     try {
@@ -87,17 +105,60 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
     }
   }, []);
 
-  // Auto-rotate through roles smoothly + allow direct clicking of any pill
+  // Scroll-driven pinned sequence: Section stays pinned while scrolling through all 4 services
   useEffect(() => {
-    if (!roles || roles.length <= 1) return;
-    const interval = setInterval(() => {
-      setRoleIndex((prev) => (prev + 1) % roles.length);
-    }, 3600);
-    return () => clearInterval(interval);
+    const activeGsap = getActiveGsap();
+    const activeScrollTrigger = getActiveScrollTrigger();
+
+    if (!heroContentRef.current || !activeScrollTrigger) return;
+
+    try {
+      if (activeGsap.registerPlugin) {
+        activeGsap.registerPlugin(activeScrollTrigger);
+      }
+
+      const st = activeScrollTrigger.create({
+        trigger: heroContentRef.current,
+        start: 'top top',
+        end: '+=250%',
+        pin: true,
+        scrub: 0.5,
+        anticipatePin: 1,
+        onUpdate: (self: any) => {
+          const progress = self.progress;
+          setScrollProgress(progress);
+          const idx = getServiceIndexFromScroll(progress, roles.length);
+          setRoleIndex(idx);
+        },
+      });
+
+      triggerRef.current = st;
+
+      return () => {
+        if (st) st.kill();
+      };
+    } catch (err) {
+      console.warn('Hero ScrollTrigger error:', err);
+    }
   }, [roles]);
 
   const handleSelectService = (idx: number) => {
     setRoleIndex(idx);
+    const st = triggerRef.current;
+    if (st && st.start !== undefined && st.end !== undefined) {
+      const segment = (st.end - st.start) / roles.length;
+      const targetScroll = st.start + segment * idx + segment * 0.45;
+      window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    }
+  };
+
+  const handleSeeWorks = () => {
+    const st = triggerRef.current;
+    if (st && st.end !== undefined) {
+      window.scrollTo({ top: st.end + 60, behavior: 'smooth' });
+    } else {
+      onSeeWorks();
+    }
   };
 
   const activeRole = roles[roleIndex] || roles[0];
@@ -188,12 +249,24 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
           })}
         </div>
 
+        {/* Scroll indicator for the 4 pinned services */}
+        <div className="blur-in flex items-center gap-2 mb-4 sm:mb-6 text-[10px] sm:text-xs font-mono text-muted/80 tracking-widest uppercase">
+          <span>Scroll To Explore</span>
+          <div className="w-16 sm:w-20 h-1 rounded-full bg-white/10 overflow-hidden relative">
+            <div
+              className="h-full accent-gradient rounded-full transition-all duration-150"
+              style={{ width: `${Math.min(100, Math.max(8, Math.round(((roleIndex + 1) / roles.length) * 100)))}%` }}
+            />
+          </div>
+          <span className="text-sky-300 font-semibold">{roleIndex + 1}/{roles.length}</span>
+        </div>
+
         {/* CTA Buttons - Apple visionOS Liquid Glass Style */}
         <div className="blur-in inline-flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
           {/* "See Works": Solid Glass Button with White Sheen */}
           <button
             type="button"
-            onClick={onSeeWorks}
+            onClick={handleSeeWorks}
             className="relative group rounded-full text-xs sm:text-sm font-medium px-6 sm:px-8 py-3 sm:py-3.5 bg-white text-black hover:bg-white/90 active:scale-95 transition-all duration-300 cursor-pointer shadow-[0_12px_28px_-6px_rgba(255,255,255,0.35),inset_0_1px_1px_rgba(255,255,255,0.9)] flex items-center gap-2"
           >
             <span>{data.siteTexts?.heroCtaWorks || 'See Works'}</span>
@@ -214,6 +287,9 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
 
       {/* Scroll down indicator */}
       <div className="relative z-10 flex flex-col items-center pb-1 sm:pb-2 select-none">
+        <span className="text-[9px] sm:text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1.5 hidden sm:inline-block">
+          {scrollProgress < 0.9 ? 'Scroll through 4 services' : 'Continue to works ↓'}
+        </span>
         <div className="w-px h-6 sm:h-8 bg-stroke relative overflow-hidden">
           <div className="w-full h-1/2 accent-gradient animate-scroll-down" />
         </div>
