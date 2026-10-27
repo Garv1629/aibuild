@@ -32,6 +32,8 @@ import {
   RefreshCw,
   Eye,
   Zap,
+  Star,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { PortfolioHome } from './PortfolioHome.tsx';
@@ -40,8 +42,9 @@ import { JournalManager } from '../components/Admin/JournalManager.tsx';
 import { ExplorationsManager } from '../components/Admin/ExplorationsManager.tsx';
 import { ServicesManager } from '../components/Admin/ServicesManager.tsx';
 import { BrandSettingsManager } from '../components/Admin/BrandSettingsManager.tsx';
+import { ReviewsManager } from '../components/Admin/ReviewsManager.tsx';
 
-type AdminTab = 'overview' | 'projects' | 'journal' | 'explorations' | 'services' | 'brand';
+type AdminTab = 'overview' | 'projects' | 'journal' | 'explorations' | 'services' | 'brand' | 'reviews';
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 class PreviewErrorBoundary extends React.Component<
@@ -92,7 +95,7 @@ export const AdminPage: React.FC = () => {
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
-    const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand'];
+    const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews'];
     if (tab && validTabs.includes(tab as AdminTab)) {
       return tab as AdminTab;
     }
@@ -107,8 +110,13 @@ export const AdminPage: React.FC = () => {
   const [importError, setImportError] = useState<string | null>(null);
   const [copiedNotification, setCopiedNotification] = useState(false);
 
-  // Split-screen Live Preview States - ALWAYS TRUE by default for instant side-by-side view
-  const [isSplitPreviewOpen, setIsSplitPreviewOpen] = useState<boolean>(true);
+  // Split-screen Live Preview States - active by default on desktop, clean full-width on mobile
+  const [isSplitPreviewOpen, setIsSplitPreviewOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [previewKey, setPreviewKey] = useState<number>(1);
   const [isLiveSyncBlinking, setIsLiveSyncBlinking] = useState(false);
@@ -136,7 +144,7 @@ export const AdminPage: React.FC = () => {
 
   useEffect(() => {
     if (tab) {
-      const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand'];
+      const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews'];
       if (validTabs.includes(tab as AdminTab)) {
         setActiveTab(tab as AdminTab);
       }
@@ -212,6 +220,7 @@ export const AdminPage: React.FC = () => {
       else if (newTab === 'explorations') handleScrollPreviewTo('explorations');
       else if (newTab === 'services') handleScrollPreviewTo('work');
       else if (newTab === 'brand') handleScrollPreviewTo('hero');
+      else if (newTab === 'reviews') handleScrollPreviewTo('reviews');
     }, 100);
   };
 
@@ -511,6 +520,31 @@ export const AdminPage: React.FC = () => {
                   <span>Brand & Identity</span>
                 </div>
               </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectTab('reviews')}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                  activeTab === 'reviews'
+                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Star className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Client Reviews</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {data.reviews && data.reviews.filter((r) => r.status === 'pending').length > 0 && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-300 font-mono border border-amber-500/40 animate-pulse">
+                      {data.reviews.filter((r) => r.status === 'pending').length} new
+                    </span>
+                  )}
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.reviews?.length || 0}
+                  </span>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -541,9 +575,9 @@ export const AdminPage: React.FC = () => {
 
         {/* Center / Left Pane: Editor Workspace */}
         <section
-          style={{ width: isSplitPreviewOpen ? `${splitRatio}%` : '100%' }}
+          style={{ width: isSplitPreviewOpen && typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${splitRatio}%` : '100%' }}
           className={`overflow-y-auto p-4 sm:p-6 transition-[width] duration-75 shrink-0 ${
-            isSplitPreviewOpen ? 'border-r border-white/10' : 'w-full'
+            isSplitPreviewOpen ? 'w-full lg:w-auto lg:border-r border-white/10' : 'w-full'
           }`}
         >
           {/* Breadcrumb row */}
@@ -596,8 +630,8 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4 Metric Cards */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Overview Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div
                   onClick={() => handleSelectTab('projects')}
                   className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group"
@@ -645,6 +679,25 @@ export const AdminPage: React.FC = () => {
                   <div className="text-2xl font-display text-white">{data.services.length}</div>
                   <p className="text-[10px] text-muted font-mono">Agency packages</p>
                 </div>
+
+                <div
+                  onClick={() => handleSelectTab('reviews')}
+                  className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group col-span-2 sm:col-span-1"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-mono text-white/50">Client Reviews</span>
+                    <Star className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-display text-white">{data.reviews?.length || 0}</span>
+                    {data.reviews && data.reviews.filter((r) => r.status === 'pending').length > 0 && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 border border-amber-500/40">
+                        {data.reviews.filter((r) => r.status === 'pending').length} pending
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted font-mono">Verify & approve</p>
+                </div>
               </div>
 
               {/* Projects Quick Preview */}
@@ -689,6 +742,7 @@ export const AdminPage: React.FC = () => {
           {activeTab === 'explorations' && <ExplorationsManager />}
           {activeTab === 'services' && <ServicesManager />}
           {activeTab === 'brand' && <BrandSettingsManager />}
+          {activeTab === 'reviews' && <ReviewsManager />}
         </section>
 
         {/* Draggable Resizer Divider Bar */}
@@ -711,8 +765,8 @@ export const AdminPage: React.FC = () => {
         {/* Right Split: NATIVE REAL-TIME LIVE WEBSITE PREVIEW */}
         {isSplitPreviewOpen && (
           <aside
-            style={{ width: `${100 - splitRatio}%` }}
-            className="flex-1 bg-[#05070a] flex flex-col overflow-hidden relative border-t lg:border-t-0 border-white/10 min-w-[320px]"
+            style={{ width: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${100 - splitRatio}%` : '100%' }}
+            className="flex-1 bg-[#05070a] flex flex-col overflow-hidden relative border-t lg:border-t-0 border-white/10 min-w-0 lg:min-w-[320px]"
           >
             {/* Live Preview Toolbar Header */}
             <div className="shrink-0 bg-[#0c1018] border-b border-white/10 px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-wrap sm:flex-nowrap">

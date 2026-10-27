@@ -65,6 +65,20 @@ export interface JournalEntry {
   category: string;
 }
 
+export interface Review {
+  id: string;
+  name: string;
+  role: string;
+  company?: string;
+  category: 'Web Development' | 'AI Videos' | 'UGC Videos' | 'E-books';
+  rating: number; // 1 to 5
+  content: string;
+  date: string;
+  avatar?: string;
+  verified?: boolean;
+  status?: 'approved' | 'pending';
+}
+
 export interface ExplorationItem {
   id: string;
   title: string;
@@ -574,3 +588,60 @@ export const STATS: BrandPrincipleStat[] = [
     sub: 'Delivering responsive, aesthetically elevated, and high-converting digital assets.',
   },
 ];
+
+// Curated Client & Collaborator Reviews across the 4 services
+export const REVIEWS: Review[] = [
+  {
+    id: 'rev-1',
+    name: 'Marcus Vance',
+    role: 'Founder & CEO',
+    company: 'Aura Horizon Labs',
+    category: 'Web Development',
+    rating: 5,
+    content:
+      'AI Build delivered an exceptional, ultra-fluid web platform for our product launch. The GSAP micro-animations and responsive architecture blew our investors away.',
+    date: '2 weeks ago',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'rev-2',
+    name: 'Elena Rostova',
+    role: 'Creative Director',
+    company: 'Luminary Studios',
+    category: 'AI Videos',
+    rating: 5,
+    content:
+      'The cinematic AI commercials produced by AI Build transformed our visual brand identity. Stunning 4K visual pacing, atmospheric depth, and lightning-fast turnaround.',
+    date: '1 month ago',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'rev-3',
+    name: 'Devon Reed',
+    role: 'Head of Growth',
+    company: 'PeakViral Commerce',
+    category: 'UGC Videos',
+    rating: 5,
+    content:
+      'Our TikTok ROAS surged 3.4x within the first 10 days of testing AI Build’s viral UGC creatives. Their 3-second hook frameworks and pacing are unbeatable.',
+    date: '3 weeks ago',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'rev-4',
+    name: 'Sophia Chen',
+    role: 'Managing Editor & Author',
+    company: 'NextEra Publications',
+    category: 'E-books',
+    rating: 5,
+    content:
+      'From editorial typography to 3D book mockup assets, AI Build created a digital publication package that generated over 15,000 downloads in our launch week.',
+    date: '1 month ago',
+    verified: true,
+    status: 'approved',
+  },
+];
+

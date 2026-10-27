@@ -19,6 +19,8 @@ import {
   Check,
   AlertCircle,
   Copy,
+  MessageSquareQuote,
+  Star,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
 import { ProjectsManager } from './ProjectsManager.tsx';
@@ -26,8 +28,9 @@ import { JournalManager } from './JournalManager.tsx';
 import { ExplorationsManager } from './ExplorationsManager.tsx';
 import { ServicesManager } from './ServicesManager.tsx';
 import { BrandSettingsManager } from './BrandSettingsManager.tsx';
+import { ReviewsManager } from './ReviewsManager.tsx';
 
-type AdminTab = 'projects' | 'journal' | 'explorations' | 'services' | 'brand';
+type AdminTab = 'projects' | 'journal' | 'explorations' | 'services' | 'reviews' | 'brand';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -160,7 +163,7 @@ export const AdminDashboard: React.FC = () => {
       {/* Navigation tabs & Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative z-10">
         {/* Sidebar / Tabs */}
-        <aside className="shrink-0 w-full md:w-64 liquid-glass-nav border-r border-white/10 p-3 sm:p-4 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-y-auto scrollbar-none">
+        <aside className="shrink-0 w-full md:w-64 liquid-glass-nav border-r border-white/10 p-3 sm:p-4 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-y-auto scrollbar-none touch-pan-x">
           <button
             type="button"
             onClick={() => setActiveTab('projects')}
@@ -235,6 +238,36 @@ export const AdminDashboard: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setActiveTab('reviews')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+              activeTab === 'reviews'
+                ? 'liquid-glass-pill-active text-white font-semibold'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <MessageSquareQuote className="w-4 h-4 text-sky-400" />
+              <span>Reviews & Moderation</span>
+            </div>
+            {(() => {
+              const pending = (data.reviews || []).filter((r) => r.status === 'pending').length;
+              if (pending > 0) {
+                return (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-300 font-mono font-medium animate-pulse border border-amber-500/40">
+                    {pending} new
+                  </span>
+                );
+              }
+              return (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">
+                  {(data.reviews || []).length}
+                </span>
+              );
+            })()}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('brand')}
             className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
               activeTab === 'brand'
@@ -261,6 +294,7 @@ export const AdminDashboard: React.FC = () => {
             {activeTab === 'journal' && <JournalManager />}
             {activeTab === 'explorations' && <ExplorationsManager />}
             {activeTab === 'services' && <ServicesManager />}
+            {activeTab === 'reviews' && <ReviewsManager />}
             {activeTab === 'brand' && <BrandSettingsManager />}
           </div>
         </main>

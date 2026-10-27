@@ -4,6 +4,8 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Instrument Serif', Georgia, serif;
 
+  --breakpoint-xs: 380px;
+
   --color-bg: hsl(var(--bg));
   --color-surface: hsl(var(--surface));
   --color-text-primary: hsl(var(--text));
@@ -325,6 +327,82 @@ body {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%);
   border-radius: inherit;
   pointer-events: none;
+}
+
+/* ==========================================================================
+   MOBILE SMOOTH PERFORMANCE ENHANCEMENTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Reduce GPU blur radius and fillrate burden on mobile screens */
+  .liquid-glass,
+  .liquid-glass-card,
+  .liquid-glass-modal,
+  .liquid-glass-nav {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+
+  /* Simplify multi-layer shadows on mobile */
+  .liquid-glass,
+  .liquid-glass-card {
+    box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Disable expensive real-time filter:blur() animation on mobile scroll */
+  [data-stat-item] div {
+    filter: none !important;
+  }
+
+  /* Eliminate 300ms tap delay and touch lag across all interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* Smooth touch momentum scrolling for filter tabs and galleries */
+  .scrollbar-none {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+  }
+}
+
+/* Touch devices: Prevent sticky hover states that cause double-tap issues */
+@media (hover: none) and (pointer: coarse) {
+  .liquid-glass-card:hover {
+    transform: none !important;
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Ensure card hover overlay doesn't block tap on mobile touch */
+  .liquid-glass-card .pointer-events-none {
+    pointer-events: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Prevent iOS Safari auto-zoom on form inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Accessibility: Respect system motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 

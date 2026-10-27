@@ -5,8 +5,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon } from 'lucide-react';
-import { Project, JournalEntry, ExplorationItem, SERVICES } from '../utils/portfolio.ts';
+import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles } from 'lucide-react';
+import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
 import { ProjectInteractiveDemo } from './ProjectInteractiveDemo.tsx';
 
 interface ProjectModalProps {
@@ -59,7 +59,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-full max-w-3xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 text-text-primary"
+            className="relative z-10 w-full max-w-3xl max-h-[92dvh] supports-[height:100dvh]:max-h-[90dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 md:p-10 text-text-primary"
             role="dialog"
             aria-modal="true"
             aria-label={project.title}
@@ -67,7 +67,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 sm:w-9 sm:h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer z-20"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm transition-all active:scale-90 cursor-pointer z-20"
               aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
@@ -97,7 +97,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             {/* Modal Navigation Tabs - Liquid Glass Segmented Pill */}
             <div
               role="tablist"
-              className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl liquid-glass mb-4 sm:mb-6 overflow-x-auto scrollbar-none"
+              className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl liquid-glass mb-4 sm:mb-6 overflow-x-auto scrollbar-none touch-pan-x"
             >
               <button
                 type="button"
@@ -332,12 +332,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                 Workflow: {project.workflow}
               </span>
 
-              <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+              <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                 {activeTab !== 'demo' && (
                   <button
                     type="button"
                     onClick={() => setActiveTab('demo')}
-                    className="flex-1 sm:flex-none text-xs font-mono px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full liquid-glass-pill text-text-primary hover:border-white/40 cursor-pointer transition-colors text-center"
+                    className="flex-1 sm:flex-none text-xs font-mono px-4 sm:px-4 py-2.5 rounded-full liquid-glass-pill text-text-primary hover:border-white/40 cursor-pointer transition-colors text-center min-h-[42px] flex items-center justify-center"
                   >
                     Open Live Demo →
                   </button>
@@ -349,7 +349,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     onClose();
                     onStartConversation();
                   }}
-                  className="flex-1 sm:flex-none text-xs font-medium uppercase tracking-wider px-5 sm:px-6 py-2.5 sm:py-3 rounded-full liquid-glass-button text-white cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+                  className="flex-1 sm:flex-none text-xs font-medium uppercase tracking-wider px-5 sm:px-6 py-2.5 sm:py-3 rounded-full liquid-glass-button text-white cursor-pointer flex items-center justify-center gap-1.5 font-sans min-h-[42px]"
                 >
                   <span>Discuss Project</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -399,7 +399,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative z-10 w-full max-w-2xl max-h-[92dvh] sm:max-h-[85vh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl text-text-primary"
+            className="relative z-10 w-full max-w-2xl max-h-[92dvh] supports-[height:100dvh]:max-h-[88dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 md:p-10 shadow-2xl text-text-primary"
             role="dialog"
             aria-modal="true"
             aria-label={article.title}
@@ -407,7 +407,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 sm:w-9 sm:h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm cursor-pointer transition-colors z-20"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm cursor-pointer transition-all active:scale-90 z-20"
             >
               <X className="w-4 h-4" />
             </button>
@@ -493,7 +493,7 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.92 }}
             transition={{ duration: 0.25 }}
-            className="relative z-10 max-w-2xl w-full max-h-[92dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6"
+            className="relative z-10 max-w-2xl w-full max-h-[92dvh] supports-[height:100dvh]:max-h-[88dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6"
             role="dialog"
             aria-modal="true"
             aria-label={item.title}
@@ -501,7 +501,7 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full liquid-glass-pill hover:bg-white/20 text-white flex items-center justify-center text-sm cursor-pointer transition-colors"
+              className="absolute top-3.5 right-3.5 z-20 w-9 h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-white flex items-center justify-center text-sm cursor-pointer transition-all active:scale-90"
             >
               <X className="w-4 h-4" />
             </button>
@@ -695,7 +695,7 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            className="relative z-10 w-full max-w-lg max-h-[92dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl text-text-primary"
+            className="relative z-10 w-full max-w-lg max-h-[92dvh] supports-[height:100dvh]:max-h-[88dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 shadow-2xl text-text-primary"
             role="dialog"
             aria-modal="true"
             aria-label="Start a conversation with AI Build"
@@ -703,7 +703,7 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 sm:w-9 sm:h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm cursor-pointer transition-colors z-20"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm cursor-pointer transition-all active:scale-90 z-20"
             >
               <X className="w-4 h-4" />
             </button>
@@ -825,3 +825,247 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
     </AnimatePresence>
   );
 };
+
+interface ReviewSubmissionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmitReview: (review: Omit<Review, 'id' | 'date'>) => void;
+}
+
+export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmitReview,
+}) => {
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+  const [company, setCompany] = useState('');
+  const [category, setCategory] = useState<'Web Development' | 'AI Videos' | 'UGC Videos' | 'E-books'>('Web Development');
+  const [rating, setRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [content, setContent] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+      setIsSubmitted(false);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !content.trim()) return;
+
+    onSubmitReview({
+      name: name.trim(),
+      role: role.trim() || 'Client',
+      company: company.trim() || undefined,
+      category,
+      rating,
+      content: content.trim(),
+      verified: false,
+      status: 'pending',
+    });
+
+    setIsSubmitted(true);
+    setTimeout(() => {
+      onClose();
+      setName('');
+      setRole('');
+      setCompany('');
+      setContent('');
+      setRating(5);
+      setIsSubmitted(false);
+    }, 2200);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative z-10 w-full max-w-lg max-h-[92dvh] supports-[height:100dvh]:max-h-[88dvh] overflow-y-auto liquid-glass-modal rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 text-text-primary"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Submit Review"
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm transition-all active:scale-90 cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-2 font-mono text-[11px] sm:text-xs text-sky-400">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>TESTIMONIAL & FEEDBACK</span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-display text-text-primary mb-2">
+              Share Your Experience
+            </h3>
+            <p className="text-xs sm:text-sm text-muted mb-6 font-sans">
+              Help future partners understand the quality, speed, and creative impact of working with AI Build.
+            </p>
+
+            {isSubmitted ? (
+              <div className="py-10 text-center space-y-3">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
+                <h4 className="text-lg font-medium text-white">Submitted for Verification!</h4>
+                <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
+                  Thank you for your feedback! Your review has been sent to our verification panel and will be published live once verified.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4 font-sans">
+                {/* Rating Stars Picker */}
+                <div>
+                  <label className="text-[11px] sm:text-xs font-mono text-muted block mb-1.5">
+                    Rating
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isFilled = (hoverRating || rating) >= star;
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          className="p-2 cursor-pointer transition-transform hover:scale-125 active:scale-125 focus:outline-none min-w-[36px] min-h-[36px] flex items-center justify-center"
+                          aria-label={`Rate ${star} star`}
+                        >
+                          <Star
+                            className={`w-6 h-6 transition-colors ${
+                              isFilled
+                                ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                                : 'text-white/20 hover:text-white/50'
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                    <span className="font-mono text-xs text-amber-300 ml-2">
+                      {rating} / 5 Stars
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="reviewer-name" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                      Your Name *
+                    </label>
+                    <input
+                      id="reviewer-name"
+                      required
+                      type="text"
+                      placeholder="e.g. Sarah Jenkins"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="reviewer-role" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                      Role / Title
+                    </label>
+                    <input
+                      id="reviewer-role"
+                      type="text"
+                      placeholder="e.g. Product Lead / Founder"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="reviewer-company" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                      Company / Brand (Optional)
+                    </label>
+                    <input
+                      id="reviewer-company"
+                      type="text"
+                      placeholder="e.g. Nova Media"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="review-category" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                      Service Delivered
+                    </label>
+                    <select
+                      id="review-category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as any)}
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary focus:outline-none cursor-pointer"
+                    >
+                      <option value="Web Development" className="bg-[#12141a] text-white">Web Development</option>
+                      <option value="AI Videos" className="bg-[#12141a] text-white">AI Videos</option>
+                      <option value="UGC Videos" className="bg-[#12141a] text-white">UGC Videos</option>
+                      <option value="E-books" className="bg-[#12141a] text-white">E-books</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="review-content" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                    Your Review / Feedback *
+                  </label>
+                  <textarea
+                    id="review-content"
+                    required
+                    rows={4}
+                    placeholder="Share how AI Build assisted your vision, delivery speeds, communication, or final quality..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2.5 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl liquid-glass-button text-white font-medium text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2 mt-4 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <span>Submit Client Review</span>
+                </button>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
