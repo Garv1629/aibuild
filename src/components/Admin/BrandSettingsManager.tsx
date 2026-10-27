@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sliders, Check, Globe, Mail, Github, Linkedin, Award, Type, MessageSquare, Compass, BookOpen, Layers } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
 import { BrandPrincipleStat, SiteTexts, DEFAULT_SITE_TEXTS } from '../../utils/portfolio.ts';
@@ -27,6 +27,22 @@ export const BrandSettingsManager: React.FC = () => {
 
   const [statsList, setStatsList] = useState<BrandPrincipleStat[]>([...data.stats]);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    setBrandForm({
+      brandName: data.brandName,
+      brandTagline: data.brandTagline,
+      heroDescription: data.heroDescription,
+      githubUrl: data.githubUrl,
+      email: data.email,
+      linkedinUrl: data.linkedinUrl,
+    });
+    setSiteTextsForm({
+      ...DEFAULT_SITE_TEXTS,
+      ...(data.siteTexts || {}),
+    });
+    setStatsList([...data.stats]);
+  }, [data]);
 
   const handleSaveBrand = (e: React.FormEvent) => {
     e.preventDefault();

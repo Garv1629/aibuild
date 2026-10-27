@@ -14,6 +14,21 @@ export default defineConfig(() => {
     optimizeDeps: {
       include: ['gsap', 'gsap/ScrollTrigger'],
     },
+    build: {
+      chunkSizeWarningLimit: 1200,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('framer-motion') || id.includes('motion')) return 'motion';
+              if (id.includes('gsap') || id.includes('hls.js')) return 'media-fx';
+              if (id.includes('lucide-react')) return 'icons';
+              return 'vendor';
+            }
+          },
+        },
+      },
+    },
     server: {
       port: 3000,
       host: true,

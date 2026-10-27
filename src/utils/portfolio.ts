@@ -72,7 +72,7 @@ export interface ExplorationItem {
   image: string;
   galleryImages?: string[];
   video?: string;
-  videoList?: string[];
+  videoList?: ProjectVideo[];
   category: string;
   description: string;
 }

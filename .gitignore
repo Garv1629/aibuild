@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+*.txt
+scratch_test.js
+scan_report.json
+clean.js
+bun.lock
+

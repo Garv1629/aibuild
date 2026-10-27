@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layers, Check, Edit2 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
 import { ServiceOffering } from '../../utils/portfolio.ts';
@@ -14,6 +14,12 @@ export const ServicesManager: React.FC = () => {
 
   const activeService = data.services.find((s) => s.id === selectedServiceId) || data.services[0];
   const [formData, setFormData] = useState<ServiceOffering>(activeService);
+
+  useEffect(() => {
+    if (activeService) {
+      setFormData(activeService);
+    }
+  }, [activeService]);
 
   const [deliverableInput, setDeliverableInput] = useState('');
   const [toolInput, setToolInput] = useState('');
