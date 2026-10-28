@@ -21,8 +21,12 @@ if (typeof window !== 'undefined') {
 }
 
 
+import { AuthProvider } from './context/AuthContext.tsx';
+
 createRoot(document.getElementById('root')!).render(
-  <PortfolioProvider>
-    <App />
-  </PortfolioProvider>
+  <AuthProvider>
+    <PortfolioProvider>
+      <App />
+    </PortfolioProvider>
+  </AuthProvider>
 );

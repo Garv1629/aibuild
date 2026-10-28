@@ -4,7 +4,28 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Eye, X, Check, Image as ImageIcon, Sparkles, Video, Film, Play, Star } from 'lucide-react';
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  EyeOff,
+  X,
+  Check,
+  Image as ImageIcon,
+  Sparkles,
+  Video,
+  Film,
+  Play,
+  ArrowUp,
+  ArrowDown,
+  Globe,
+  Github,
+  Link as LinkIcon,
+  Filter,
+  CheckCircle2,
+  FolderKanban,
+} from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
 import { Project, PROJECT_CATEGORIES, ProjectVideo } from '../../utils/portfolio.ts';
 
@@ -17,12 +38,14 @@ const SAMPLE_IMAGES = [
 ];
 
 export const ProjectsManager: React.FC = () => {
-  const { data, addProject, updateProject, deleteProject } = usePortfolio();
+  const { data, addProject, updateProject, deleteProject, reorderProjects, togglePublishProject } = usePortfolio();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterPublishStatus, setFilterPublishStatus] = useState<'all' | 'published' | 'draft'>('all');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState<Partial<Project>>({});
@@ -32,17 +55,32 @@ export const ProjectsManager: React.FC = () => {
   const [newVideoTitle, setNewVideoTitle] = useState('');
   const [newVideoUrl, setNewVideoUrl] = useState('');
 
-  const filteredProjects = data.projects.filter((p) => {
+  // Sorted by explicit display order
+  const projectsList = [...data.projects].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+
+  const filteredProjects = projectsList.filter((p) => {
     const matchesSearch =
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       filterCategory === 'All' ? true : p.category.toLowerCase().includes(filterCategory.toLowerCase());
-    return matchesSearch && matchesCategory;
+    const matchesPublish =
+      filterPublishStatus === 'all'
+        ? true
+        : filterPublishStatus === 'published'
+        ? p.isPublished !== false
+        : p.isPublished === false;
+    return matchesSearch && matchesCategory && matchesPublish;
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+
   const handleStartCreate = () => {
+    setSaveError(null);
+    setSaveSuccess(null);
     const newId = `project-${Date.now()}`;
     const initial: Project = {
       id: newId,
@@ -57,6 +95,8 @@ export const ProjectsManager: React.FC = () => {
       features: ['High performance code', 'Responsive design architecture'],
       workflow: 'React + TypeScript + Vite + Tailwind CSS',
       demoType: 'interactive-device',
+      isPublished: true,
+      order: data.projects.length + 1,
     };
     setFormData(initial);
     setIsCreating(true);
@@ -64,22 +104,66 @@ export const ProjectsManager: React.FC = () => {
   };
 
   const handleStartEdit = (project: Project) => {
+    setSaveError(null);
+    setSaveSuccess(null);
     setFormData({ ...project });
     setEditingProject(project);
     setIsCreating(false);
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.title || !formData.category) return;
-
-    if (isCreating) {
-      addProject(formData as Project);
-    } else if (editingProject) {
-      updateProject(editingProject.id, formData);
+  const handleSave = async (publishState?: boolean) => {
+    if (!formData.title?.trim()) {
+      setSaveError('Please enter a project title.');
+      return;
     }
-    setEditingProject(null);
-    setIsCreating(false);
+    if (!formData.category) {
+      setSaveError('Please select a project category.');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(null);
+
+    const finalPublished = typeof publishState === 'boolean' ? publishState : (formData.isPublished ?? true);
+    const payload: Project = {
+      ...(formData as Project),
+      title: formData.title.trim(),
+      isPublished: finalPublished,
+      updatedAt: new Date().toISOString(),
+    };
+
+    let result;
+    if (isCreating) {
+      result = await addProject(payload);
+    } else if (editingProject) {
+      result = await updateProject(editingProject.id, payload);
+    }
+
+    setIsSaving(false);
+    if (result && !result.success) {
+      setSaveError(result.error || 'Failed to save project. Please check database permissions.');
+      return;
+    }
+
+    setSaveSuccess(finalPublished ? 'Project saved & published live!' : 'Project saved as private draft.');
+    setTimeout(() => {
+      setSaveSuccess(null);
+      setEditingProject(null);
+      setIsCreating(false);
+    }, 700);
+  };
+
+  const handleMoveUp = (currentIdx: number) => {
+    if (currentIdx > 0) {
+      reorderProjects(currentIdx, currentIdx - 1);
+    }
+  };
+
+  const handleMoveDown = (currentIdx: number) => {
+    if (currentIdx < projectsList.length - 1) {
+      reorderProjects(currentIdx, currentIdx + 1);
+    }
   };
 
   const handleAddTag = () => {
@@ -131,10 +215,6 @@ export const ProjectsManager: React.FC = () => {
     });
   };
 
-  const handleSetAsCover = (imgUrl: string) => {
-    setFormData({ ...formData, image: imgUrl });
-  };
-
   const handleAddVideo = () => {
     const url = newVideoUrl.trim();
     if (!url) return;
@@ -160,17 +240,18 @@ export const ProjectsManager: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-body">
       {/* Top action bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl liquid-glass">
-        <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl liquid-glass">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1">
           <input
             type="text"
             placeholder="Search projects..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="liquid-glass-input text-xs font-mono px-3.5 py-2 rounded-xl text-white placeholder-white/40 focus:outline-none w-48 sm:w-64"
+            className="liquid-glass-input text-xs font-mono px-3.5 py-2 rounded-xl text-white placeholder-white/40 focus:outline-none w-44 sm:w-56"
           />
+
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
@@ -182,12 +263,22 @@ export const ProjectsManager: React.FC = () => {
               </option>
             ))}
           </select>
+
+          <select
+            value={filterPublishStatus}
+            onChange={(e) => setFilterPublishStatus(e.target.value as any)}
+            className="liquid-glass-input text-xs font-mono px-3 py-2 rounded-xl text-white focus:outline-none cursor-pointer bg-neutral-900"
+          >
+            <option value="all" className="bg-neutral-900 text-white">All Statuses</option>
+            <option value="published" className="bg-neutral-900 text-white">Published Only</option>
+            <option value="draft" className="bg-neutral-900 text-white">Drafts Only</option>
+          </select>
         </div>
 
         <button
           type="button"
           onClick={handleStartCreate}
-          className="liquid-glass-button bg-sky-500/25 border-sky-400/50 hover:bg-sky-500/35 text-white font-medium text-xs font-mono px-4 py-2 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_16px_rgba(56,189,248,0.3)] transition-all"
+          className="liquid-glass-button bg-sky-500/25 border-sky-400/50 hover:bg-sky-500/35 text-white font-medium text-xs font-mono px-4 py-2 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_16px_rgba(56,189,248,0.3)] transition-all shrink-0"
         >
           <Plus className="w-4 h-4 text-sky-300" />
           <span>Add Project</span>
@@ -196,91 +287,155 @@ export const ProjectsManager: React.FC = () => {
 
       {/* Projects List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredProjects.map((project) => (
-          <div
-            key={project.id}
-            className="liquid-glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 border border-white/10 hover:border-white/25 transition-all group"
-          >
-            <div className="flex gap-4">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 border border-white/15 relative bg-black/40">
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute bottom-1 right-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/75 text-white/90">
-                  {project.span} Col
-                </span>
-              </div>
+        {filteredProjects.map((project, idx) => {
+          const globalIdx = projectsList.findIndex((p) => p.id === project.id);
+          const isPublished = project.isPublished !== false;
 
-              <div className="flex flex-col min-w-0 flex-1 justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-sky-300">
-                      {project.category}
+          return (
+            <div
+              key={project.id}
+              className={`liquid-glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 border transition-all group ${
+                isPublished ? 'border-white/10 hover:border-white/25' : 'border-amber-500/30 bg-amber-500/[0.02]'
+              }`}
+            >
+              <div className="flex gap-4">
+                {/* Media Thumbnail with Reorder Controls */}
+                <div className="flex flex-col items-center gap-1.5 shrink-0">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 border border-white/15 relative bg-black/40">
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <span className="absolute bottom-1 right-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/75 text-white/90">
+                      {project.span} Col
                     </span>
-                    <span className="text-white/40 text-[10px] font-mono">• {project.year}</span>
+                    <span className="absolute top-1 left-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/75 text-white/80">
+                      #{project.order || globalIdx + 1}
+                    </span>
                   </div>
-                  <h4 className="text-base font-medium text-text-primary truncate">
-                    {project.title}
-                  </h4>
-                  <p className="text-xs text-muted line-clamp-2 mt-1 leading-relaxed">
-                    {project.description}
-                  </p>
+
+                  {/* Reorder Up / Down Buttons */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={globalIdx === 0}
+                      onClick={() => handleMoveUp(globalIdx)}
+                      className="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-all"
+                      title="Move Project Up"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={globalIdx === projectsList.length - 1}
+                      onClick={() => handleMoveDown(globalIdx)}
+                      className="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-all"
+                      title="Move Project Down"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full liquid-glass-pill text-emerald-300 border-emerald-500/30">
-                    {project.status}
-                  </span>
-                  {project.demoType && (
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-white/80">
-                      {project.demoType}
+                <div className="flex flex-col min-w-0 flex-1 justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono uppercase tracking-wide text-accent">
+                          {project.category}
+                        </span>
+                        <span className="text-secondary text-xs font-mono">• {project.year}</span>
+                      </div>
+
+                      {/* Publish / Draft Switcher Pill */}
+                      <button
+                        type="button"
+                        onClick={() => togglePublishProject(project.id)}
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 cursor-pointer transition-all ${
+                          isPublished
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                            : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                        }`}
+                        title="Click to toggle publish status"
+                      >
+                        {isPublished ? <CheckCircle2 className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                        <span>{isPublished ? 'Published' : 'Draft'}</span>
+                      </button>
+                    </div>
+
+                    <h4 className="text-base font-medium text-text-primary truncate">
+                      {project.title}
+                    </h4>
+                    <p className="text-xs text-muted line-clamp-2 mt-1 leading-relaxed">
+                      {project.description}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full liquid-glass-pill text-emerald-300 border-emerald-500/30">
+                      {project.status}
+                    </span>
+                    {project.demoType && (
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/10 text-white/80">
+                        {project.demoType}
+                      </span>
+                    )}
+                    {project.demoUrl && (
+                      <a
+                        href={project.demoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 hover:text-sky-200 border border-sky-400/20 flex items-center gap-1"
+                      >
+                        <Globe className="w-2.5 h-2.5" />
+                        <span>Live Demo</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags preview & action buttons */}
+              <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
+                <div className="flex flex-wrap gap-1 max-w-[60%] truncate">
+                  {project.tags.slice(0, 3).map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/5 text-secondary"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                  {project.tags.length > 3 && (
+                    <span className="text-xs font-mono text-muted">
+                      +{project.tags.length - 3}
                     </span>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Tags preview & action buttons */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
-              <div className="flex flex-wrap gap-1 max-w-[65%] truncate">
-                {project.tags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[9px] font-mono px-2 py-0.5 rounded bg-white/5 text-white/60"
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleStartEdit(project)}
+                    className="p-1.5 rounded-lg liquid-glass-pill hover:bg-white/20 text-white cursor-pointer transition-colors"
+                    title="Edit Project"
                   >
-                    #{tag}
-                  </span>
-                ))}
-                {project.tags.length > 3 && (
-                  <span className="text-[9px] font-mono text-white/40">
-                    +{project.tags.length - 3}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleStartEdit(project)}
-                  className="p-1.5 rounded-lg liquid-glass-pill hover:bg-white/20 text-white cursor-pointer transition-colors"
-                  title="Edit Project"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteId(project.id)}
-                  className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/20 cursor-pointer transition-colors"
-                  title="Delete Project"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(project.id)}
+                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/20 cursor-pointer transition-colors"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredProjects.length === 0 && (
@@ -291,17 +446,17 @@ export const ProjectsManager: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="liquid-glass-modal rounded-2xl max-w-sm w-full p-6 text-center space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="liquid-glass-modal rounded-2xl max-w-sm w-full p-6 text-center space-y-4 border border-white/15">
             <h4 className="text-lg font-medium text-white">Delete Project?</h4>
-            <p className="text-xs text-muted">
+            <p className="text-xs text-muted font-mono leading-relaxed">
               Are you sure you want to delete this project? This will remove it from the portfolio bento grid.
             </p>
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setConfirmDeleteId(null)}
-                className="px-4 py-2 rounded-xl liquid-glass-pill text-xs font-mono text-white cursor-pointer"
+                className="px-4 py-2 rounded-xl liquid-glass-pill text-xs font-mono text-white cursor-pointer hover:bg-white/10"
               >
                 Cancel
               </button>
@@ -311,25 +466,27 @@ export const ProjectsManager: React.FC = () => {
                   deleteProject(confirmDeleteId);
                   setConfirmDeleteId(null);
                 }}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-mono text-white font-medium cursor-pointer shadow-lg transition-colors"
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-mono text-white font-medium cursor-pointer shadow-lg"
               >
-                Confirm Delete
+                Delete
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add / Edit Project Modal */}
+      {/* Create / Edit Project Modal */}
       {(isCreating || editingProject) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto">
-          <div className="liquid-glass-modal rounded-3xl max-w-4xl w-full p-5 sm:p-8 space-y-6 my-auto max-h-[92vh] overflow-y-auto scrollbar-none border border-white/20 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-5 h-5 text-sky-400" />
-                <h3 className="text-lg sm:text-xl font-medium text-white">
-                  {isCreating ? 'Create New Project' : `Edit: ${editingProject?.title}`}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="liquid-glass-modal rounded-3xl max-w-2xl w-full p-5 sm:p-7 border border-white/20 shadow-2xl space-y-5 my-auto max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div>
+                <h3 className="text-base sm:text-lg font-medium text-white tracking-tight">
+                  {isCreating ? 'Create New Showcase Project' : 'Edit Project Details'}
                 </h3>
+                <p className="text-xs text-muted font-mono">
+                  Configure titles, categories, deliverables, media, and external URLs.
+                </p>
               </div>
               <button
                 type="button"
@@ -337,358 +494,221 @@ export const ProjectsManager: React.FC = () => {
                   setIsCreating(false);
                   setEditingProject(null);
                 }}
-                className="p-1.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
+                className="p-1.5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                {/* Title */}
-                <div>
+            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Project Title */}
+                <div className="md:col-span-2">
                   <label className="block text-xs font-mono text-white/80 mb-1.5">Project Title</label>
                   <input
                     type="text"
                     required
                     value={formData.title || ''}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                     placeholder="e.g. Sri Balaji Real Estate"
                   />
                 </div>
 
-                {/* Category */}
+                {/* Service Category */}
                 <div>
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Category</label>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Service Category</label>
                   <select
                     value={formData.category || 'Web Development'}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none cursor-pointer bg-neutral-900"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none bg-neutral-900 cursor-pointer"
                   >
-                    <option value="Web Development">Web Development</option>
-                    <option value="AI Videos">AI Videos</option>
-                    <option value="UGC Videos">UGC Videos</option>
-                    <option value="E-books">E-books</option>
+                    {PROJECT_CATEGORIES.filter((c) => c !== 'All').map((cat) => (
+                      <option key={cat} value={cat} className="bg-neutral-900 text-white">
+                        {cat}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 {/* Status */}
                 <div>
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Status</label>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Production Status</label>
                   <select
                     value={formData.status || 'In Progress'}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none cursor-pointer bg-neutral-900"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none bg-neutral-900 cursor-pointer"
                   >
-                    <option value="In Progress">In Progress</option>
-                    <option value="Prototype">Prototype</option>
-                    <option value="Creative Production">Creative Production</option>
-                    <option value="Workflow Automation">Workflow Automation</option>
+                    <option value="In Progress" className="bg-neutral-900 text-white">In Progress</option>
+                    <option value="Prototype" className="bg-neutral-900 text-white">Prototype</option>
+                    <option value="Creative Production" className="bg-neutral-900 text-white">Creative Production</option>
+                    <option value="Workflow Automation" className="bg-neutral-900 text-white">Workflow Automation</option>
                   </select>
                 </div>
 
-                {/* Year & Span */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-mono text-white/80 mb-1.5">Year</label>
-                    <input
-                      type="text"
-                      value={formData.year || '2026'}
-                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono text-white/80 mb-1.5">Bento Span</label>
-                    <select
-                      value={formData.span || 7}
-                      onChange={(e) => setFormData({ ...formData, span: Number(e.target.value) as 7 | 5 })}
-                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none cursor-pointer bg-neutral-900"
-                    >
-                      <option value={7}>7 Columns (Wide)</option>
-                      <option value={5}>5 Columns (Standard)</option>
-                    </select>
-                  </div>
+                {/* Bento Grid Column Span */}
+                <div>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Bento Span (Columns)</label>
+                  <select
+                    value={formData.span || 7}
+                    onChange={(e) => setFormData({ ...formData, span: parseInt(e.target.value, 10) as 7 | 5 })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none bg-neutral-900 cursor-pointer"
+                  >
+                    <option value={7} className="bg-neutral-900 text-white">7 Col (Wide Hero Bento Card)</option>
+                    <option value={5} className="bg-neutral-900 text-white">5 Col (Compact Secondary Card)</option>
+                  </select>
                 </div>
 
-                {/* Primary Cover Image */}
-                <div className="md:col-span-2 p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono text-white/90 flex items-center gap-1.5 font-semibold">
-                      <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Primary Cover Image</span>
-                    </label>
-                    <span className="text-[10px] font-mono text-white/40">Displayed on main Bento grid</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      required
-                      value={formData.image || ''}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      className="flex-1 liquid-glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none"
-                      placeholder="https://images.unsplash.com/..."
-                    />
-                  </div>
-
-                  {/* Sample image quick-select */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] text-white/40 font-mono">Quick presets:</span>
-                    {SAMPLE_IMAGES.map((sample) => (
-                      <button
-                        key={sample.label}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image: sample.url })}
-                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors cursor-pointer"
-                      >
-                        {sample.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Image preview */}
-                  {formData.image && (
-                    <div className="w-full h-32 rounded-xl overflow-hidden border border-white/15 relative">
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = SAMPLE_IMAGES[0].url;
-                        }}
-                      />
-                      <span className="absolute top-2 left-2 text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 text-emerald-400 border border-emerald-500/30">
-                        Primary Cover
-                      </span>
-                    </div>
-                  )}
+                {/* Year */}
+                <div>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Launch Year</label>
+                  <input
+                    type="text"
+                    value={formData.year || ''}
+                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                    placeholder="2026"
+                  />
                 </div>
 
-                {/* Additional Media Gallery (Multiple Images) */}
-                <div className="md:col-span-2 p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono text-white/90 flex items-center gap-1.5 font-semibold">
-                      <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Additional Gallery Images ({(formData.galleryImages || []).length})</span>
-                    </label>
-                    <span className="text-[10px] font-mono text-white/40">Add multiple screenshots or mockups</span>
-                  </div>
+                {/* Demo Type */}
+                <div>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Interactive Demo Viewer</label>
+                  <select
+                    value={formData.demoType || 'interactive-device'}
+                    onChange={(e) => setFormData({ ...formData, demoType: e.target.value as any })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none bg-neutral-900 cursor-pointer"
+                  >
+                    <option value="interactive-device" className="bg-neutral-900 text-white">Responsive Real Estate Device</option>
+                    <option value="video-reel" className="bg-neutral-900 text-white">AI Video Showcase Reel</option>
+                    <option value="ugc-player" className="bg-neutral-900 text-white">9:16 Vertical UGC Video Player</option>
+                    <option value="ebook-reader" className="bg-neutral-900 text-white">3D Digital Publication Reader</option>
+                    <option value="decision-tool" className="bg-neutral-900 text-white">Decision Calculator Tool</option>
+                    <option value="motion-preview" className="bg-neutral-900 text-white">Motion Graphic Preview</option>
+                  </select>
+                </div>
 
-                  {/* Add image row */}
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={newGalleryUrl}
-                      onChange={(e) => setNewGalleryUrl(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddGalleryImage();
-                        }
-                      }}
-                      className="flex-1 liquid-glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none"
-                      placeholder="Paste image URL and click Add to Gallery..."
-                    />
+                {/* Live Demo URL */}
+                <div>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5 flex items-center gap-1.5">
+                    <Globe className="w-3 h-3 text-sky-400" />
+                    <span>Live Demo / Production URL</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.demoUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, demoUrl: e.target.value })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                {/* GitHub Repository URL */}
+                <div>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5 flex items-center gap-1.5">
+                    <Github className="w-3 h-3 text-sky-400" />
+                    <span>GitHub Repository URL</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.githubUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+
+                {/* Primary Cover Image URL */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-mono text-white/80 flex items-center gap-1.5">
+                      <ImageIcon className="w-3 h-3 text-sky-400" />
+                      <span>Cover Image URL</span>
+                    </label>
                     <button
                       type="button"
-                      onClick={() => handleAddGalleryImage()}
-                      className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-black text-xs font-mono font-medium transition-colors cursor-pointer"
+                      onClick={() => setShowMediaPicker(!showMediaPicker)}
+                      className="text-[11px] font-mono text-sky-400 hover:text-sky-300 underline underline-offset-2 cursor-pointer"
                     >
-                      Add
+                      {showMediaPicker ? 'Hide Library Assets' : 'Choose from Media Library'}
                     </button>
                   </div>
+                  <input
+                    type="url"
+                    required
+                    value={formData.image || ''}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                    placeholder="https://images.unsplash.com/..."
+                  />
 
-                  {/* Quick gallery presets */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] text-white/40 font-mono">Quick add:</span>
-                    {SAMPLE_IMAGES.map((sample) => (
-                      <button
-                        key={sample.label}
-                        type="button"
-                        onClick={() => handleAddGalleryImage(sample.url)}
-                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors cursor-pointer"
-                      >
-                        + {sample.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Gallery Thumbnails Grid */}
-                  {(formData.galleryImages || []).length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                      {(formData.galleryImages || []).map((imgUrl, idx) => (
-                        <div
-                          key={idx}
-                          className="group relative aspect-video rounded-xl overflow-hidden border border-white/15 bg-black/50"
-                        >
-                          <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/70 text-white/80">
-                                #{idx + 1}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveGalleryImage(idx)}
-                                className="w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-500 flex items-center justify-center text-white text-[10px] cursor-pointer"
-                                title="Remove from gallery"
-                              >
-                                ×
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleSetAsCover(imgUrl)}
-                              className="w-full text-[9px] font-mono py-1 rounded bg-sky-500 hover:bg-sky-400 text-black font-semibold text-center cursor-pointer"
-                            >
-                              Set as Cover
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Multiple Project Videos Hub */}
-                <div className="md:col-span-2 p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono text-white/90 flex items-center gap-1.5 font-semibold">
-                      <Film className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Project Videos Hub ({(formData.videoList || []).length})</span>
-                    </label>
-                    <span className="text-[10px] font-mono text-white/40">MP4, Mux HLS .m3u8, Reels</span>
-                  </div>
-
-                  {/* Add Video Inputs */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      value={newVideoTitle}
-                      onChange={(e) => setNewVideoTitle(e.target.value)}
-                      className="liquid-glass-input rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none"
-                      placeholder="Video Title (e.g. Hero Demo)"
-                    />
-                    <input
-                      type="url"
-                      value={newVideoUrl}
-                      onChange={(e) => setNewVideoUrl(e.target.value)}
-                      className="liquid-glass-input rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none sm:col-span-1"
-                      placeholder="Video URL (https://...mp4 or .m3u8)"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddVideo}
-                      className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:brightness-110 text-white text-xs font-mono font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Video</span>
-                    </button>
-                  </div>
-
-                  {/* List of Added Videos */}
-                  {(formData.videoList || []).length > 0 && (
-                    <div className="space-y-2 pt-1">
-                      {(formData.videoList || []).map((vid, vIdx) => {
-                        const isPrimary = formData.videoUrl === vid.url;
-                        return (
+                  {/* Media Picker Drawer */}
+                  {showMediaPicker && (
+                    <div className="mt-3 p-3 rounded-2xl bg-black/60 border border-white/10 space-y-2 animate-fadeIn">
+                      <div className="text-[11px] font-mono text-white/60">Click an asset to set as cover image:</div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1">
+                        {(data.mediaAssets || []).filter((m) => m.type === 'image').map((media) => (
                           <div
-                            key={vIdx}
-                            className={`p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                              isPrimary
-                                ? 'bg-sky-500/10 border-sky-400/30'
-                                : 'bg-white/[0.02] border-white/10'
-                            }`}
+                            key={media.id}
+                            onClick={() => {
+                              setFormData({ ...formData, image: media.url });
+                              setShowMediaPicker(false);
+                            }}
+                            className="aspect-video rounded-lg overflow-hidden border border-white/15 hover:border-sky-400 cursor-pointer relative group"
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center shrink-0">
-                                <Play className="w-3.5 h-3.5 fill-current" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-white font-medium truncate">{vid.title}</span>
-                                  {isPrimary && (
-                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30">
-                                      Primary
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-[10px] font-mono text-white/40 truncate max-w-sm">{vid.url}</p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {!isPrimary && (
-                                <button
-                                  type="button"
-                                  onClick={() => setFormData({ ...formData, videoUrl: vid.url })}
-                                  className="text-[10px] font-mono px-2 py-1 rounded bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors cursor-pointer"
-                                >
-                                  Set Primary
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveVideo(vIdx)}
-                                className="p-1 rounded bg-red-600/20 hover:bg-red-600/40 text-red-300 transition-colors cursor-pointer"
-                                title="Delete video"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                            <img src={media.url} alt={media.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-mono transition-opacity">
+                              Select
                             </div>
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
                   )}
+                </div>
+
+                {/* Video URL (Optional) */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-mono text-white/80 mb-1.5 flex items-center gap-1.5">
+                    <Video className="w-3 h-3 text-sky-400" />
+                    <span>Video / Reel URL (Optional M3U8 / MP4)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.videoUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                    placeholder="https://stream.mux.com/..."
+                  />
                 </div>
 
                 {/* Description */}
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Project Description</label>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Project Overview & Description</label>
                   <textarea
                     rows={3}
-                    required
                     value={formData.description || ''}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl p-3 text-xs leading-relaxed text-white focus:outline-none"
-                    placeholder="Describe the solution, tools, and results..."
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none leading-relaxed"
+                    placeholder="Describe the objective, creative workflow, and client impact..."
                   />
                 </div>
 
-                {/* Interactive Demo Type */}
-                <div>
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Interactive Demo Type</label>
-                  <select
-                    value={formData.demoType || 'interactive-device'}
-                    onChange={(e) => setFormData({ ...formData, demoType: e.target.value as any })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none cursor-pointer bg-neutral-900"
-                  >
-                    <option value="interactive-device">Device Frame (Web UI)</option>
-                    <option value="video-reel">Video Reel (AI Commercials)</option>
-                    <option value="ugc-player">UGC Vertical Player (TikTok/Reels)</option>
-                    <option value="ebook-reader">E-book Publication Reader</option>
-                    <option value="decision-tool">Decision Calculator Tool</option>
-                  </select>
-                </div>
-
-                {/* Workflow Stack */}
-                <div>
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Workflow / Tech Stack</label>
+                {/* Workflow Tools */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Workflow & Tech Stack</label>
                   <input
                     type="text"
                     value={formData.workflow || ''}
                     onChange={(e) => setFormData({ ...formData, workflow: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none"
-                    placeholder="e.g. Vite + React + Tailwind + GSAP"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+                    placeholder="e.g. Vite + React + GSAP + Tailwind CSS"
                   />
                 </div>
 
-                {/* Tags Manager */}
+                {/* Tags List */}
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Tags</label>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Tags & Badges</label>
                   <div className="flex gap-2 mb-2">
                     <input
                       type="text"
@@ -775,25 +795,56 @@ export const ProjectsManager: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+              {/* Notification Banner */}
+              {saveError && (
+                <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-mono">
+                  {saveError}
+                </div>
+              )}
+              {saveSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>{saveSuccess}</span>
+                </div>
+              )}
+
+              {/* Action Buttons: Save Draft vs Save & Publish */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
+                  disabled={isSaving}
                   onClick={() => {
                     setIsCreating(false);
                     setEditingProject(null);
                   }}
-                  className="px-5 py-2.5 rounded-xl liquid-glass-pill text-xs font-mono text-white hover:bg-white/10 cursor-pointer transition-colors"
+                  className="px-5 py-2.5 rounded-xl liquid-glass-pill text-xs font-mono text-white hover:bg-white/10 cursor-pointer transition-colors text-center disabled:opacity-50"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-xs font-mono text-white font-medium cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.4)] hover:brightness-110 transition-all flex items-center gap-2"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Save Project</span>
-                </button>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => handleSave(false)}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-mono font-medium cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    title="Save as Draft without displaying on public website"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => handleSave(true)}
+                    className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-xs font-mono text-white font-medium cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    title="Save and publish directly to live website"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{isSaving ? 'Publishing...' : 'Save & Publish'}</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>

@@ -22,7 +22,6 @@ import {
   ConversationModal,
   ReviewSubmissionModal,
 } from '../components/Modals.tsx';
-import { AdminTrigger } from '../components/Admin/AdminTrigger.tsx';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Project, JournalEntry, ExplorationItem } from '../utils/portfolio.ts';
 
@@ -123,7 +122,6 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false 
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onOpenContact={() => setIsConversationOpen(true)}
-        showAdminButton={!isPreview}
       />
 
       <main>
@@ -191,9 +189,6 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false 
         onClose={() => setIsReviewModalOpen(false)}
         onSubmitReview={addReview}
       />
-
-      {/* Subtle Admin Panel Quick Trigger (hidden inside preview iframe) */}
-      {!isInsideIframe && <AdminTrigger />}
     </div>
   );
 };

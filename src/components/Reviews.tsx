@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Plus, CheckCircle2, Quote, Sparkles } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Review } from '../utils/portfolio.ts';
+import { Button } from './Button.tsx';
 
 interface ReviewsProps {
   onOpenReviewModal: () => void;
@@ -36,12 +37,12 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-16">
           <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full liquid-glass-subtle text-[11px] font-mono text-sky-400 uppercase tracking-widest mb-3 sm:mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-subtle text-sm font-mono text-accent uppercase tracking-wider mb-3 sm:mb-4">
+              <Sparkles className="w-4 h-4 text-warning" />
               <span>Client Voices & Feedback</span>
             </div>
             
-            <h2 className="text-2xl xs:text-3xl sm:text-5xl font-display font-light text-white tracking-tight leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-display font-light text-white tracking-tight leading-tight">
               What partners say <br />
               <span className="italic font-normal bg-gradient-to-r from-sky-400 via-blue-200 to-indigo-300 bg-clip-text text-transparent">
                 about our craft.
@@ -57,27 +58,28 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
           <div className="flex flex-wrap items-center gap-4">
             {/* Rating pill */}
             <div className="liquid-glass rounded-2xl px-4 py-3 flex items-center gap-3 border border-white/10 shadow-lg">
-              <div className="flex items-center gap-1 text-amber-400">
-                <Star className="w-5 h-5 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+              <div className="flex items-center gap-1 text-warning">
+                <Star className="w-5 h-5 fill-warning drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
                 <span className="font-display font-medium text-lg text-white">{averageRating}</span>
               </div>
               <div className="h-6 w-px bg-white/15" />
-              <div className="text-left font-mono text-[11px] text-muted">
+              <div className="text-left font-mono text-xs text-muted">
                 <div className="text-white font-medium">{reviewsList.length} Reviews</div>
                 <div>100% Verified</div>
               </div>
             </div>
 
             {/* Submit Review Button */}
-            <button
-              type="button"
+            <Button
+              variant="glass"
+              size="md"
               onClick={onOpenReviewModal}
-              className="liquid-glass-button rounded-2xl px-5 py-3 text-white text-xs sm:text-sm font-medium flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(56,189,248,0.25)] min-h-[44px]"
+              className="rounded-2xl hover:scale-105 shadow-[0_0_20px_rgba(56,189,248,0.25)] min-h-[44px]"
               aria-label="Add your review"
             >
-              <Plus className="w-4 h-4 text-sky-300" />
+              <Plus className="w-4 h-4 text-accent" />
               <span>Leave a Review</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -90,21 +92,19 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
             const isActive = selectedCategory === cat;
 
             return (
-              <button
+              <Button
                 key={cat}
-                type="button"
+                variant="pill"
+                size="sm"
+                active={isActive}
                 onClick={() => setSelectedCategory(cat)}
-                className={`text-xs font-mono rounded-full px-4 py-2 sm:py-1.5 transition-all duration-200 cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
-                  isActive
-                    ? 'liquid-glass-pill-active text-white border border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.2)]'
-                    : 'liquid-glass text-muted hover:text-white hover:bg-white/10'
-                }`}
+                className="shrink-0"
               >
                 <span>{cat}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-sky-500/30 text-sky-200' : 'bg-white/10 text-muted'}`}>
+                <span className={`text-2xs px-1.5 py-0.2 rounded-full ${isActive ? 'bg-accent/20 text-accent' : 'bg-white/10 text-muted'}`}>
                   {count}
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -134,14 +134,14 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
                           key={star}
                           className={`w-3.5 h-3.5 ${
                             star <= review.rating
-                              ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
-                              : 'text-white/20'
+                              ? 'text-warning fill-warning drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
+                              : 'text-muted'
                           }`}
                         />
                       ))}
                     </div>
 
-                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full liquid-glass-subtle text-sky-300 border border-sky-400/20">
+                    <span className="text-2xs font-mono px-2.5 py-0.5 rounded-full liquid-glass-subtle text-accent border border-accent/20">
                       {review.category}
                     </span>
                   </div>
@@ -149,7 +149,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
                   {/* Quote icon & Review Content */}
                   <div className="relative mb-6">
                     <Quote className="w-6 h-6 text-white/10 absolute -top-1 -left-2 -scale-x-100 pointer-events-none" />
-                    <p className="text-sm text-text-primary/90 leading-relaxed font-sans relative z-10 pl-2">
+                    <p className="text-sm text-text-primary leading-relaxed font-sans relative z-10 pl-2">
                       "{review.content}"
                     </p>
                   </div>
@@ -174,17 +174,17 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
                         </span>
                         {review.verified !== false && (
                           <span title="Verified Client">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-muted truncate font-mono">
+                      <div className="text-xs text-muted truncate font-mono">
                         {review.role}{review.company ? ` • ${review.company}` : ''}
                       </div>
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-mono text-muted/70 shrink-0">
+                  <span className="text-2xs font-mono text-muted shrink-0">
                     {review.date}
                   </span>
                 </div>
@@ -199,16 +199,16 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
             onClick={onOpenReviewModal}
             className="liquid-glass-subtle rounded-3xl p-6 sm:p-7 flex flex-col items-center justify-center text-center border border-dashed border-white/20 hover:border-sky-400/50 hover:bg-white/[0.04] transition-all cursor-pointer group min-h-[220px]"
           >
-            <div className="w-12 h-12 rounded-full liquid-glass-pill flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-sky-400 transition-all text-sky-400 shadow-lg">
+            <div className="w-12 h-12 rounded-full liquid-glass-pill flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-accent transition-all text-accent shadow-lg">
               <Plus className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-medium text-white group-hover:text-sky-300 transition-colors">
+            <h3 className="text-sm sm:text-base font-medium text-white group-hover:text-accent transition-colors">
               Worked with us?
-            </h4>
-            <p className="text-xs text-muted mt-1 max-w-[200px]">
-              Add your review and join our verified testimonials wall.
+            </h3>
+            <p className="text-sm leading-relaxed text-muted mt-2 max-w-[260px] xs:max-w-[280px] font-sans">
+              Add your review and join our client feedback wall.
             </p>
-            <span className="mt-3 font-mono text-[11px] text-sky-400 underline underline-offset-4 opacity-80 group-hover:opacity-100">
+            <span className="mt-3 font-mono text-xs text-accent underline underline-offset-4 opacity-80 group-hover:opacity-100">
               Submit Review →
             </span>
           </motion.div>

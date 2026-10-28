@@ -26,6 +26,13 @@ export interface Project {
   videoUrl?: string;
   video?: string;
   videoList?: ProjectVideo[];
+  isPublished?: boolean;
+  order?: number;
+  demoUrl?: string;
+  githubUrl?: string;
+  clientUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const PROJECT_CATEGORIES = [
@@ -63,6 +70,11 @@ export interface JournalEntry {
   videoUrl?: string;
   excerpt: string;
   category: string;
+  isPublished?: boolean;
+  order?: number;
+  author?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Review {
@@ -90,6 +102,32 @@ export interface ExplorationItem {
   videoList?: ProjectVideo[];
   category: string;
   description: string;
+  isPublished?: boolean;
+  order?: number;
+  createdAt?: string;
+}
+
+export interface MediaAsset {
+  id: string;
+  title: string;
+  fileName: string;
+  url: string;
+  type: 'image' | 'video';
+  mimeType: string;
+  sizeBytes: number;
+  storageProvider: 'supabase' | 'local';
+  storagePath?: string;
+  createdAt: string;
+  tags?: string[];
+}
+
+export interface ActivityLog {
+  id: string;
+  action: 'create' | 'update' | 'delete' | 'publish' | 'unpublish' | 'upload' | 'reorder' | 'login' | 'settings';
+  target: 'project' | 'journal' | 'exploration' | 'service' | 'media' | 'content' | 'review' | 'auth';
+  title: string;
+  timestamp: string;
+  details?: string;
 }
 
 export interface BrandPrincipleStat {
@@ -370,6 +408,11 @@ export const PROJECTS: Project[] = [
     ],
     workflow: 'Vite + React + GSAP + Tailwind CSS development workflow',
     demoType: 'interactive-device',
+    demoUrl: 'https://sribalajirealestate.in',
+    githubUrl: 'https://github.com/Garv1629/real-estate-web',
+    isPublished: true,
+    order: 1,
+    createdAt: '2026-10-15T08:00:00.000Z',
   },
   {
     id: 'cinematic-ai-studio',
@@ -393,6 +436,9 @@ export const PROJECTS: Project[] = [
     workflow: 'Runway Gen-3 + Luma Dream Machine + Premiere Pro editing',
     demoType: 'video-reel',
     videoUrl: 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8',
+    isPublished: true,
+    order: 2,
+    createdAt: '2026-10-18T12:00:00.000Z',
   },
   {
     id: 'ugc-viral-creative-lab',
@@ -415,6 +461,9 @@ export const PROJECTS: Project[] = [
     ],
     workflow: 'Mobile vertical capture + CapCut Pro + AI Voice pacing',
     demoType: 'ugc-player',
+    isPublished: true,
+    order: 3,
+    createdAt: '2026-10-20T14:30:00.000Z',
   },
   {
     id: 'digital-mastery-ebooks',
@@ -437,6 +486,9 @@ export const PROJECTS: Project[] = [
     ],
     workflow: 'Adobe InDesign + Figma + Interactive PDF compilation',
     demoType: 'ebook-reader',
+    isPublished: true,
+    order: 4,
+    createdAt: '2026-10-22T09:15:00.000Z',
   },
 ];
 
@@ -453,6 +505,8 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     excerpt:
       'How prompt engineering, human-in-the-loop refinement, and iterative component assembly transform early sketches into responsive digital experiences.',
     category: 'Web Development',
+    isPublished: true,
+    order: 1,
   },
   {
     id: 'ai-videos-craft',
@@ -465,6 +519,8 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     excerpt:
       'Developing cinematic product visuals, camera motion choreography, and high-resolution commercial mockups with emerging generative video pipelines.',
     category: 'AI Videos',
+    isPublished: true,
+    order: 2,
   },
   {
     id: 'ugc-videos-growth',
@@ -477,6 +533,8 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     excerpt:
       'Analyzing why authentic user-generated content outperforms polished commercials on TikTok and Reels, and how to craft 3-second hooks that convert.',
     category: 'UGC Videos',
+    isPublished: true,
+    order: 3,
   },
   {
     id: 'ebooks-publishing-design',
@@ -489,6 +547,8 @@ export const JOURNAL_ENTRIES: JournalEntry[] = [
     excerpt:
       'Principles of digital publication design: from responsive editorial layouts and interactive PDF tables of contents to 3D launch mockup kits.',
     category: 'E-books',
+    isPublished: true,
+    order: 4,
   },
 ];
 
@@ -506,6 +566,8 @@ export const EXPLORATIONS: ExplorationItem[] = [
     category: 'Web Development',
     description:
       'Interactive web interfaces, luxury real estate filter layouts, responsive grids, and fluid motion micro-interactions.',
+    isPublished: true,
+    order: 1,
   },
   {
     id: 'exp-ai-video-luxury',
@@ -519,6 +581,8 @@ export const EXPLORATIONS: ExplorationItem[] = [
     category: 'AI Videos',
     description:
       'Cinematic apparel visual concepts exploring dynamic textile physics, studio lighting, and high-fashion editorial pacing.',
+    isPublished: true,
+    order: 2,
   },
   {
     id: 'exp-ugc-beauty',
@@ -532,6 +596,8 @@ export const EXPLORATIONS: ExplorationItem[] = [
     category: 'UGC Videos',
     description:
       'Authentic user-generated style concepts emphasizing natural skin textures, clean product packaging, and organic lifestyle lighting.',
+    isPublished: true,
+    order: 3,
   },
   {
     id: 'exp-ebook-digital',
@@ -543,6 +609,8 @@ export const EXPLORATIONS: ExplorationItem[] = [
     category: 'E-books',
     description:
       'Three-dimensional digital book cover mockups and kinetic typography animations for digital product launches and educational guides.',
+    isPublished: true,
+    order: 4,
   },
   {
     id: 'exp-ai-video-tech',
@@ -556,6 +624,8 @@ export const EXPLORATIONS: ExplorationItem[] = [
     category: 'AI Videos',
     description:
       'Futuristic hardware concepts, holographic interface projections, and neural network visualization aesthetics.',
+    isPublished: true,
+    order: 5,
   },
   {
     id: 'exp-ugc-unboxing',
@@ -567,6 +637,8 @@ export const EXPLORATIONS: ExplorationItem[] = [
     category: 'UGC Videos',
     description:
       'Fast-paced TikTok and Reels style unboxing videos, hands-on demonstrations, and high-converting problem-solution hooks.',
+    isPublished: true,
+    order: 6,
   },
 ];
 
@@ -644,4 +716,117 @@ export const REVIEWS: Review[] = [
     status: 'approved',
   },
 ];
+
+// Initial Media Assets Catalog for the Media Library
+export const DEFAULT_MEDIA_ASSETS: MediaAsset[] = [
+  {
+    id: 'media-real-estate-hero',
+    title: 'Real Estate Modern Architecture UI',
+    fileName: 'real-estate-hero.jpg',
+    url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+    type: 'image',
+    mimeType: 'image/jpeg',
+    sizeBytes: 345000,
+    storageProvider: 'local',
+    createdAt: '2026-10-20T10:00:00.000Z',
+    tags: ['Web Development', 'Architecture', 'UI'],
+  },
+  {
+    id: 'media-ai-cinema-studio',
+    title: 'Cinematic AI Studio Lighting',
+    fileName: 'ai-studio-lighting.jpg',
+    url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
+    type: 'image',
+    mimeType: 'image/jpeg',
+    sizeBytes: 420000,
+    storageProvider: 'local',
+    createdAt: '2026-10-21T11:30:00.000Z',
+    tags: ['AI Videos', 'Cinematography', 'Product Ads'],
+  },
+  {
+    id: 'media-ugc-creator-recording',
+    title: 'UGC Creator Mobile Recording Studio',
+    fileName: 'ugc-creator-studio.jpg',
+    url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',
+    type: 'image',
+    mimeType: 'image/jpeg',
+    sizeBytes: 310000,
+    storageProvider: 'local',
+    createdAt: '2026-10-22T14:15:00.000Z',
+    tags: ['UGC Videos', 'TikTok', 'Vertical Video'],
+  },
+  {
+    id: 'media-ebook-publishing',
+    title: 'Digital Publications Editorial Spread',
+    fileName: 'ebook-editorial-spread.jpg',
+    url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
+    type: 'image',
+    mimeType: 'image/jpeg',
+    sizeBytes: 285000,
+    storageProvider: 'local',
+    createdAt: '2026-10-23T09:45:00.000Z',
+    tags: ['E-books', 'Editorial', 'Typography'],
+  },
+  {
+    id: 'media-digital-screens-video',
+    title: 'Digital UI Holographic Motion Graphic',
+    fileName: 'digital-screens-motion.mp4',
+    url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-and-data-31912-large.mp4',
+    type: 'video',
+    mimeType: 'video/mp4',
+    sizeBytes: 4850000,
+    storageProvider: 'local',
+    createdAt: '2026-10-24T16:00:00.000Z',
+    tags: ['Web Development', 'Motion Video', 'Animation'],
+  },
+  {
+    id: 'media-ai-fashion-reel',
+    title: 'Fashion Commercial AI Model Reel',
+    fileName: 'ai-fashion-model-reel.mp4',
+    url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-a-bright-fashion-outfit-42533-large.mp4',
+    type: 'video',
+    mimeType: 'video/mp4',
+    sizeBytes: 5200000,
+    storageProvider: 'local',
+    createdAt: '2026-10-25T12:00:00.000Z',
+    tags: ['AI Videos', 'Fashion', '4K Teaser'],
+  },
+];
+
+// Activity log for tracking recent admin actions
+export const DEFAULT_ACTIVITY_LOGS: ActivityLog[] = [
+  {
+    id: 'act-1',
+    action: 'publish',
+    target: 'project',
+    title: 'Sri Balaji Real Estate published to live portfolio',
+    timestamp: '2 hours ago',
+    details: 'Live status verified on web',
+  },
+  {
+    id: 'act-2',
+    action: 'upload',
+    target: 'media',
+    title: 'Uploaded 4K Fashion AI Commercial Reel',
+    timestamp: '5 hours ago',
+    details: 'Video added to Media Library',
+  },
+  {
+    id: 'act-3',
+    action: 'update',
+    target: 'content',
+    title: 'Updated Brand Tagline & Hero Eyebrow',
+    timestamp: '1 day ago',
+    details: 'Changes live in Split Mirror',
+  },
+  {
+    id: 'act-4',
+    action: 'publish',
+    target: 'review',
+    title: 'Approved review from Aura Horizon Labs',
+    timestamp: '2 days ago',
+    details: '5-star rating verified',
+  },
+];
+
 

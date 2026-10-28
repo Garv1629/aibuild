@@ -39,9 +39,16 @@ export const Explorations: React.FC<ExplorationsProps> = ({
   const col1Ref = useRef<HTMLDivElement | null>(null);
   const col2Ref = useRef<HTMLDivElement | null>(null);
   const pinnedContentRef = useRef<HTMLDivElement | null>(null);
+  const columnsContainerRef = useRef<HTMLDivElement | null>(null);
 
   const col1Items = explorations.filter((item) => item.column === 1);
   const col2Items = explorations.filter((item) => item.column === 2);
+  const maxItemsInCol = Math.max(col1Items.length, col2Items.length, 1);
+
+  // Dynamic height calculation so center text stays pinned until all background cards finish scrolling
+  const [dynamicHeight, setDynamicHeight] = useState<number>(() => {
+    return Math.max(maxItemsInCol * 520 + 750, 2400);
+  });
 
   const [isLargeScreen, setIsLargeScreen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -58,6 +65,46 @@ export const Explorations: React.FC<ExplorationsProps> = ({
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
   }, []);
+
+  // Measure background columns height dynamically whenever explorations change
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const measureHeight = () => {
+      if (!columnsContainerRef.current) return;
+      const colHeight = columnsContainerRef.current.offsetHeight;
+      if (colHeight > 0) {
+        // Required height: columns height + col2 downward parallax (260px) + full viewport height so last card completely scrolls out + exit buffer
+        const vh = window.innerHeight;
+        const requiredHeight = colHeight + 350 + vh;
+        const minHeight = vh * 2.4;
+        const finalHeight = Math.max(requiredHeight, minHeight);
+        setDynamicHeight(finalHeight);
+
+        const activeScrollTrigger = getActiveScrollTrigger();
+        if (activeScrollTrigger && activeScrollTrigger.refresh) {
+          activeScrollTrigger.refresh();
+        }
+      }
+    };
+
+    const timer = setTimeout(measureHeight, 150);
+
+    const ro = new ResizeObserver(() => {
+      measureHeight();
+    });
+
+    if (columnsContainerRef.current) {
+      ro.observe(columnsContainerRef.current);
+    }
+    window.addEventListener('resize', measureHeight);
+
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+      window.removeEventListener('resize', measureHeight);
+    };
+  }, [explorations, isLargeScreen]);
 
   useEffect(() => {
     const activeGsap = getActiveGsap();
@@ -109,13 +156,16 @@ export const Explorations: React.FC<ExplorationsProps> = ({
     } catch (e) {
       console.warn('Explorations GSAP animation error:', e);
     }
-  }, []);
+  }, [explorations, isLargeScreen, dynamicHeight]);
 
   return (
     <section
       id="explorations"
       ref={containerRef}
-      className="relative z-10 py-12 lg:py-0 lg:min-h-[290vh] overflow-x-clip"
+      style={{
+        minHeight: isLargeScreen && dynamicHeight ? `${dynamicHeight}px` : undefined,
+      }}
+      className="relative z-10 py-12 lg:py-0 overflow-x-clip"
       aria-label="Explorations and Visual Experiments"
     >
       {/* Ambient background depth lights */}
@@ -130,20 +180,20 @@ export const Explorations: React.FC<ExplorationsProps> = ({
           {/* Eyebrow */}
           <div className="flex items-center gap-3 mb-3 sm:mb-4">
             <span className="w-8 h-px bg-stroke" aria-hidden="true" />
-            <span className="text-xs text-sky-400 uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
+            <span className="text-xs text-accent uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
               {data.siteTexts?.explorationsEyebrow || 'Explorations'}
             </span>
             <span className="w-8 h-px bg-stroke" aria-hidden="true" />
           </div>
 
           {/* Heading */}
-          <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal mb-2.5 sm:mb-3">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl text-text-primary tracking-tight font-normal mb-2.5 sm:mb-3">
             {data.siteTexts?.explorationsHeading || 'Visual'}{' '}
             <span className="font-display italic">{data.siteTexts?.explorationsHeadingItalic || 'playground'}</span>
           </h2>
 
           {/* Description */}
-          <p className="text-xs sm:text-sm md:text-base text-muted max-w-md mx-auto mb-6 leading-relaxed">
+          <p className="text-sm sm:text-base text-muted max-w-md mx-auto mb-6 leading-relaxed">
             {data.siteTexts?.explorationsSubtext ||
               'A curated gallery of live AI video experiments, high-converting UGC mockups, web interactions, and digital publication concepts.'}
           </p>
@@ -202,27 +252,27 @@ export const Explorations: React.FC<ExplorationsProps> = ({
               )}
 
               {/* Format Badge */}
-              <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+              <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-2xs font-mono tracking-wider flex items-center gap-1.5 text-secondary">
                 {item.video ? (
                   <>
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                    <span className="text-sky-300 font-semibold">VIDEO</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="text-accent font-semibold">VIDEO</span>
                   </>
                 ) : (
                   <span>IMAGE</span>
                 )}
-                <span className="text-zinc-500">•</span>
+                <span className="text-muted">•</span>
                 <span>{item.category.toUpperCase()}</span>
               </div>
 
               {/* Gradient Scrim & Info */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4 z-20">
-                <span className="text-[10px] font-mono text-sky-300 uppercase tracking-wider">
+                <span className="text-2xs font-mono text-accent uppercase tracking-wider">
                   {item.category}
                 </span>
-                <h4 className="text-white text-sm sm:text-base font-medium leading-tight">
+                <h3 className="text-white text-sm sm:text-base font-medium leading-tight">
                   {item.title}
-                </h4>
+                </h3>
               </div>
             </div>
           ))}
@@ -238,14 +288,14 @@ export const Explorations: React.FC<ExplorationsProps> = ({
           {/* Eyebrow */}
           <div className="flex items-center gap-3 mb-4">
             <span className="w-8 h-px bg-stroke" aria-hidden="true" />
-            <span className="text-xs text-sky-400 uppercase tracking-[0.3em] font-medium font-mono">
+            <span className="text-xs text-accent uppercase tracking-[0.3em] font-medium font-mono">
               {data.siteTexts?.explorationsEyebrow || 'Explorations'}
             </span>
             <span className="w-8 h-px bg-stroke" aria-hidden="true" />
           </div>
 
           {/* Heading */}
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-text-primary tracking-tight font-normal mb-4 drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl text-text-primary tracking-tight font-normal mb-4 drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
             {data.siteTexts?.explorationsHeading || 'Visual'}{' '}
             <span className="font-display italic">{data.siteTexts?.explorationsHeadingItalic || 'playground'}</span>
           </h2>
@@ -275,7 +325,10 @@ export const Explorations: React.FC<ExplorationsProps> = ({
 
       {/* DESKTOP BACKGROUND LAYER (>= 1024px): Parallax Columns */}
       {isLargeScreen && (
-        <div className="hidden lg:block relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 -mt-[100vh] pointer-events-none">
+        <div
+          ref={columnsContainerRef}
+          className="hidden lg:block relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 -mt-[100vh] pointer-events-none"
+        >
           <div className="grid grid-cols-2 gap-6 sm:gap-16 md:gap-32 lg:gap-48">
             {/* Column 1 (Left Flank) */}
             <div ref={col1Ref} className="flex flex-col gap-24 sm:gap-36 md:gap-48 items-start">
@@ -317,28 +370,28 @@ export const Explorations: React.FC<ExplorationsProps> = ({
                   )}
 
                   {/* Media Format Badge */}
-                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-2xs font-mono tracking-wider flex items-center gap-1.5 text-secondary">
                     {item.video ? (
                       <>
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                        <span className="text-sky-300 font-semibold">VIDEO</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                        <span className="text-accent font-semibold">VIDEO</span>
                       </>
                     ) : (
                       <span>IMAGE</span>
                     )}
-                    <span className="text-zinc-500">•</span>
+                    <span className="text-muted">•</span>
                     <span>{item.category.toUpperCase()}</span>
                   </div>
 
                   {/* Halftone & dark hover scrim */}
                   <div className="halftone-overlay absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-5 z-20">
-                    <span className="text-[11px] font-mono text-sky-300 uppercase tracking-wider">
+                    <span className="text-xs font-mono text-accent uppercase tracking-wider">
                       {item.category}
                     </span>
-                    <h4 className="text-white text-base sm:text-lg font-medium leading-tight">
+                    <h3 className="text-white text-base sm:text-lg font-medium leading-tight">
                       {item.title}
-                    </h4>
+                    </h3>
                   </div>
                 </div>
               ))}
@@ -384,28 +437,28 @@ export const Explorations: React.FC<ExplorationsProps> = ({
                   )}
 
                   {/* Media Format Badge */}
-                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-[10px] font-mono tracking-wider flex items-center gap-1.5 text-zinc-300">
+                  <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-2xs font-mono tracking-wider flex items-center gap-1.5 text-secondary">
                     {item.video ? (
                       <>
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-                        <span className="text-sky-300 font-semibold">VIDEO</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                        <span className="text-accent font-semibold">VIDEO</span>
                       </>
                     ) : (
                       <span>IMAGE</span>
                     )}
-                    <span className="text-zinc-500">•</span>
+                    <span className="text-muted">•</span>
                     <span>{item.category.toUpperCase()}</span>
                   </div>
 
                   {/* Halftone & dark hover scrim */}
                   <div className="halftone-overlay absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-5 z-20">
-                    <span className="text-[11px] font-mono text-sky-300 uppercase tracking-wider">
+                    <span className="text-xs font-mono text-accent uppercase tracking-wider">
                       {item.category}
                     </span>
-                    <h4 className="text-white text-base sm:text-lg font-medium leading-tight">
+                    <h3 className="text-white text-base sm:text-lg font-medium leading-tight">
                       {item.title}
-                    </h4>
+                    </h3>
                   </div>
                 </div>
               ))}

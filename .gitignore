@@ -18,3 +18,11 @@ git_push.bat
 push.js
 test_runner.cjs
 test_out.json
+verify_build.mjs
+check_status.cjs
+scratch_copy.js
+typecheck.js
+install_deps.mjs
+test_supabase_live.mjs
+git_result.json
+commit_msg.txt

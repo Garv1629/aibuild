@@ -7,6 +7,9 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PortfolioHome } from './pages/PortfolioHome.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
+import { AdminLoginPage } from './pages/AdminLoginPage.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
+import { ProtectedRoute } from './components/ProtectedRoute.tsx';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -36,12 +39,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       return (
         <div className="min-h-screen bg-[#07090e] text-white flex items-center justify-center p-6 font-mono">
           <div className="max-w-xl w-full p-6 bg-red-950/80 border border-red-500/40 rounded-2xl shadow-2xl space-y-4">
-            <h2 className="text-lg font-semibold text-red-400">Application Error</h2>
+            <h2 className="text-lg font-semibold text-error">Application Error</h2>
             <p className="text-xs text-red-200/90 whitespace-pre-wrap leading-relaxed">
               {this.state.error?.message || 'An unknown render error occurred.'}
             </p>
             {this.state.error?.stack && (
-              <pre className="text-[10px] text-white/50 max-h-48 overflow-auto p-3 bg-black/60 rounded-xl">
+              <pre className="text-2xs text-white/50 max-h-48 overflow-auto p-3 bg-black/60 rounded-xl">
                 {this.state.error.stack}
               </pre>
             )}
@@ -79,8 +82,23 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/admin/:tab" element={<AdminPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/:tab"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<PortfolioHome />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

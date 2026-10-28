@@ -108,17 +108,28 @@ export const ExplorationsManager: React.FC = () => {
     setFormData({ ...formData, video: videoObj.url });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.category) return;
 
-    if (isCreating) {
-      addExploration(formData as ExplorationItem);
-    } else if (editingItem) {
-      updateExploration(editingItem.id, formData);
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      if (isCreating) {
+        await addExploration(formData as ExplorationItem);
+      } else if (editingItem) {
+        await updateExploration(editingItem.id, formData);
+      }
+      setEditingItem(null);
+      setIsCreating(false);
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to save exploration');
+    } finally {
+      setIsSaving(false);
     }
-    setEditingItem(null);
-    setIsCreating(false);
   };
 
   return (
@@ -170,13 +181,13 @@ export const ExplorationsManager: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-sky-300">
+                <span className="text-xs font-mono uppercase tracking-wide text-accent">
                   {item.category}
                 </span>
               </div>
-              <h4 className="text-sm font-medium text-text-primary line-clamp-1">
+              <h3 className="text-sm font-medium text-text-primary line-clamp-1">
                 {item.title}
-              </h4>
+              </h3>
               <p className="text-xs text-muted line-clamp-2 mt-1 leading-relaxed">
                 {item.description}
               </p>
@@ -512,9 +523,16 @@ export const ExplorationsManager: React.FC = () => {
                 />
               </div>
 
+              {saveError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+                  {saveError}
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
+                  disabled={isSaving}
                   onClick={() => {
                     setIsCreating(false);
                     setEditingItem(null);
@@ -525,10 +543,15 @@ export const ExplorationsManager: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-xs font-mono text-white font-medium cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.4)] hover:brightness-110 transition-all flex items-center gap-2"
+                  disabled={isSaving}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-xs font-mono text-white font-medium cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.4)] hover:brightness-110 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4" />
-                  <span>Save Exploration</span>
+                  {isSaving ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  <span>{isSaving ? 'Saving...' : 'Save Exploration'}</span>
                 </button>
               </div>
             </form>

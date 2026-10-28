@@ -27,6 +27,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Project } from '../utils/portfolio.ts';
+import { Button } from './Button.tsx';
 
 interface ProjectInteractiveDemoProps {
   project: Project;
@@ -146,34 +147,28 @@ const VideoReelDemo: React.FC<{ project: Project }> = ({ project }) => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl liquid-glass text-xs font-mono">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-sky-400" />
+          <Sparkles className="w-4 h-4 text-accent" />
           <span className="text-text-primary font-medium">Interactive AI Video Player</span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="text-muted mr-1">Aspect:</span>
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
+            active={aspectRatio === '16/9'}
             onClick={() => setAspectRatio('16/9')}
-            className={`px-3 py-1 rounded-full cursor-pointer transition-all ${
-              aspectRatio === '16/9'
-                ? 'liquid-glass-pill-active text-white font-semibold'
-                : 'liquid-glass-pill hover:text-white text-muted'
-            }`}
           >
             16:9 Landscape
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            active={aspectRatio === '9/16'}
             onClick={() => setAspectRatio('9/16')}
-            className={`px-3 py-1 rounded-full cursor-pointer transition-all ${
-              aspectRatio === '9/16'
-                ? 'liquid-glass-pill-active text-white font-semibold'
-                : 'liquid-glass-pill hover:text-white text-muted'
-            }`}
           >
             9:16 Vertical
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -195,10 +190,10 @@ const VideoReelDemo: React.FC<{ project: Project }> = ({ project }) => {
           />
 
           <div className="absolute top-3 left-3 flex items-center gap-2 z-10 pointer-events-none">
-            <span className="liquid-glass-pill text-[10px] font-mono px-2.5 py-0.5 rounded-full text-white">
+            <span className="liquid-glass-pill text-2xs font-mono px-2.5 py-0.5 rounded-full text-white">
               {concept.resolution}
             </span>
-            <span className="liquid-glass-pill text-[10px] font-mono px-2.5 py-0.5 rounded-full text-emerald-400 border-emerald-500/40">
+            <span className="liquid-glass-pill text-2xs font-mono px-2.5 py-0.5 rounded-full text-success border-success/40">
               {concept.fps}
             </span>
           </div>
@@ -206,23 +201,25 @@ const VideoReelDemo: React.FC<{ project: Project }> = ({ project }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
             <div className="pointer-events-auto flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="icon"
+                  size="sm"
                   onClick={togglePlay}
-                  className="w-8 h-8 rounded-full liquid-glass-pill hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-colors"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="icon"
+                  size="sm"
                   onClick={toggleMute}
-                  className="w-8 h-8 rounded-full liquid-glass-pill hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-colors"
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
                 >
                   {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                </button>
+                </Button>
               </div>
 
-              <span className="text-xs font-mono text-white/90 drop-shadow-md">
+              <span className="text-xs font-mono text-white drop-shadow-md">
                 {concept.name} • {concept.tag}
               </span>
             </div>
@@ -242,17 +239,17 @@ const VideoReelDemo: React.FC<{ project: Project }> = ({ project }) => {
               onClick={() => setSelectedConcept(idx)}
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                 selectedConcept === idx
-                  ? 'border-sky-400/60 bg-sky-950/40 shadow-[0_0_15px_rgba(78,133,191,0.25)]'
+                  ? 'border-accent/60 bg-sky-950/40 shadow-[0_0_15px_rgba(78,133,191,0.25)]'
                   : 'border-white/10 bg-white/[0.03] hover:border-white/20'
               }`}
             >
               <div className="text-xs font-medium text-text-primary">{c.name}</div>
-              <div className="text-[10px] font-mono text-muted mt-0.5">{c.tag}</div>
+              <div className="text-2xs font-mono text-muted mt-0.5">{c.tag}</div>
             </button>
           ))}
         </div>
         <div className="p-3.5 rounded-xl liquid-glass-subtle text-xs font-mono space-y-1">
-          <span className="text-sky-400 font-semibold">Generative Camera &amp; Lighting Prompt:</span>
+          <span className="text-accent font-semibold">Generative Camera &amp; Lighting Prompt:</span>
           <p className="text-muted leading-relaxed italic">&quot;{concept.prompt}&quot;</p>
         </div>
       </div>
@@ -313,14 +310,14 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl liquid-glass text-xs font-mono">
         <div className="flex items-center gap-2">
-          <Smartphone className="w-4 h-4 text-emerald-400" />
+          <Smartphone className="w-4 h-4 text-success" />
           <span className="text-text-primary font-medium">UGC Video Ad &amp; Social Hook Simulator</span>
         </div>
 
         <div className="flex items-center gap-2 text-muted">
-          <span className="text-emerald-400 font-semibold">{concept.retention}</span>
+          <span className="text-success font-semibold">{concept.retention}</span>
           <span>•</span>
-          <span className="text-sky-400 font-semibold">{concept.ctr}</span>
+          <span className="text-accent font-semibold">{concept.ctr}</span>
         </div>
       </div>
 
@@ -340,10 +337,10 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
 
           {/* Top Bar */}
           <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
-            <span className="liquid-glass-pill text-[10px] font-mono px-2.5 py-0.5 rounded-full text-white">
+            <span className="liquid-glass-pill text-2xs font-mono px-2.5 py-0.5 rounded-full text-white">
               9:16 UGC Format
             </span>
-            <span className="liquid-glass-pill text-[10px] font-mono px-2.5 py-0.5 rounded-full text-emerald-300 border-emerald-500/30">
+            <span className="liquid-glass-pill text-2xs font-mono px-2.5 py-0.5 rounded-full text-success border-success/30">
               High Converting
             </span>
           </div>
@@ -357,12 +354,12 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
             >
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center liquid-glass-pill transition-transform group-hover:scale-110 ${
-                  isLiked ? 'bg-red-500/80 text-white border-red-400' : 'text-white'
+                  isLiked ? 'bg-error/80 text-white border-error' : 'text-white'
                 }`}
               >
                 <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
               </div>
-              <span className="text-[10px] font-mono text-white font-medium drop-shadow-md">
+              <span className="text-2xs font-mono text-white font-medium drop-shadow-md">
                 {isLiked ? '142.9K' : concept.likes}
               </span>
             </button>
@@ -371,7 +368,7 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
               <div className="w-10 h-10 rounded-full text-white flex items-center justify-center liquid-glass-pill">
                 <MessageCircle className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono text-white font-medium drop-shadow-md">
+              <span className="text-2xs font-mono text-white font-medium drop-shadow-md">
                 {concept.comments}
               </span>
             </div>
@@ -380,7 +377,7 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
               <div className="w-10 h-10 rounded-full text-white flex items-center justify-center liquid-glass-pill">
                 <Share2 className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono text-white font-medium drop-shadow-md">
+              <span className="text-2xs font-mono text-white font-medium drop-shadow-md">
                 {concept.shares}
               </span>
             </div>
@@ -388,7 +385,7 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
 
           {/* Bottom Captions & Hook Overlay */}
           <div className="absolute bottom-4 inset-x-4 pr-14 z-10 space-y-2">
-            <div className="inline-block px-2.5 py-0.5 rounded-md bg-sky-500/80 text-bg text-[10px] font-mono font-bold uppercase tracking-wider">
+            <div className="inline-block px-2.5 py-0.5 rounded-md bg-accent/80 text-bg text-2xs font-mono font-bold uppercase tracking-wider">
               {concept.hookType}
             </div>
 
@@ -397,14 +394,14 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
             </p>
 
             <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="liquid-glass-button px-3.5 py-1 rounded-full text-white text-[10px] font-mono font-bold cursor-pointer"
               >
                 {isPlaying ? 'Pause Preview' : 'Play Preview'}
-              </button>
-              <span className="text-[10px] font-mono text-white/70">
+              </Button>
+              <span className="text-2xs font-mono text-secondary">
                 AI Build UGC Studio
               </span>
             </div>
@@ -428,12 +425,12 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
               }}
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                 selectedIdx === idx
-                  ? 'border-emerald-400/60 bg-emerald-950/40 shadow-[0_0_15px_rgba(52,211,153,0.2)]'
+                  ? 'border-success/60 bg-emerald-950/40 shadow-[0_0_15px_rgba(52,211,153,0.2)]'
                   : 'border-white/10 bg-white/[0.03] hover:border-white/20'
               }`}
             >
               <div className="text-xs font-medium text-text-primary">{c.title}</div>
-              <div className="text-[10px] font-mono text-emerald-400 mt-0.5">{c.hookType}</div>
+              <div className="text-2xs font-mono text-success mt-0.5">{c.hookType}</div>
             </button>
           ))}
         </div>
@@ -500,30 +497,28 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl liquid-glass text-xs font-mono">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-sky-400" />
+          <BookOpen className="w-4 h-4 text-accent" />
           <span className="text-text-primary font-medium">Interactive Digital Publication Reader</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted text-[11px]">Font:</span>
-          <button
-            type="button"
+          <span className="text-muted text-xs">Font:</span>
+          <Button
+            variant="outline"
+            size="sm"
+            active={fontSize === 'normal'}
             onClick={() => setFontSize('normal')}
-            className={`px-2.5 py-0.5 rounded cursor-pointer transition-all ${
-              fontSize === 'normal' ? 'liquid-glass-pill-active text-white font-bold' : 'liquid-glass-pill text-muted'
-            }`}
           >
             Aa
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            active={fontSize === 'large'}
             onClick={() => setFontSize('large')}
-            className={`px-2.5 py-0.5 rounded cursor-pointer transition-all ${
-              fontSize === 'large' ? 'liquid-glass-pill-active text-white font-bold' : 'liquid-glass-pill text-muted'
-            }`}
           >
             Aa+
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -543,30 +538,31 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
                 onClick={() => setActiveChapter(idx)}
                 className={`w-full p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
                   activeChapter === idx
-                    ? 'border border-sky-400/50 bg-sky-950/40 shadow-[0_0_12px_rgba(78,133,191,0.25)]'
+                    ? 'border border-accent/50 bg-sky-950/40 shadow-[0_0_12px_rgba(78,133,191,0.25)]'
                     : 'border border-transparent hover:bg-white/[0.05] text-muted'
                 }`}
               >
                 <div>
                   <div className="text-xs font-medium text-text-primary">
-                    <span className="font-mono text-sky-400 mr-1.5">{ch.num}.</span>
+                    <span className="font-mono text-accent mr-1.5">{ch.num}.</span>
                     {ch.title}
                   </div>
-                  <div className="text-[10px] font-mono text-muted mt-0.5">{ch.pages}</div>
+                  <div className="text-2xs font-mono text-muted mt-0.5">{ch.pages}</div>
                 </div>
               </button>
             ))}
           </div>
 
           <div className="pt-3 border-t border-stroke/70 mt-3">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="md"
               onClick={handleDownload}
-              className="w-full py-2.5 rounded-xl liquid-glass-button text-white font-medium text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full text-xs font-mono uppercase tracking-wider"
             >
               {downloaded ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-success" />
                   <span>Sample PDF Prepared ✓</span>
                 </>
               ) : (
@@ -575,7 +571,7 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
                   <span>Download Sample Chapter</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -583,10 +579,10 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
         <div className="md:col-span-7 p-6 rounded-2xl liquid-glass-card flex flex-col justify-between space-y-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-stroke/60 pb-3">
-              <span className="text-[11px] font-mono text-sky-400 uppercase tracking-widest">
+              <span className="text-xs font-mono text-accent uppercase tracking-widest">
                 Chapter {chapter.num} • {chapter.pages}
               </span>
-              <span className="text-[10px] font-mono text-muted">AI Build Digital Guide</span>
+              <span className="text-2xs font-mono text-muted">AI Build Digital Guide</span>
             </div>
 
             <h4 className="text-xl sm:text-2xl font-display italic text-text-primary leading-snug">
@@ -598,8 +594,8 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
             </p>
 
             {/* Editorial Highlight Quote Box */}
-            <div className="p-4 rounded-xl liquid-glass-subtle border-l-2 border-sky-400 space-y-1">
-              <span className="text-[10px] font-mono text-muted uppercase tracking-wider block">
+            <div className="p-4 rounded-xl liquid-glass-subtle border-l-2 border-accent space-y-1">
+              <span className="text-2xs font-mono text-muted uppercase tracking-wider block">
                 Key Takeaway
               </span>
               <p
@@ -612,9 +608,9 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-stroke/60 flex items-center justify-between text-[11px] font-mono text-muted">
+          <div className="pt-4 border-t border-stroke/60 flex items-center justify-between text-xs font-mono text-muted">
             <span className="flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-sky-400" />
+              <FileText className="w-3.5 h-3.5 text-accent" />
               <span>Interactive PDF / ePub Format</span>
             </span>
             <span>3D Cover &amp; Mockups Included</span>
@@ -674,35 +670,29 @@ const InteractiveDeviceDemo: React.FC<{ project: Project }> = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl liquid-glass text-xs font-mono">
         <div className="flex items-center gap-2">
-          <Monitor className="w-4 h-4 text-sky-400" />
+          <Monitor className="w-4 h-4 text-accent" />
           <span className="text-text-primary font-medium">Responsive Viewport Simulator</span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
+            active={device === 'desktop'}
             onClick={() => setDevice('desktop')}
-            className={`px-3 py-1 rounded-full cursor-pointer flex items-center gap-1.5 transition-all ${
-              device === 'desktop'
-                ? 'liquid-glass-pill-active text-white font-semibold'
-                : 'liquid-glass-pill hover:text-white text-muted'
-            }`}
           >
             <Monitor className="w-3.5 h-3.5" />
             <span>Desktop</span>
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            active={device === 'mobile'}
             onClick={() => setDevice('mobile')}
-            className={`px-3 py-1 rounded-full cursor-pointer flex items-center gap-1.5 transition-all ${
-              device === 'mobile'
-                ? 'liquid-glass-pill-active text-white font-semibold'
-                : 'liquid-glass-pill hover:text-white text-muted'
-            }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
             <span>Mobile</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -714,13 +704,13 @@ const InteractiveDeviceDemo: React.FC<{ project: Project }> = () => {
         >
           <div className="px-4 py-2.5 bg-black/40 border-b border-stroke/70 flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500/70" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
+              <span className="w-2.5 h-2.5 rounded-full bg-error/70" />
+              <span className="w-2.5 h-2.5 rounded-full bg-warning/70" />
+              <span className="w-2.5 h-2.5 rounded-full bg-success/70" />
             </div>
 
             <div className="flex-1 text-center">
-              <span className="text-[11px] font-mono text-muted liquid-glass-pill px-3 py-1 rounded-full inline-block max-w-[200px] truncate">
+              <span className="text-xs font-mono text-muted liquid-glass-pill px-3 py-1 rounded-full inline-block max-w-[200px] truncate">
                 sribalajirealestate.in/estates
               </span>
             </div>
@@ -732,25 +722,22 @@ const InteractiveDeviceDemo: React.FC<{ project: Project }> = () => {
                 <h4 className="text-sm font-semibold text-text-primary">
                   Sri Balaji Real Estate
                 </h4>
-                <p className="text-[11px] text-muted">
+                <p className="text-xs text-muted">
                   Premium Estates &amp; Residential Plots
                 </p>
               </div>
 
-              <div className="flex items-center gap-1 overflow-x-auto text-[10px] font-mono">
+              <div className="flex items-center gap-1 overflow-x-auto text-2xs font-mono">
                 {(['All', 'Villas', 'Penthouses', 'Green Acres'] as const).map((cat) => (
-                  <button
+                  <Button
                     key={cat}
-                    type="button"
+                    variant="outline"
+                    size="sm"
+                    active={selectedFilter === cat}
                     onClick={() => setSelectedFilter(cat)}
-                    className={`px-2.5 py-0.5 rounded-full cursor-pointer transition-all ${
-                      selectedFilter === cat
-                        ? 'liquid-glass-pill-active text-white font-semibold'
-                        : 'liquid-glass-pill text-muted hover:text-white'
-                    }`}
                   >
                     {cat}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -766,26 +753,26 @@ const InteractiveDeviceDemo: React.FC<{ project: Project }> = () => {
                       <span className="text-xs font-medium text-text-primary">
                         {prop.title}
                       </span>
-                      <span className="text-[9px] font-mono px-2 py-0.2 rounded-full liquid-glass-pill text-emerald-400 border-emerald-500/20">
+                      <span className="text-2xs font-mono px-2 py-0.2 rounded-full liquid-glass-pill text-success border-success/20">
                         {prop.tag}
                       </span>
                     </div>
-                    <div className="text-[11px] font-mono text-muted">
+                    <div className="text-xs font-mono text-muted">
                       {prop.specs} • {prop.location}
                     </div>
                   </div>
 
                   <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0">
-                    <span className="text-xs font-semibold text-sky-400 font-mono">
+                    <span className="text-xs font-semibold text-accent font-mono">
                       {prop.price}
                     </span>
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setInquirySent(prop.id)}
-                      className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider liquid-glass-button text-white font-medium cursor-pointer"
                     >
                       {inquirySent === prop.id ? 'Inquiry Sent ✓' : 'Book Tour'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -822,7 +809,7 @@ const DecisionToolDemo: React.FC<{ project: Project }> = () => {
       <div className="p-4 sm:p-5 rounded-2xl liquid-glass-card space-y-4">
         <div className="flex items-center justify-between text-xs font-mono">
           <div className="flex items-center gap-2 text-text-primary font-medium">
-            <Sliders className="w-4 h-4 text-sky-400" />
+            <Sliders className="w-4 h-4 text-accent" />
             <span>Decision Matrix Simulator</span>
           </div>
           <span className="text-muted">Dynamic Scoring</span>
@@ -832,7 +819,7 @@ const DecisionToolDemo: React.FC<{ project: Project }> = () => {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-muted">Target Budget:</span>
-              <span className="text-sky-400 font-semibold">${budget}/mo</span>
+              <span className="text-accent font-semibold">${budget}/mo</span>
             </div>
             <input
               type="range"
@@ -841,14 +828,14 @@ const DecisionToolDemo: React.FC<{ project: Project }> = () => {
               step="50"
               value={budget}
               onChange={(e) => setBudget(Number(e.target.value))}
-              className="w-full accent-sky-400 cursor-pointer"
+              className="w-full accent-accent cursor-pointer"
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-muted">Max Commute:</span>
-              <span className="text-sky-400 font-semibold">{commuteMax} mins</span>
+              <span className="text-accent font-semibold">{commuteMax} mins</span>
             </div>
             <input
               type="range"
@@ -857,41 +844,35 @@ const DecisionToolDemo: React.FC<{ project: Project }> = () => {
               step="5"
               value={commuteMax}
               onChange={(e) => setCommuteMax(Number(e.target.value))}
-              className="w-full accent-sky-400 cursor-pointer"
+              className="w-full accent-accent cursor-pointer"
             />
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-stroke/70 text-xs font-mono">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
+            active={petFriendly}
             onClick={() => setPetFriendly(!petFriendly)}
-            className={`px-3 py-1.5 rounded-full cursor-pointer transition-all flex items-center gap-2 ${
-              petFriendly
-                ? 'liquid-glass-pill-active text-white'
-                : 'liquid-glass-pill text-muted hover:text-white'
-            }`}
           >
             <span>Pet Friendly</span>
-            <span className={petFriendly ? 'text-sky-300 font-bold' : 'text-muted'}>
+            <span className={petFriendly ? 'text-accent font-bold' : 'text-muted'}>
               {petFriendly ? 'ON' : 'OFF'}
             </span>
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
+            active={inUnitWasher}
             onClick={() => setInUnitWasher(!inUnitWasher)}
-            className={`px-3 py-1.5 rounded-full cursor-pointer transition-all flex items-center gap-2 ${
-              inUnitWasher
-                ? 'liquid-glass-pill-active text-white'
-                : 'liquid-glass-pill text-muted hover:text-white'
-            }`}
           >
             <span>In-Unit Laundry</span>
-            <span className={inUnitWasher ? 'text-sky-300 font-bold' : 'text-muted'}>
+            <span className={inUnitWasher ? 'text-accent font-bold' : 'text-muted'}>
               {inUnitWasher ? 'ON' : 'OFF'}
             </span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -900,7 +881,7 @@ const DecisionToolDemo: React.FC<{ project: Project }> = () => {
           <span className="text-xs font-mono text-muted uppercase tracking-wider">
             AI Tradeoff Analysis &amp; Match Rating
           </span>
-          <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
+          <span className="text-xs font-mono text-success flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5" />
             Verified Match
           </span>
@@ -919,9 +900,9 @@ const DecisionToolDemo: React.FC<{ project: Project }> = () => {
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
               <div className="text-xs font-mono text-muted">Confidence</div>
-              <div className="text-lg font-mono font-bold text-sky-400">{score}%</div>
+              <div className="text-lg font-mono font-bold text-accent">{score}%</div>
             </div>
-            <div className="w-12 h-12 rounded-full border-2 border-sky-400/40 liquid-glass-pill flex items-center justify-center font-mono text-xs font-semibold text-text-primary">
+            <div className="w-12 h-12 rounded-full border-2 border-accent/40 liquid-glass-pill flex items-center justify-center font-mono text-xs font-semibold text-text-primary">
               A+
             </div>
           </div>
@@ -944,24 +925,24 @@ const MotionPhysicsDemo: React.FC<{ project: Project }> = () => {
       <div className="p-4 sm:p-5 rounded-2xl liquid-glass-card space-y-4">
         <div className="flex items-center justify-between text-xs font-mono">
           <div className="flex items-center gap-2 text-text-primary font-medium">
-            <Sliders className="w-4 h-4 text-sky-400" />
+            <Sliders className="w-4 h-4 text-accent" />
             <span>Interactive Spring Physics Inspector</span>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setResetKey((k) => k + 1)}
-            className="liquid-glass-pill px-3 py-1 rounded-full text-muted hover:text-white flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <RefreshCw className="w-3 h-3" />
             <span>Reset Card</span>
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-muted">Spring Stiffness:</span>
-              <span className="text-sky-400 font-semibold">{stiffness}</span>
+              <span className="text-accent font-semibold">{stiffness}</span>
             </div>
             <input
               type="range"
@@ -970,14 +951,14 @@ const MotionPhysicsDemo: React.FC<{ project: Project }> = () => {
               step="20"
               value={stiffness}
               onChange={(e) => setStiffness(Number(e.target.value))}
-              className="w-full accent-sky-400 cursor-pointer"
+              className="w-full accent-accent cursor-pointer"
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-muted">Spring Damping:</span>
-              <span className="text-sky-400 font-semibold">{damping}</span>
+              <span className="text-accent font-semibold">{damping}</span>
             </div>
             <input
               type="range"
@@ -986,14 +967,14 @@ const MotionPhysicsDemo: React.FC<{ project: Project }> = () => {
               step="5"
               value={damping}
               onChange={(e) => setDamping(Number(e.target.value))}
-              className="w-full accent-sky-400 cursor-pointer"
+              className="w-full accent-accent cursor-pointer"
             />
           </div>
         </div>
       </div>
 
       <div className="h-64 rounded-3xl liquid-glass-subtle border border-white/10 flex items-center justify-center p-6 relative overflow-hidden">
-        <span className="absolute top-4 left-4 text-[10px] font-mono text-muted uppercase tracking-wider">
+        <span className="absolute top-4 left-4 text-2xs font-mono text-muted uppercase tracking-wider">
           Drag card to test spring return physics
         </span>
 
@@ -1013,7 +994,7 @@ const MotionPhysicsDemo: React.FC<{ project: Project }> = () => {
           <div className="text-base font-medium text-text-primary">
             AI Build Interactive Card
           </div>
-          <div className="mt-3 pt-3 border-t border-white/10 text-[11px] font-mono text-sky-400">
+          <div className="mt-3 pt-3 border-t border-white/10 text-xs font-mono text-accent">
             Stiffness: {stiffness} • Damping: {damping}
           </div>
         </motion.div>
