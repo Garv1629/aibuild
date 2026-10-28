@@ -122,10 +122,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </Button>
 
           {/* 6. Mobile Menu Hamburger Toggle (< md) */}
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            size="sm"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex md:hidden p-1.5 rounded-full liquid-glass text-white/90 hover:text-white transition-all active:scale-90 cursor-pointer shadow-md shrink-0 ml-0.5"
+            className="flex md:hidden shrink-0 ml-0.5"
             aria-label={isMobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             aria-expanded={isMobileMenuOpen}
           >
@@ -134,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <Menu className="w-4 h-4 text-white" />
             )}
-          </button>
+          </Button>
         </nav>
       </header>
 
@@ -164,14 +165,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              <button
-                type="button"
+              <Button
+                variant="icon"
+                size="sm"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-full liquid-glass text-white/80 hover:text-white transition-colors cursor-pointer"
                 aria-label="Close Navigation Menu"
               >
                 <X className="w-5 h-5 text-white" />
-              </button>
+              </Button>
             </div>
 
             {/* Navigation Links with large touch targets */}

@@ -37,7 +37,7 @@ export const Journal: React.FC<JournalProps> = ({
           <div>
             <div className="flex items-center gap-3 mb-3 sm:mb-4">
               <span className="w-8 h-px bg-stroke" aria-hidden="true" />
-              <span className="text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
+              <span className="text-xs text-muted tracking-[0.15em] sm:tracking-[0.2em] font-medium font-mono">
                 {data.siteTexts?.journalEyebrow || 'Journal & Insights'}
               </span>
             </div>
@@ -59,7 +59,7 @@ export const Journal: React.FC<JournalProps> = ({
               variant="glass"
               size="sm"
               onClick={onViewAllThoughts}
-              className="uppercase tracking-wider group"
+              className="group"
             >
               <span>{data.siteTexts?.journalButtonText || 'View all'}</span>
               <span className="transition-transform group-hover:translate-x-1">→</span>
@@ -139,7 +139,6 @@ export const Journal: React.FC<JournalProps> = ({
             variant="glass"
             size="md"
             onClick={onViewAllThoughts}
-            className="uppercase tracking-wider"
           >
             <span>View all thoughts</span>
             <span>→</span>
