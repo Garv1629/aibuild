@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles } from 'lucide-react';
 import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
 import { ProjectInteractiveDemo } from './ProjectInteractiveDemo.tsx';
+import { Button } from './Button.tsx';
 
 interface ProjectModalProps {
   project: Project | null;
@@ -64,22 +65,23 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             aria-modal="true"
             aria-label={project.title}
           >
-            <button
-              type="button"
+            <Button
+              variant="icon"
+              size="md"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm transition-all active:scale-90 cursor-pointer z-20"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20"
               aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
 
-            <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3 font-mono text-[11px] sm:text-xs pr-8">
+            <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3 font-mono text-xs pr-8">
               <span className="liquid-glass-pill px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-text-primary flex items-center gap-1.5">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     project.status === 'In Progress'
-                      ? 'bg-amber-400 animate-pulse'
-                      : 'bg-emerald-400'
+                      ? 'bg-warning animate-pulse'
+                      : 'bg-success'
                   }`}
                 />
                 {project.status}
@@ -90,7 +92,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               </span>
             </div>
 
-            <h3 className="text-2xl sm:text-4xl md:text-5xl font-display text-text-primary mb-4 sm:mb-6 pr-8 leading-tight">
+            <h3 className="text-2xl sm:text-3xl md:text-5xl font-display text-text-primary mb-4 sm:mb-6 pr-8 leading-tight">
               {project.title}
             </h3>
 
@@ -99,48 +101,42 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               role="tablist"
               className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl liquid-glass mb-4 sm:mb-6 overflow-x-auto scrollbar-none touch-pan-x"
             >
-              <button
-                type="button"
+              <Button
+                variant="pill"
+                size="sm"
+                active={activeTab === 'overview'}
                 role="tab"
                 aria-selected={activeTab === 'overview'}
                 onClick={() => setActiveTab('overview')}
-                className={`flex-1 min-w-[85px] sm:min-w-[100px] py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono transition-all cursor-pointer text-center whitespace-nowrap ${
-                  activeTab === 'overview'
-                    ? 'liquid-glass-pill-active text-white font-semibold'
-                    : 'text-muted hover:text-text-primary'
-                }`}
+                className="flex-1 min-w-[85px] sm:min-w-[100px] text-center whitespace-nowrap"
               >
                 Overview
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="pill"
+                size="sm"
+                active={activeTab === 'demo'}
                 role="tab"
                 aria-selected={activeTab === 'demo'}
                 onClick={() => setActiveTab('demo')}
-                className={`flex-1 min-w-[130px] sm:min-w-[140px] py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'demo'
-                    ? 'liquid-glass-pill-active text-white font-semibold'
-                    : 'text-muted hover:text-text-primary'
-                }`}
+                className="flex-1 min-w-[130px] sm:min-w-[140px] whitespace-nowrap"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 <span>Demo &amp; Reel</span>
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="pill"
+                size="sm"
+                active={activeTab === 'workflow'}
                 role="tab"
                 aria-selected={activeTab === 'workflow'}
                 onClick={() => setActiveTab('workflow')}
-                className={`flex-1 min-w-[90px] sm:min-w-[100px] py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono transition-all cursor-pointer text-center whitespace-nowrap ${
-                  activeTab === 'workflow'
-                    ? 'liquid-glass-pill-active text-white font-semibold'
-                    : 'text-muted hover:text-text-primary'
-                }`}
+                className="flex-1 min-w-[90px] sm:min-w-[100px] text-center whitespace-nowrap"
               >
                 Workflow
-              </button>
+              </Button>
             </div>
 
             {/* Tab 1: Overview */}
@@ -172,9 +168,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                   (project.videoList && project.videoList.length > 0) ||
                   project.video) && (
                   <div className="space-y-2 p-3 rounded-2xl liquid-glass border border-white/10">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-muted px-1">
+                    <div className="flex items-center justify-between text-xs font-mono text-muted px-1">
                       <span>Project Media Gallery &amp; Video Clips</span>
-                      <span className="text-sky-400">Click to preview</span>
+                      <span className="text-accent">Click to preview</span>
                     </div>
 
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -184,12 +180,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                         onClick={() => setActiveMedia({ url: project.image, type: 'image', title: 'Cover' })}
                         className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                           activeMedia.url === project.image && activeMedia.type === 'image'
-                            ? 'border-sky-400 ring-2 ring-sky-400/50 scale-105'
+                            ? 'border-accent ring-2 ring-accent/50 scale-105'
                             : 'border-white/20 opacity-70 hover:opacity-100'
                         }`}
                       >
                         <img src={project.image} alt="Cover" className="w-full h-full object-cover" />
-                        <span className="absolute bottom-1 left-1 text-[8px] font-mono px-1 py-0.2 rounded bg-black/80 text-white">Cover</span>
+                        <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-black/80 text-white">Cover</span>
                       </button>
 
                       {/* Additional Gallery Images */}
@@ -200,12 +196,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                           onClick={() => setActiveMedia({ url: imgUrl, type: 'image', title: `Gallery ${i + 1}` })}
                           className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                             activeMedia.url === imgUrl && activeMedia.type === 'image'
-                              ? 'border-sky-400 ring-2 ring-sky-400/50 scale-105'
+                              ? 'border-accent ring-2 ring-accent/50 scale-105'
                               : 'border-white/20 opacity-70 hover:opacity-100'
                           }`}
                         >
                           <img src={imgUrl} alt={`gallery-${i}`} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-1 left-1 text-[8px] font-mono px-1 py-0.2 rounded bg-black/80 text-white">Img {i + 1}</span>
+                          <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-black/80 text-white">Img {i + 1}</span>
                         </button>
                       ))}
 
@@ -216,12 +212,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                           onClick={() => setActiveMedia({ url: project.video!, type: 'video', title: 'Main Reel' })}
                           className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                             activeMedia.url === project.video && activeMedia.type === 'video'
-                              ? 'border-purple-400 ring-2 ring-purple-400/50 scale-105'
+                              ? 'border-accent ring-2 ring-accent/50 scale-105'
                               : 'border-white/20 opacity-70 hover:opacity-100'
                           }`}
                         >
-                          <Play className="w-5 h-5 text-purple-400" />
-                          <span className="absolute bottom-1 left-1 text-[8px] font-mono px-1 py-0.2 rounded bg-purple-600 text-white">Video</span>
+                          <Play className="w-5 h-5 text-accent" />
+                          <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-accent/80 text-white">Video</span>
                         </button>
                       )}
 
@@ -232,12 +228,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                           onClick={() => setActiveMedia({ url: vid.url, type: 'video', title: vid.title })}
                           className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                             activeMedia.url === vid.url && activeMedia.type === 'video'
-                              ? 'border-purple-400 ring-2 ring-purple-400/50 scale-105'
+                              ? 'border-accent ring-2 ring-accent/50 scale-105'
                               : 'border-white/20 opacity-70 hover:opacity-100'
                           }`}
                         >
-                          <Play className="w-5 h-5 text-purple-400" />
-                          <span className="absolute bottom-1 left-1 text-[8px] font-mono px-1 py-0.2 rounded bg-purple-600 text-white truncate max-w-[80px]">
+                          <Play className="w-5 h-5 text-accent" />
+                          <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-accent/80 text-white truncate max-w-[80px]">
                             {vid.title || `Reel ${i + 1}`}
                           </span>
                         </button>
@@ -261,9 +257,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     {project.features.map((feat) => (
                       <div
                         key={feat}
-                        className="flex items-start gap-2 text-xs sm:text-sm text-text-primary/90"
+                        className="flex items-start gap-2 text-xs sm:text-sm text-text-primary"
                       >
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </div>
                     ))}
@@ -287,21 +283,21 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div className="p-3.5 rounded-xl liquid-glass-card space-y-1.5">
-                      <div className="font-mono text-sky-400 font-semibold">01. Conception</div>
+                      <div className="font-mono text-accent font-semibold">01. Conception</div>
                       <p className="text-muted leading-relaxed">
                         Prompt engineering, requirement synthesis, and architecture framing.
                       </p>
                     </div>
 
                     <div className="p-3.5 rounded-xl liquid-glass-card space-y-1.5">
-                      <div className="font-mono text-sky-400 font-semibold">02. Development</div>
+                      <div className="font-mono text-accent font-semibold">02. Development</div>
                       <p className="text-muted leading-relaxed">
                         Vibe coding, rapid prototyping, component assembly, and micro-interactions.
                       </p>
                     </div>
 
                     <div className="p-3.5 rounded-xl liquid-glass-card space-y-1.5">
-                      <div className="font-mono text-sky-400 font-semibold">03. Production</div>
+                      <div className="font-mono text-accent font-semibold">03. Production</div>
                       <p className="text-muted leading-relaxed">
                         Performance audits, responsiveness verification, and dark mode contrast calibration.
                       </p>
@@ -317,7 +313,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     {project.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs font-mono px-3 py-1 rounded-full liquid-glass-pill text-text-primary"
+                        className="text-xs font-mono tracking-normal px-3 py-1 rounded-full liquid-glass-pill text-text-primary max-w-full break-words"
                       >
                         {tag}
                       </span>
@@ -328,32 +324,34 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             )}
 
             <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-stroke/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-              <span className="text-[11px] sm:text-xs font-mono text-muted">
+              <span className="text-xs font-mono text-muted">
                 Workflow: {project.workflow}
               </span>
 
               <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                 {activeTab !== 'demo' && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="md"
                     onClick={() => setActiveTab('demo')}
-                    className="flex-1 sm:flex-none text-xs font-mono px-4 sm:px-4 py-2.5 rounded-full liquid-glass-pill text-text-primary hover:border-white/40 cursor-pointer transition-colors text-center min-h-[42px] flex items-center justify-center"
+                    className="flex-1 sm:flex-none text-center"
                   >
                     Open Live Demo →
-                  </button>
+                  </Button>
                 )}
 
-                <button
-                  type="button"
+                <Button
+                  variant="glass"
+                  size="md"
                   onClick={() => {
                     onClose();
                     onStartConversation();
                   }}
-                  className="flex-1 sm:flex-none text-xs font-medium uppercase tracking-wider px-5 sm:px-6 py-2.5 sm:py-3 rounded-full liquid-glass-button text-white cursor-pointer flex items-center justify-center gap-1.5 font-sans min-h-[42px]"
+                  className="flex-1 sm:flex-none uppercase tracking-wider font-sans"
                 >
                   <span>Discuss Project</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -404,15 +402,17 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
             aria-modal="true"
             aria-label={article.title}
           >
-            <button
-              type="button"
+            <Button
+              variant="icon"
+              size="md"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm cursor-pointer transition-all active:scale-90 z-20"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20"
+              aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-xs uppercase tracking-widest text-muted font-mono mb-3 sm:mb-4 pr-8">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs uppercase tracking-widest text-muted font-mono mb-3 sm:mb-4 pr-8">
               <span className="liquid-glass-pill px-3 py-1 rounded-full text-text-primary">{article.category}</span>
               <span>•</span>
               <span>{article.readTime}</span>
@@ -433,10 +433,10 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
               <div className="halftone-overlay absolute inset-0 opacity-20 pointer-events-none" />
             </div>
 
-            <p className="text-xs sm:text-base text-muted leading-relaxed mb-3 sm:mb-4">
+            <p className="text-sm sm:text-base text-muted leading-relaxed mb-3 sm:mb-4">
               {article.excerpt}
             </p>
-            <p className="text-xs sm:text-base text-muted leading-relaxed">
+            <p className="text-sm sm:text-base text-muted leading-relaxed">
               At AI Build, every experiment is an opportunity to learn, test, solve a problem, and turn ideas into practical digital solutions. We combine prompt engineering, visual design, and rapid prototyping to explore new frontiers in digital craft.
             </p>
           </motion.div>
@@ -498,13 +498,15 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
             aria-modal="true"
             aria-label={item.title}
           >
-            <button
-              type="button"
+            <Button
+              variant="icon"
+              size="md"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 z-20 w-9 h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-white flex items-center justify-center text-sm cursor-pointer transition-all active:scale-90"
+              className="absolute top-3.5 right-3.5 z-20"
+              aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
 
             <div className="w-full aspect-video sm:aspect-square rounded-xl sm:rounded-2xl overflow-hidden mb-3 sm:mb-4 border border-stroke/70 relative bg-black">
               {activeMedia.type === 'video' ? (
@@ -535,9 +537,9 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
               (item.videoList && item.videoList.length > 0) ||
               (item.video && item.image)) && (
               <div className="mb-4 p-2.5 rounded-xl liquid-glass border border-white/10 space-y-1.5">
-                <div className="flex items-center justify-between text-[10px] font-mono text-muted px-1">
+                <div className="flex items-center justify-between text-2xs font-mono text-muted px-1">
                   <span>Exploration Media Gallery</span>
-                  <span className="text-sky-400">Click to switch</span>
+                  <span className="text-accent">Click to switch</span>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                   {/* Image */}
@@ -546,12 +548,12 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                     onClick={() => setActiveMedia({ url: item.image, type: 'image', title: 'Cover' })}
                     className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                       activeMedia.url === item.image && activeMedia.type === 'image'
-                        ? 'border-sky-400 ring-2 ring-sky-400/50 scale-105'
+                        ? 'border-accent ring-2 ring-accent/50 scale-105'
                         : 'border-white/20 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img src={item.image} alt="Cover" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0.5 left-0.5 text-[8px] font-mono px-1 rounded bg-black/80 text-white">Img</span>
+                    <span className="absolute bottom-0.5 left-0.5 text-2xs font-mono px-1 rounded bg-black/80 text-white">Img</span>
                   </button>
 
                   {/* Additional Gallery */}
@@ -562,12 +564,12 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                       onClick={() => setActiveMedia({ url: imgUrl, type: 'image', title: `Gallery ${i + 1}` })}
                       className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                         activeMedia.url === imgUrl && activeMedia.type === 'image'
-                          ? 'border-sky-400 ring-2 ring-sky-400/50 scale-105'
+                          ? 'border-accent ring-2 ring-accent/50 scale-105'
                           : 'border-white/20 opacity-70 hover:opacity-100'
                       }`}
                     >
                       <img src={imgUrl} alt={`gallery-${i}`} className="w-full h-full object-cover" />
-                      <span className="absolute bottom-0.5 left-0.5 text-[8px] font-mono px-1 rounded bg-black/80 text-white">Img {i + 1}</span>
+                      <span className="absolute bottom-0.5 left-0.5 text-2xs font-mono px-1 rounded bg-black/80 text-white">Img {i + 1}</span>
                     </button>
                   ))}
 
@@ -578,12 +580,12 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                       onClick={() => setActiveMedia({ url: item.video!, type: 'video', title: 'Main Reel' })}
                       className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                         activeMedia.url === item.video && activeMedia.type === 'video'
-                          ? 'border-purple-400 ring-2 ring-purple-400/50 scale-105'
+                          ? 'border-accent ring-2 ring-accent/50 scale-105'
                           : 'border-white/20 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <Play className="w-4 h-4 text-purple-400" />
-                      <span className="absolute bottom-0.5 left-0.5 text-[8px] font-mono px-1 rounded bg-purple-600 text-white">Video</span>
+                      <Play className="w-4 h-4 text-accent" />
+                      <span className="absolute bottom-0.5 left-0.5 text-2xs font-mono px-1 rounded bg-accent/80 text-white">Video</span>
                     </button>
                   )}
 
@@ -595,12 +597,12 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                       onClick={() => setActiveMedia({ url: vid.url, type: 'video', title: vid.title })}
                       className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                         activeMedia.url === vid.url && activeMedia.type === 'video'
-                          ? 'border-purple-400 ring-2 ring-purple-400/50 scale-105'
+                          ? 'border-accent ring-2 ring-accent/50 scale-105'
                           : 'border-white/20 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <Play className="w-4 h-4 text-purple-400" />
-                      <span className="absolute bottom-0.5 left-0.5 text-[8px] font-mono px-1 rounded bg-purple-600 text-white truncate max-w-[60px]">
+                      <Play className="w-4 h-4 text-accent" />
+                      <span className="absolute bottom-0.5 left-0.5 text-2xs font-mono px-1 rounded bg-accent/80 text-white truncate max-w-[60px]">
                         {vid.title || `Vid ${i + 1}`}
                       </span>
                     </button>
@@ -611,14 +613,14 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
 
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] sm:text-[11px] font-mono text-muted uppercase tracking-wider block">
+                <span className="text-xs font-mono text-muted uppercase tracking-wider block">
                   {item.category}
                 </span>
-                <h4 className="text-lg sm:text-xl font-display text-text-primary mt-0.5">
+                <h3 className="text-lg sm:text-xl font-display text-text-primary mt-0.5">
                   {item.title}
-                </h4>
+                </h3>
               </div>
-              <span className="liquid-glass-pill px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-mono text-muted">
+              <span className="liquid-glass-pill px-2.5 py-1 rounded-full text-xs font-mono text-muted">
                 Rotation {item.rotation}°
               </span>
             </div>
@@ -700,17 +702,19 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
             aria-modal="true"
             aria-label="Start a conversation with AI Build"
           >
-            <button
-              type="button"
+            <Button
+              variant="icon"
+              size="md"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm cursor-pointer transition-all active:scale-90 z-20"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20"
+              aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
 
             {submitted ? (
               <div className="py-8 sm:py-10 text-center flex flex-col items-center">
-                <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-4" />
+                <CheckCircle2 className="w-12 h-12 text-success mb-4" />
                 <h3 className="text-xl sm:text-2xl font-display text-text-primary mb-2">
                   Conversation Initiated!
                 </h3>
@@ -721,19 +725,19 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
                 <div className="pr-8">
-                  <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted block mb-1">
+                  <span className="text-xs font-mono uppercase tracking-widest text-muted block mb-1">
                     Connect
                   </span>
                   <h3 className="text-xl sm:text-3xl font-display text-text-primary mb-1 sm:mb-2">
                     Start a Conversation
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-muted leading-relaxed">
+                  <p className="text-xs text-muted leading-relaxed">
                     Have an idea, prototype, or creative project? Tell us what you want to build.
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="user-name" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                  <label htmlFor="user-name" className="text-xs font-mono text-muted block mb-1">
                     Your Name
                   </label>
                   <input
@@ -743,12 +747,12 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                     placeholder="e.g. Alex Vance"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="user-email" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                  <label htmlFor="user-email" className="text-xs font-mono text-muted block mb-1">
                     Your Email (Optional)
                   </label>
                   <input
@@ -757,12 +761,12 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                     placeholder="alex@example.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="service-type" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                  <label htmlFor="service-type" className="text-xs font-mono text-muted block mb-1">
                     Service Required
                   </label>
                   <select
@@ -783,11 +787,11 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                     if (!match) return null;
                     return (
                       <div className="mt-2 p-2.5 sm:p-3 rounded-xl liquid-glass-subtle space-y-1 text-xs">
-                        <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-sky-400">
+                        <div className="flex items-center justify-between text-xs font-mono text-accent">
                           <span>{match.badge}</span>
                           <span className="text-muted">{match.statsValue}</span>
                         </div>
-                        <p className="text-[10px] sm:text-[11px] text-muted leading-relaxed font-sans">
+                        <p className="text-xs text-muted leading-relaxed font-sans">
                           {match.shortDesc}
                         </p>
                       </div>
@@ -796,7 +800,7 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                 </div>
 
                 <div>
-                  <label htmlFor="idea-desc" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                  <label htmlFor="idea-desc" className="text-xs font-mono text-muted block mb-1">
                     Describe Your Idea or Goal
                   </label>
                   <textarea
@@ -806,17 +810,19 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                     placeholder="Tell us what you are looking to build or experiment with..."
                     value={formData.ideaDescription}
                     onChange={(e) => setFormData({ ...formData, ideaDescription: e.target.value })}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted/50 focus:outline-none resize-none"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted focus:outline-none resize-none"
                   />
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  className="w-full py-3.5 sm:py-4 rounded-xl liquid-glass-button text-white font-medium text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2 mt-2"
+                  variant="glass"
+                  size="md"
+                  className="w-full uppercase tracking-wider mt-2 py-3.5 sm:py-4"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send Message</span>
-                </button>
+                </Button>
               </form>
             )}
           </motion.div>
@@ -909,17 +915,18 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
             aria-modal="true"
             aria-label="Submit Review"
           >
-            <button
-              type="button"
+            <Button
+              variant="icon"
+              size="md"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 w-9 h-9 rounded-full liquid-glass-pill hover:bg-white/20 text-muted hover:text-white flex items-center justify-center text-sm transition-all active:scale-90 cursor-pointer"
+              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20"
               aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
 
-            <div className="flex items-center gap-2 mb-2 font-mono text-[11px] sm:text-xs text-sky-400">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex items-center gap-2 mb-2 font-mono text-xs text-accent">
+              <Sparkles className="w-3.5 h-3.5 text-warning" />
               <span>TESTIMONIAL & FEEDBACK</span>
             </div>
 
@@ -932,7 +939,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
 
             {isSubmitted ? (
               <div className="py-10 text-center space-y-3">
-                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
+                <CheckCircle2 className="w-12 h-12 text-success mx-auto animate-bounce" />
                 <h4 className="text-lg font-medium text-white">Submitted for Verification!</h4>
                 <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
                   Thank you for your feedback! Your review has been sent to our verification panel and will be published live once verified.
@@ -942,7 +949,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
               <form onSubmit={handleSubmit} className="space-y-4 font-sans">
                 {/* Rating Stars Picker */}
                 <div>
-                  <label className="text-[11px] sm:text-xs font-mono text-muted block mb-1.5">
+                  <label className="text-xs font-mono text-muted block mb-1.5">
                     Rating
                   </label>
                   <div className="flex items-center gap-2">
@@ -961,14 +968,14 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                           <Star
                             className={`w-6 h-6 transition-colors ${
                               isFilled
-                                ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                                : 'text-white/20 hover:text-white/50'
+                                ? 'text-warning fill-warning drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                                : 'text-muted hover:text-white'
                             }`}
                           />
                         </button>
                       );
                     })}
-                    <span className="font-mono text-xs text-amber-300 ml-2">
+                    <span className="font-mono text-xs text-warning ml-2">
                       {rating} / 5 Stars
                     </span>
                   </div>
@@ -976,7 +983,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="reviewer-name" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                    <label htmlFor="reviewer-name" className="text-xs font-mono text-muted block mb-1">
                       Your Name *
                     </label>
                     <input
@@ -986,12 +993,12 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                       placeholder="e.g. Sarah Jenkins"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="reviewer-role" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                    <label htmlFor="reviewer-role" className="text-xs font-mono text-muted block mb-1">
                       Role / Title
                     </label>
                     <input
@@ -1000,14 +1007,14 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                       placeholder="e.g. Product Lead / Founder"
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
-                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="reviewer-company" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                    <label htmlFor="reviewer-company" className="text-xs font-mono text-muted block mb-1">
                       Company / Brand (Optional)
                     </label>
                     <input
@@ -1016,12 +1023,12 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                       placeholder="e.g. Nova Media"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
-                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none"
+                      className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="review-category" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                    <label htmlFor="review-category" className="text-xs font-mono text-muted block mb-1">
                       Service Delivered
                     </label>
                     <select
@@ -1039,7 +1046,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                 </div>
 
                 <div>
-                  <label htmlFor="review-content" className="text-[11px] sm:text-xs font-mono text-muted block mb-1">
+                  <label htmlFor="review-content" className="text-xs font-mono text-muted block mb-1">
                     Your Review / Feedback *
                   </label>
                   <textarea
@@ -1049,17 +1056,19 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                     placeholder="Share how AI Build assisted your vision, delivery speeds, communication, or final quality..."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2.5 text-sm text-text-primary placeholder:text-muted/50 focus:outline-none resize-none"
+                    className="w-full liquid-glass-input rounded-xl px-3.5 py-2.5 text-sm text-text-primary placeholder:text-muted focus:outline-none resize-none"
                   />
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl liquid-glass-button text-white font-medium text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2 mt-4 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all"
+                  variant="glass"
+                  size="md"
+                  className="w-full uppercase tracking-wider mt-4 py-3.5 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)]"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <Sparkles className="w-4 h-4 text-warning" />
                   <span>Submit Client Review</span>
-                </button>
+                </Button>
               </form>
             )}
           </motion.div>

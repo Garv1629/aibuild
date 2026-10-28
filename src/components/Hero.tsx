@@ -8,6 +8,7 @@ import Hls from 'hls.js';
 import gsap from 'gsap';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { SERVICES, getServiceIndexFromScroll } from '../utils/portfolio.ts';
+import { Button } from './Button.tsx';
 
 const getActiveGsap = () => {
   if (typeof window !== 'undefined' && (window as any).gsap) {
@@ -230,12 +231,12 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
         {/* Hero Content (centered, z-10) */}
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center my-auto py-1 xs:py-2 sm:py-4 w-full">
           {/* Brand Name */}
-          <h1 className="name-reveal text-3xl xs:text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display italic leading-[0.92] sm:leading-[0.9] tracking-tight text-text-primary mb-1.5 xs:mb-2 sm:mb-5 selection:bg-white/20 break-words max-w-full">
+          <h1 className="name-reveal text-3xl sm:text-5xl md:text-7xl font-display italic leading-[0.92] sm:leading-[0.9] tracking-tight text-text-primary mb-1.5 xs:mb-2 sm:mb-5 selection:bg-white/20 break-words max-w-full">
             {data.siteTexts?.heroHeadline || data.brandName || 'AI Build'}
           </h1>
 
           {/* Dynamic Scroll-Driven Role Line: ONLY this text transitions with scroll */}
-          <div className="blur-in text-xs xs:text-sm sm:text-xl md:text-2xl text-muted/90 font-light mb-2 xs:mb-2.5 sm:mb-5 flex flex-wrap items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 px-2">
+          <div className="blur-in text-sm sm:text-xl md:text-2xl text-muted font-light mb-2 xs:mb-2.5 sm:mb-5 flex flex-wrap items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 px-2">
             <span>{data.siteTexts?.heroRolePrefix || 'Ideas into reality through'}</span>
             <span
               key={activeRole}
@@ -247,7 +248,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
           </div>
 
           {/* Common Information: Stays constant and common across all services while user scrolls */}
-          <p className="blur-in text-[11px] xs:text-xs sm:text-sm md:text-base text-muted/80 max-w-xl mx-auto mb-3 xs:mb-4 sm:mb-7 leading-relaxed font-light text-center px-2 sm:px-4 selection:bg-white/20">
+          <p className="blur-in text-sm sm:text-base text-muted max-w-xl mx-auto mb-3 xs:mb-4 sm:mb-7 leading-relaxed font-light text-center px-2 sm:px-4 selection:bg-white/20">
             {heroDescription ||
               'Transforming concepts into high-impact digital products through modern engineering, creative direction, and generative visual pipelines.'}
           </p>
@@ -257,50 +258,49 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
             {roles.map((role, idx) => {
               const isActive = roleIndex === idx;
               return (
-                <button
+                <Button
                   key={role}
-                  type="button"
+                  variant="pill"
+                  size="sm"
+                  active={isActive}
                   onClick={() => handleSelectService(idx)}
-                  className={`text-[10px] xs:text-[11px] sm:text-xs font-mono px-2.5 xs:px-3 sm:px-4 py-1.5 sm:py-1.5 rounded-full transition-all duration-300 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none ${
-                    isActive
-                      ? 'liquid-glass-pill-active text-sky-200 scale-105 font-medium shadow-[0_0_16px_rgba(56,189,248,0.4)]'
-                      : 'liquid-glass-pill text-muted hover:text-white hover:border-white/30'
-                  }`}
+                  className={`transition-all duration-300 ${isActive ? 'scale-105' : ''}`}
                   aria-pressed={isActive}
                   title={`Jump to ${role}`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      isActive ? 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)] animate-pulse' : 'bg-muted/40'
+                      isActive ? 'bg-accent shadow-[0_0_8px_rgba(56,189,248,0.9)] animate-pulse' : 'bg-muted/40'
                     }`}
                   />
                   <span>{role}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
 
-          {/* CTA Buttons - Apple visionOS Liquid Glass Style */}
+          {/* CTA Buttons - Consolidated Design System */}
           <div className="blur-in inline-flex flex-wrap items-center justify-center gap-2 xs:gap-2.5 sm:gap-4 w-full sm:w-auto px-2 sm:px-0">
-            {/* "See Works": Solid Glass Button */}
-            <button
-              type="button"
+            {/* "See Works": High-Contrast Primary Button */}
+            <Button
+              variant="primary"
+              size="md"
               onClick={handleSeeWorks}
-              className="relative group rounded-full text-xs sm:text-sm font-medium px-4 xs:px-6 sm:px-8 py-2.5 xs:py-3 sm:py-3.5 bg-white text-black hover:bg-white/90 active:scale-95 transition-all duration-300 cursor-pointer shadow-[0_12px_28px_-6px_rgba(255,255,255,0.35),inset_0_1px_1px_rgba(255,255,255,0.9)] flex items-center justify-center gap-2 min-h-[42px] sm:min-h-0"
+              className="group"
             >
               <span>{data.siteTexts?.heroCtaWorks || 'See Works'}</span>
               <span className="text-xs transition-transform group-hover:translate-x-0.5">→</span>
-            </button>
+            </Button>
 
             {/* "Reach out...": VisionOS Liquid Glass Button */}
-            <button
-              type="button"
+            <Button
+              variant="glass"
+              size="md"
               onClick={onReachOut}
-              className="liquid-glass-button rounded-full text-xs sm:text-sm font-medium px-4 xs:px-6 sm:px-8 py-2.5 xs:py-3 sm:py-3.5 text-white active:scale-95 cursor-pointer flex items-center justify-center gap-2 min-h-[42px] sm:min-h-0"
             >
               <span>{data.siteTexts?.heroCtaContact || 'Reach out...'}</span>
-              <span className="text-xs text-white/70">↗</span>
-            </button>
+              <span className="text-xs text-secondary">↗</span>
+            </Button>
           </div>
         </div>
       </div>

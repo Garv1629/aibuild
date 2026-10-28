@@ -6,12 +6,49 @@
 
   --breakpoint-xs: 380px;
 
+  /* Consolidated 10-Step Typography Scale Tokens (Strictly <= 10 distinct font sizes) */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+  --text-5xl: 48px;
+  --text-5xl--line-height: 1.1;
+  --text-7xl: 72px;
+  --text-7xl--line-height: 1;
+
+  /* Aliased non-scale Tailwind sizes collapse cleanly into the 10-step scale */
+  --text-4xl: 30px;
+  --text-4xl--line-height: 36px;
+  --text-6xl: 48px;
+  --text-6xl--line-height: 1.1;
+  --text-8xl: 72px;
+  --text-8xl--line-height: 1;
+  --text-9xl: 72px;
+  --text-9xl--line-height: 1;
+
+  /* Semantic 12-Color System (Strictly <= 12 distinct text colours) */
   --color-bg: hsl(var(--bg));
   --color-surface: hsl(var(--surface));
   --color-text-primary: hsl(var(--text));
+  --color-secondary: rgba(255, 255, 255, 0.72);
   --color-muted: hsl(var(--muted));
   --color-stroke: hsl(var(--stroke));
-  --color-accent: hsl(var(--accent));
+  --color-accent: #38bdf8;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
 
   --animate-scroll-down: scroll-down 1.5s ease-in-out infinite;
   --animate-role-fade-in: role-fade-in 0.4s ease-out forwards;
@@ -24,7 +61,7 @@
   --text: 0 0% 96%;
   --muted: 0 0% 53%;
   --stroke: 0 0% 12%;
-  --accent: 0 0% 96%;
+  --accent: 199 89% 60%; /* #38bdf8 Sky Blue brand accent */
   color-scheme: dark;
 }
 
@@ -94,6 +131,34 @@ body {
 .animate-gradient-shift {
   background-size: 200% 200%;
   animation: gradient-shift 6s ease infinite;
+}
+
+/* Cinematic Loader Motion & Ambient Effects */
+@keyframes shimmer-sweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes laser-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.75)); }
+  50% { filter: drop-shadow(0 0 18px rgba(0, 229, 255, 0.95)) drop-shadow(0 0 6px #ffffff); }
+}
+
+@keyframes atmospheric-breathe {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.03); }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 2.4s linear infinite;
+}
+
+.animate-laser-pulse {
+  animation: laser-glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-atmospheric-breathe {
+  animation: atmospheric-breathe 6s ease-in-out infinite;
 }
 
 .accent-gradient {

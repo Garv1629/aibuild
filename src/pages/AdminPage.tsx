@@ -34,17 +34,23 @@ import {
   Zap,
   Star,
   MessageSquareHeart,
+  Images,
+  LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
+import { useAuth } from '../context/AuthContext.tsx';
 import { PortfolioHome } from './PortfolioHome.tsx';
+import { AdminDashboardOverview } from '../components/Admin/AdminDashboardOverview.tsx';
 import { ProjectsManager } from '../components/Admin/ProjectsManager.tsx';
 import { JournalManager } from '../components/Admin/JournalManager.tsx';
 import { ExplorationsManager } from '../components/Admin/ExplorationsManager.tsx';
 import { ServicesManager } from '../components/Admin/ServicesManager.tsx';
 import { BrandSettingsManager } from '../components/Admin/BrandSettingsManager.tsx';
 import { ReviewsManager } from '../components/Admin/ReviewsManager.tsx';
+import { MediaLibraryManager } from '../components/Admin/MediaLibraryManager.tsx';
 
-type AdminTab = 'overview' | 'projects' | 'journal' | 'explorations' | 'services' | 'brand' | 'reviews';
+type AdminTab = 'overview' | 'projects' | 'journal' | 'explorations' | 'services' | 'brand' | 'reviews' | 'media';
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 class PreviewErrorBoundary extends React.Component<
@@ -87,6 +93,7 @@ class PreviewErrorBoundary extends React.Component<
 export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { tab } = useParams<{ tab?: string }>();
+  const { user, logout } = useAuth();
   const {
     data,
     resetToDefaults,
@@ -95,7 +102,7 @@ export const AdminPage: React.FC = () => {
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
-    const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews'];
+    const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews', 'media'];
     if (tab && validTabs.includes(tab as AdminTab)) {
       return tab as AdminTab;
     }
@@ -144,7 +151,7 @@ export const AdminPage: React.FC = () => {
 
   useEffect(() => {
     if (tab) {
-      const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews'];
+      const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews', 'media'];
       if (validTabs.includes(tab as AdminTab)) {
         setActiveTab(tab as AdminTab);
       }
@@ -402,6 +409,17 @@ export const AdminPage: React.FC = () => {
             <RotateCcw className="w-3 h-3" />
             <span className="hidden xl:inline">Reset</span>
           </button>
+
+          {/* Sign Out (Header) */}
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="liquid-glass-pill text-xs font-mono px-2.5 py-1.5 rounded-xl text-red-400/80 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-1 cursor-pointer transition-colors"
+            title="Sign out of Admin Session"
+          >
+            <LogOut className="w-3 h-3" />
+            <span className="hidden xl:inline">Logout</span>
+          </button>
         </div>
       </header>
 
@@ -449,6 +467,24 @@ export const AdminPage: React.FC = () => {
                 </div>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
                   {data.projects.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectTab('media')}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                  activeTab === 'media'
+                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Images className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Media Library</span>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                  {data.mediaAssets?.length || 0}
                 </span>
               </button>
 
@@ -548,19 +584,27 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Bottom Sidebar Status */}
+          {/* Bottom Sidebar Status & Session */}
           <div className="pt-3 border-t border-white/10 space-y-2">
-            <div className="p-2 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
+            <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
-                <span className="flex items-center gap-1.5">
-                  <Zap className="w-3 h-3 text-emerald-400" />
-                  <span>Live Split Mirror</span>
+                <span className="flex items-center gap-1.5 truncate max-w-[130px]" title={user?.email}>
+                  <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  <span className="truncate">{user?.email || 'admin@aibuild.studio'}</span>
                 </span>
-                <span className="text-emerald-400 font-semibold">Active</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
+                  {user?.role || 'admin'}
+                </span>
               </div>
-              <p className="text-[9px] text-white/40 leading-relaxed font-mono">
-                Updates appear in the live view instantaneously as you type.
-              </p>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="w-full text-left px-2 py-1.5 rounded-lg text-[11px] font-mono flex items-center gap-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all cursor-pointer"
+                title="Sign out of Admin Session"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
         </aside>
@@ -598,146 +642,11 @@ export const AdminPage: React.FC = () => {
 
           {/* Tab 1: Overview */}
           {activeTab === 'overview' && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-sky-500/10 via-blue-600/10 to-transparent border border-sky-400/20 shadow-2xl space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-400/10 border border-sky-400/20 text-sky-300 text-xs font-mono">
-                  <Sparkles className="w-3 h-3" />
-                  <span>{data.brandName} Live Studio</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-display font-medium text-white tracking-tight">
-                  Split-Screen Real-Time Editor
-                </h2>
-                <p className="text-xs sm:text-sm text-muted leading-relaxed font-body">
-                  Edit projects, journal entries, services, and branding. Your live website on the right split screen updates in real time on every keystroke.
-                </p>
-                <div className="pt-2 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectTab('projects')}
-                    className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-black text-xs font-mono font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1.5"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Edit Projects</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectTab('brand')}
-                    className="px-3.5 py-1.5 rounded-xl liquid-glass-pill text-white text-xs font-mono hover:bg-white/15 transition-all cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Settings className="w-3.5 h-3.5 text-sky-300" />
-                    <span>Brand Settings</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Overview Metric Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div
-                  onClick={() => handleSelectTab('projects')}
-                  className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-white/50">Projects</span>
-                    <FolderKanban className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="text-2xl font-display text-white">{data.projects.length}</div>
-                  <p className="text-[10px] text-muted font-mono">Featured items</p>
-                </div>
-
-                <div
-                  onClick={() => handleSelectTab('journal')}
-                  className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-white/50">Journal</span>
-                    <BookOpen className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="text-2xl font-display text-white">{data.journalEntries.length}</div>
-                  <p className="text-[10px] text-muted font-mono">Articles</p>
-                </div>
-
-                <div
-                  onClick={() => handleSelectTab('explorations')}
-                  className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-white/50">Explorations</span>
-                    <Compass className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="text-2xl font-display text-white">{data.explorations.length}</div>
-                  <p className="text-[10px] text-muted font-mono">Canvas experiments</p>
-                </div>
-
-                <div
-                  onClick={() => handleSelectTab('services')}
-                  className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-white/50">Services</span>
-                    <Layers className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="text-2xl font-display text-white">{data.services.length}</div>
-                  <p className="text-[10px] text-muted font-mono">Agency packages</p>
-                </div>
-
-                <div
-                  onClick={() => handleSelectTab('reviews')}
-                  className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 transition-all cursor-pointer group col-span-2 sm:col-span-1"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-white/50">Client Reviews</span>
-                    <Star className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-display text-white">{data.reviews?.length || 0}</span>
-                    {data.reviews && data.reviews.filter((r) => r.status === 'pending').length > 0 && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 border border-amber-500/40">
-                        {data.reviews.filter((r) => r.status === 'pending').length} pending
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-muted font-mono">Verify & approve</p>
-                </div>
-              </div>
-
-              {/* Projects Quick Preview */}
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-medium text-white">Current Projects</h3>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectTab('projects')}
-                    className="text-[11px] font-mono text-sky-400 hover:text-sky-300"
-                  >
-                    Manage all →
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {data.projects.slice(0, 3).map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => handleSelectTab('projects')}
-                      className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 flex items-center justify-between gap-3 cursor-pointer group transition-all"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {p.image && (
-                          <img src={p.image} alt={p.title} className="w-8 h-8 rounded-lg object-cover shrink-0" />
-                        )}
-                        <span className="text-xs text-white group-hover:text-sky-300 truncate font-medium">
-                          {p.title}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-white/10 text-white/60 shrink-0">
-                        {p.category}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <AdminDashboardOverview onSelectTab={handleSelectTab} />
           )}
 
           {activeTab === 'projects' && <ProjectsManager />}
+          {activeTab === 'media' && <MediaLibraryManager />}
           {activeTab === 'journal' && <JournalManager />}
           {activeTab === 'explorations' && <ExplorationsManager />}
           {activeTab === 'services' && <ServicesManager />}

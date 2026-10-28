@@ -187,13 +187,13 @@ test('projects adhere strictly to verified non-fabricated statuses', () => {
   });
 });
 
-test('check git diff and commit', async () => {
-  const { spawnSync } = await import('node:child_process');
-  const g = spawnSync('git', ['--version'], { encoding: 'utf-8' });
-  const gitPath = 'C:\\Program Files\\Git\\cmd\\git.exe';
-  const g2 = spawnSync(gitPath, ['--version'], { encoding: 'utf-8' });
-  throw new Error(`g: ${JSON.stringify(g)} | g2: ${JSON.stringify(g2)}`);
+test('projects have isPublished and order defined', () => {
+  PROJECTS.forEach((p) => {
+    assert.equal(typeof p.isPublished, 'boolean');
+    assert.equal(typeof p.order, 'number');
+  });
 });
+
 
 
 

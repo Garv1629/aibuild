@@ -65,7 +65,7 @@ const PrincipleColumn: React.FC<PrincipleColumnProps> = ({
         {/* Step number: 01, 02, 03 */}
         <motion.span
           style={shouldReduceMotion ? undefined : { opacity: nodeGlow }}
-          className="absolute -bottom-5 text-[10px] font-mono text-sky-300/70 tracking-widest uppercase font-semibold"
+          className="absolute -bottom-5 text-2xs font-mono text-accent/80 tracking-widest uppercase font-semibold"
         >
           0{index + 1}
         </motion.span>
@@ -87,12 +87,12 @@ const PrincipleColumn: React.FC<PrincipleColumnProps> = ({
         className="flex flex-col items-center mt-2"
       >
         {/* Large Serif Title */}
-        <h3 className="text-4xl sm:text-5xl md:text-6xl font-display text-white tracking-tight mb-2 sm:mb-3 drop-shadow-[0_2px_14px_rgba(255,255,255,0.25)] select-none">
+        <h3 className="text-3xl sm:text-5xl font-display text-white tracking-tight mb-2 sm:mb-3 drop-shadow-[0_2px_14px_rgba(255,255,255,0.25)] select-none">
           {stat.value}
         </h3>
 
         {/* Uppercase Mono Subtitle */}
-        <div className="text-xs sm:text-sm font-semibold text-sky-400 tracking-wider mb-2.5 font-mono uppercase">
+        <div className="text-xs sm:text-sm font-semibold text-accent tracking-wider mb-2.5 font-mono uppercase">
           {stat.label}
         </div>
 
@@ -162,10 +162,10 @@ const MobilePrincipleCard: React.FC<MobilePrincipleCardProps> = ({
       }}
       className="absolute inset-x-0 flex flex-col items-center text-center px-2 pointer-events-none"
     >
-      <h3 className="text-3xl xs:text-4xl font-display text-white tracking-tight mb-2 select-none drop-shadow-[0_2px_12px_rgba(255,255,255,0.25)]">
+      <h3 className="text-3xl font-display text-white tracking-tight mb-2 select-none drop-shadow-[0_2px_12px_rgba(255,255,255,0.25)]">
         {stat.value}
       </h3>
-      <div className="text-xs font-semibold text-sky-400 tracking-wider mb-2 font-mono uppercase">
+      <div className="text-xs font-semibold text-accent tracking-wider mb-2 font-mono uppercase">
         {stat.label}
       </div>
       <p className="text-xs text-muted font-normal max-w-[280px] leading-relaxed">
@@ -178,35 +178,33 @@ const MobilePrincipleCard: React.FC<MobilePrincipleCardProps> = ({
 export const Stats: React.FC = () => {
   const { data } = usePortfolio();
   const stats = data.stats;
+  const count = stats.length || 4;
   const shouldReduceMotion = useReducedMotion();
   const containerRef = useRef<HTMLElement | null>(null);
 
   // Normalized scroll progress of the pinned section: 0 (entry) to 1 (exit)
   const scrollProgress = useMotionValue(0);
 
-  // Progressive connecting line: extends smoothly from Col 1 to Col 3
-  const lineProgress = useTransform(scrollProgress, [0.06, 0.82], [0, 1]);
+  // Progressive connecting line: extends smoothly from Col 1 to Col 4
+  const lineProgress = useTransform(scrollProgress, [0.05, 0.85], [0, 1]);
 
   // Sequential reveal ranges for text:
-  // Item 0: reveals from 0.06 to 0.26
-  // Item 1: reveals from 0.36 to 0.56
-  // Item 2: reveals from 0.66 to 0.86
   const textRanges = useMemo(() => {
-    return [
-      [0.06, 0.26],
-      [0.36, 0.56],
-      [0.66, 0.86],
-    ] as [number, number][];
-  }, []);
+    const step = 0.8 / count;
+    return Array.from({ length: count }, (_, i) => [
+      0.04 + i * step,
+      0.04 + i * step + step * 0.72,
+    ]) as [number, number][];
+  }, [count]);
 
   // Node arrival ranges:
   const nodeRanges = useMemo(() => {
-    return [
-      [0.02, 0.16],
-      [0.32, 0.46],
-      [0.62, 0.76],
-    ] as [number, number][];
-  }, []);
+    const step = 0.8 / count;
+    return Array.from({ length: count }, (_, i) => [
+      0.02 + i * step,
+      0.02 + i * step + step * 0.52,
+    ]) as [number, number][];
+  }, [count]);
 
   // Scroll tracking loop
   useEffect(() => {
@@ -253,7 +251,17 @@ export const Stats: React.FC = () => {
     return (
       <section id="principles" className="relative z-10 py-16 sm:py-24 select-none">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+          {/* Section Header */}
+          <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
+            <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.12em] sm:tracking-[0.18em] text-accent font-medium mb-1.5 sm:mb-2">
+              Foundational Pillars
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-normal text-text-primary tracking-tight">
+              Driven by purpose &amp; <span className="font-display italic">precision</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
             {stats.map((stat, idx) => (
               <PrincipleColumn
                 key={stat.value}
@@ -280,22 +288,22 @@ export const Stats: React.FC = () => {
     >
       {/* Sticky viewport frame: remains pinned while scroll advances the connecting line */}
       <div className="sticky top-0 w-full h-screen h-[100dvh] supports-[height:100svh]:h-[100svh] flex items-center justify-center overflow-hidden py-6 sm:py-12 md:py-16 px-3 sm:px-6 md:px-10 lg:px-16 pointer-events-none">
-        <div className="max-w-[1100px] w-full mx-auto pointer-events-auto flex flex-col items-center">
+        <div className="max-w-[1280px] w-full mx-auto pointer-events-auto flex flex-col items-center">
           
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
-            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.3em] text-sky-400 font-medium mb-1.5 sm:mb-2">
+            <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.12em] sm:tracking-[0.18em] text-accent font-medium mb-1.5 sm:mb-2">
               Foundational Pillars
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal text-text-primary tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-normal text-text-primary tracking-tight">
               Driven by purpose &amp; <span className="font-display italic">precision</span>
             </h2>
           </div>
 
           {/* MOBILE VIEW (< md): Single centered active principle with a sleek top milestone connector */}
           <div className="flex md:hidden flex-col items-center w-full px-2 max-w-sm">
-            {/* Top 3-Node Horizontal Milestone Stepper */}
-            <div className="relative w-full max-w-[260px] h-12 flex items-center justify-between mb-6">
+            {/* Top Horizontal Milestone Stepper */}
+            <div className="relative w-full max-w-[320px] h-12 flex items-center justify-between mb-6">
               {/* Background track line */}
               <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-white/10 -translate-y-1/2 z-0 rounded-full overflow-hidden">
                 <motion.div
@@ -304,13 +312,13 @@ export const Stats: React.FC = () => {
                 />
               </div>
 
-              {/* 3 Milestone Nodes: 01, 02, 03 */}
+              {/* Milestone Nodes: 01, 02, 03, 04 */}
               {stats.map((stat, idx) => (
                 <div key={stat.value} className="relative z-10 flex flex-col items-center">
-                  <div className="w-9 h-9 rounded-full border border-sky-400/50 bg-[#07090e] flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.45)]">
-                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-sky-400 to-cyan-200" />
+                  <div className="w-8 h-8 rounded-full border border-sky-400/50 bg-[#07090e] flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.45)]">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-tr from-sky-400 to-cyan-200" />
                   </div>
-                  <span className="text-[9px] font-mono text-sky-300/80 tracking-widest mt-1">
+                  <span className="text-2xs font-mono text-accent tracking-widest mt-1">
                     0{idx + 1}
                   </span>
                 </div>
@@ -332,11 +340,17 @@ export const Stats: React.FC = () => {
             </div>
           </div>
 
-          {/* DESKTOP VIEW (>= md): Original 3 Columns with Connecting Line */}
-          <div className="hidden md:grid md:grid-cols-3 gap-8 w-full relative">
+          {/* DESKTOP VIEW (>= md): All 4 Columns in a Single Lane with Connecting Line */}
+          <div className="hidden md:grid md:grid-cols-4 gap-6 lg:gap-8 w-full relative">
             
-            {/* The horizontal connecting line: runs directly from center of Col 1 (16.666%) to center of Col 3 (83.333%) */}
-            <div className="absolute top-5 left-[16.666%] right-[16.666%] h-[2px] bg-white/10 -translate-y-1/2 z-0 rounded-full overflow-hidden">
+            {/* The horizontal connecting line: runs directly from center of Col 1 to center of Col 4 */}
+            <div
+              className="absolute top-5 h-[2px] bg-white/10 -translate-y-1/2 z-0 rounded-full overflow-hidden"
+              style={{
+                left: `${100 / (2 * count)}%`,
+                right: `${100 / (2 * count)}%`,
+              }}
+            >
               {/* Scroll-driven active glowing fill */}
               <motion.div
                 className="h-full w-full bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 origin-left shadow-[0_0_18px_rgba(56,189,248,1)]"
@@ -344,7 +358,7 @@ export const Stats: React.FC = () => {
               />
             </div>
 
-            {/* 3 Principles Columns: each contains its node on top and pure text below */}
+            {/* 4 Principles Columns in a single lane */}
             {stats.map((stat, idx) => (
               <PrincipleColumn
                 key={stat.value}

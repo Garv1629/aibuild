@@ -7,6 +7,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { JournalEntry } from '../utils/portfolio.ts';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
+import { Button, buttonVariants } from './Button.tsx';
 
 interface JournalProps {
   onSelectArticle: (entry: JournalEntry) => void;
@@ -18,7 +19,10 @@ export const Journal: React.FC<JournalProps> = ({
   onViewAllThoughts,
 }) => {
   const { data } = usePortfolio();
-  const journalEntries = data.journalEntries;
+  const isInsideAdminPreview = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const journalEntries = (data.journalEntries || [])
+    .filter((j) => isInsideAdminPreview || j.isPublished !== false)
+    .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
   return (
     <section id="journal" className="relative z-10 py-12 sm:py-16 md:py-24">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
@@ -39,26 +43,27 @@ export const Journal: React.FC<JournalProps> = ({
             </div>
 
             {/* Heading */}
-            <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-text-primary tracking-tight font-normal">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl text-text-primary tracking-tight font-normal">
               {data.siteTexts?.journalHeading || 'Recent'}{' '}
               <span className="font-display italic">{data.siteTexts?.journalHeadingItalic || 'thoughts'}</span>
             </h2>
 
-            <p className="text-xs sm:text-sm md:text-base text-muted max-w-lg mt-1.5 sm:mt-3 leading-relaxed">
+            <p className="text-sm sm:text-base text-muted max-w-lg mt-1.5 sm:mt-3 leading-relaxed">
               {data.siteTexts?.journalSubtext ||
                 'Articles and strategic breakdowns covering Web Development, AI Videos, viral UGC Videos, and digital E-book publishing.'}
             </p>
           </div>
 
           <div className="hidden md:inline-flex shrink-0">
-            <button
-              type="button"
+            <Button
+              variant="glass"
+              size="sm"
               onClick={onViewAllThoughts}
-              className="liquid-glass-button rounded-full text-xs font-mono uppercase tracking-wider px-5 py-2.5 text-white flex items-center gap-2 cursor-pointer shadow-lg group"
+              className="uppercase tracking-wider group"
             >
               <span>{data.siteTexts?.journalButtonText || 'View all'}</span>
               <span className="transition-transform group-hover:translate-x-1">→</span>
-            </button>
+            </Button>
           </div>
         </motion.div>
 
@@ -100,7 +105,7 @@ export const Journal: React.FC<JournalProps> = ({
                 </div>
 
                 <div className="flex flex-col min-w-0 pr-2">
-                  <span className="text-[10px] text-sky-300 uppercase tracking-[0.2em] font-mono sm:hidden mb-1">
+                  <span className="text-2xs text-accent uppercase tracking-[0.2em] font-mono sm:hidden mb-1">
                     {entry.category} • {entry.date}
                   </span>
                   <h3 className="text-sm sm:text-lg md:text-xl text-text-primary font-medium tracking-tight line-clamp-2 sm:line-clamp-1 group-hover:text-white transition-colors">
@@ -111,14 +116,14 @@ export const Journal: React.FC<JournalProps> = ({
 
               {/* Right side: Read time + Date + Arrow */}
               <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 shrink-0 pt-1 sm:pt-0 border-t border-white/10 sm:border-0">
-                <div className="flex sm:flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-mono text-muted">
-                  <span className="liquid-glass-pill px-3 py-1 rounded-full text-white/90">
+                <div className="flex sm:flex items-center gap-3 sm:gap-4 text-xs font-mono text-muted">
+                  <span className="liquid-glass-pill px-3 py-1 rounded-full text-secondary">
                     {entry.readTime}
                   </span>
-                  <span className="hidden sm:inline text-muted group-hover:text-white/80 transition-colors">{entry.date}</span>
+                  <span className="hidden sm:inline text-muted group-hover:text-white transition-colors">{entry.date}</span>
                 </div>
 
-                <div className="liquid-glass-button w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white flex items-center justify-center text-xs sm:text-sm shadow-md">
+                <div className={buttonVariants({ variant: 'icon', size: 'sm', className: 'text-white shadow-md' })}>
                   <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                     ↗
                   </span>
@@ -130,14 +135,15 @@ export const Journal: React.FC<JournalProps> = ({
 
         {/* Mobile View All Button */}
         <div className="flex md:hidden justify-center mt-8">
-          <button
-            type="button"
+          <Button
+            variant="glass"
+            size="md"
             onClick={onViewAllThoughts}
-            className="liquid-glass-button rounded-full text-xs font-mono uppercase tracking-wider px-6 py-3 text-white flex items-center gap-2 cursor-pointer shadow-lg active:scale-95"
+            className="uppercase tracking-wider"
           >
             <span>View all thoughts</span>
             <span>→</span>
-          </button>
+          </Button>
         </div>
       </div>
     </section>
