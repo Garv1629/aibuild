@@ -308,19 +308,22 @@ export const Explorations: React.FC<ExplorationsProps> = ({
           </p>
 
           {/* GitHub button (verified link) - Apple Liquid Glass */}
-          <div className="pointer-events-auto">
             <a
               href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="liquid-glass-button rounded-full text-xs font-mono uppercase tracking-wider px-6 py-3 text-white flex items-center gap-2 shadow-xl inline-flex active:scale-95"
+              className={buttonVariants({
+                variant: 'glass',
+                size: 'md',
+                className: 'group shadow-xl',
+              })}
+              aria-label="Explore AI Build projects on GitHub"
             >
               <span>{data.siteTexts?.explorationsGithubText || 'Explore on GitHub'}</span>
-              <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+              <span className="text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                 ↗
               </span>
             </a>
-          </div>
         </div>
       </div>
 

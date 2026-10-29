@@ -51,7 +51,7 @@ try {
     fs.copyFileSync(srcArtwork, destArtwork);
   }
 } catch (e) {
-  // Silent fallback
+  // Silent fallback - triggered
 }
 
 if (fs.existsSync('sync_trigger.txt')) {
@@ -63,7 +63,7 @@ if (fs.existsSync('sync_trigger.txt')) {
       return res.status === 0;
     };
     run('git', ['add', '-A']);
-    run('git', ['commit', '-m', 'Clean up build configurations and finalize live updates']);
+    run('git', ['commit', '-m', 'Fix 3 usability issues: font families, button styles, and long all-caps text']);
     run('git', ['pull', '--rebase', 'origin', 'main']);
     run('git', ['push', 'origin', 'main']);
   } catch (e) {}

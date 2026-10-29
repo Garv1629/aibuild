@@ -37,7 +37,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-16">
           <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-subtle text-sm font-mono text-accent uppercase tracking-wider mb-3 sm:mb-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-subtle text-sm font-mono text-accent tracking-wide mb-3 sm:mb-4">
               <Sparkles className="w-4 h-4 text-warning" />
               <span>Client Voices & Feedback</span>
             </div>
