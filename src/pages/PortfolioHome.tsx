@@ -20,7 +20,6 @@ import {
   ConversationModal,
   ReviewSubmissionModal,
 } from '../components/Modals.tsx';
-import { AdminTrigger } from '../components/Admin/AdminTrigger.tsx';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Project, JournalEntry, ExplorationItem } from '../utils/portfolio.ts';
 
@@ -163,9 +162,6 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = () => {
         onClose={() => setIsReviewModalOpen(false)}
         onSubmitReview={addReview}
       />
-
-      {/* Floating Quick Admin Trigger */}
-      <AdminTrigger />
     </div>
   );
 };

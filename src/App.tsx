@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { PortfolioHome } from './pages/PortfolioHome.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { AdminLoginPage } from './pages/AdminLoginPage.tsx';
@@ -77,10 +77,53 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
+/**
+ * Global Invisible Admin Shortcut Listener:
+ * Press Ctrl+Shift+A (or Cmd+Shift+A on Mac) or Alt+A anywhere on the site
+ * to instantly toggle or navigate to the Admin Portal (/admin) without any visible buttons.
+ */
+function AdminShortcutListener() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is actively typing in a form input or textarea
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable);
+
+      if (isInput) return;
+
+      const key = e.key ? e.key.toLowerCase() : '';
+      const isCtrlShiftA = (e.ctrlKey || e.metaKey) && e.shiftKey && key === 'a';
+      const isAltA = e.altKey && !e.ctrlKey && !e.metaKey && key === 'a';
+
+      if (isCtrlShiftA || isAltA) {
+        e.preventDefault();
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith('/admin')) {
+          navigate('/');
+        } else {
+          navigate('/admin');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <AdminShortcutListener />
         <Routes>
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route
