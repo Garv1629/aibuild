@@ -7,9 +7,7 @@
     "dev": "node ./node_modules/vite/bin/vite.js",
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview --port=3000 --host=0.0.0.0",
-    "lint": "node ./node_modules/typescript/bin/tsc --noEmit",
-    "test": "git add .",
-    "push": "git add ."
+    "lint": "node ./node_modules/typescript/bin/tsc --noEmit"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
