@@ -8,8 +8,9 @@ import Hls from 'hls.js';
 import gsap from 'gsap';
 import { Mail } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
-import { SERVICES, getServiceIndexFromScroll } from '../utils/portfolio.ts';
+import { SERVICES, getServiceIndexFromScroll, normalizeContactEmail } from '../utils/portfolio.ts';
 import { Button } from './Button.tsx';
+import { EmailContactPill } from './EmailContactPill.tsx';
 
 const getActiveGsap = () => {
   if (typeof window !== 'undefined' && (window as any).gsap) {
@@ -25,6 +26,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
   const { data } = usePortfolio();
+  const contactEmail = normalizeContactEmail(data.email);
   const roles = data.roles && data.roles.length > 0 ? data.roles : ['Web Development', 'AI Videos', 'UGC Videos', 'E-books'];
   const heroDescription = data.heroDescription;
 
@@ -233,7 +235,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center my-auto py-1 xs:py-2 sm:py-4 w-full">
 
           {/* Brand Name / Main Headline */}
-          <h1 className="name-reveal text-5xl sm:text-7xl md:text-8xl lg:text-[104px] font-display font-extrabold tracking-tight sm:tracking-tighter leading-[0.92] text-text-primary mb-1.5 xs:mb-2 sm:mb-5 selection:bg-white/20 break-words max-w-full text-center">
+          <h1 className="name-reveal text-5xl sm:text-7xl font-display font-extrabold tracking-tight sm:tracking-tighter leading-[0.92] text-text-primary mb-1.5 xs:mb-2 sm:mb-5 selection:bg-white/20 break-words max-w-full text-center">
             {data.siteTexts?.heroHeadline || data.brandName || 'AI Build'}
           </h1>
 
@@ -307,15 +309,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
 
           {/* Direct Email Link under CTA buttons */}
           <div className="blur-in mt-3 xs:mt-3.5 sm:mt-4 flex items-center justify-center">
-            <a
-              href={`mailto:${data.email || 'aibuild1629@gmail.com'}`}
-              className="group inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass-pill hover:bg-white/10 border border-white/10 hover:border-sky-400/40 transition-all text-2xs sm:text-xs font-mono text-white/70 hover:text-white shadow-sm cursor-pointer"
-              title="Email aibuild1629@gmail.com directly"
-            >
-              <Mail className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-              <span className="tracking-wide">{data.email || 'aibuild1629@gmail.com'}</span>
-              <span className="text-2xs text-white/40 group-hover:text-sky-300 transition-colors">↗</span>
-            </a>
+            <EmailContactPill email={contactEmail} variant="hero" />
           </div>
         </div>
       </div>

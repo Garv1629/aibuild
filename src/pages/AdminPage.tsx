@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -92,6 +92,24 @@ class PreviewErrorBoundary extends React.Component<
   }
 }
 
+const MemoizedPreview = React.memo<{
+  previewKey: number;
+  previewScrollRef: React.RefObject<HTMLDivElement | null>;
+  onRetry: () => void;
+}>(({ previewKey, previewScrollRef, onRetry }) => {
+  return (
+    <div
+      key={previewKey}
+      ref={previewScrollRef}
+      className="w-full h-full overflow-y-auto overflow-x-hidden relative scroll-smooth bg-bg"
+    >
+      <PreviewErrorBoundary onRetry={onRetry}>
+        <PortfolioHome isPreview={true} />
+      </PreviewErrorBoundary>
+    </div>
+  );
+});
+
 export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { tab } = useParams<{ tab?: string }>();
@@ -119,16 +137,47 @@ export const AdminPage: React.FC = () => {
   const [importError, setImportError] = useState<string | null>(null);
   const [copiedNotification, setCopiedNotification] = useState(false);
 
-  // Split-screen Live Preview States - active by default on desktop, clean full-width on mobile
+  // Split-screen Live Preview States - saved in localStorage, ultra-fast initial load
   const [isSplitPreviewOpen, setIsSplitPreviewOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ai_build_split_preview_open');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+      return false; // Default closed for instant snappy editing
+    }
+    return false;
+  });
+
+  const [isDesktop, setIsDesktop] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 1024;
     }
     return true;
   });
+
+  const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const toggleSplitPreview = useCallback(() => {
+    setIsSplitPreviewOpen((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ai_build_split_preview_open', String(next));
+      }
+      return next;
+    });
+  }, []);
+
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [previewKey, setPreviewKey] = useState<number>(1);
-  const [isLiveSyncBlinking, setIsLiveSyncBlinking] = useState(false);
   const [isLiveSyncPaused, setIsLiveSyncPaused] = useState(false);
 
   // Adjustable Split Ratio (percentage: 20% to 80%, default 50%)
@@ -143,13 +192,11 @@ export const AdminPage: React.FC = () => {
     return 50;
   });
   const [isDraggingSplit, setIsDraggingSplit] = useState(false);
+  const isDraggingSplitRef = useRef(false);
 
   // Container refs for measuring drag width
-  const mainWorkspaceRef = useRef<HTMLDivElement>(null);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
   const previewScrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Optimized deferred rendering for live preview to guarantee 0ms typing latency
-  const deferredData = React.useDeferredValue(data);
 
   useEffect(() => {
     if (tab) {
@@ -160,46 +207,56 @@ export const AdminPage: React.FC = () => {
     }
   }, [tab]);
 
-  // Flash live sync indicator whenever data updates in real-time
-  useEffect(() => {
-    if (isLiveSyncPaused) return;
-    setIsLiveSyncBlinking(true);
-    const timer = setTimeout(() => setIsLiveSyncBlinking(false), 400);
-    return () => clearTimeout(timer);
-  }, [data, isLiveSyncPaused]);
-
-  // Dragging divider handler for adjustable split screen
+  // Dragging divider handler for adjustable split screen with 60fps rAF and zero mouse hitching
   useEffect(() => {
     if (!isDraggingSplit) return;
 
+    let animFrame: number | null = null;
+    let latestRatio = splitRatio;
+
     const handleMouseMove = (e: MouseEvent) => {
-      if (!mainWorkspaceRef.current) return;
-      const rect = mainWorkspaceRef.current.getBoundingClientRect();
-      const relativeX = e.clientX - rect.left;
-      const newRatio = (relativeX / rect.width) * 100;
-      const clamped = Math.max(20, Math.min(80, Math.round(newRatio)));
-      setSplitRatio(clamped);
-      localStorage.setItem('ai_build_split_ratio', String(clamped));
+      if (!isDraggingSplitRef.current || !splitContainerRef.current) return;
+
+      if (animFrame !== null) return;
+
+      animFrame = requestAnimationFrame(() => {
+        animFrame = null;
+        if (!splitContainerRef.current) return;
+        const rect = splitContainerRef.current.getBoundingClientRect();
+        if (rect.width <= 0) return;
+        const relativeX = e.clientX - rect.left;
+        const newRatio = (relativeX / rect.width) * 100;
+        const clamped = Math.max(20, Math.min(80, Math.round(newRatio)));
+        latestRatio = clamped;
+        setSplitRatio(clamped);
+      });
     };
 
     const handleMouseUp = () => {
+      if (animFrame !== null) {
+        cancelAnimationFrame(animFrame);
+        animFrame = null;
+      }
+      isDraggingSplitRef.current = false;
       setIsDraggingSplit(false);
+      localStorage.setItem('ai_build_split_ratio', String(latestRatio));
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
 
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      if (animFrame !== null) cancelAnimationFrame(animFrame);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
-  }, [isDraggingSplit]);
+  }, [isDraggingSplit, splitRatio]);
 
   const handleScrollPreviewTo = (sectionId: string) => {
     if (!previewScrollContainerRef.current) return;
@@ -233,9 +290,9 @@ export const AdminPage: React.FC = () => {
     }, 100);
   };
 
-  const handleRefreshPreview = () => {
+  const handleRefreshPreview = useCallback(() => {
     setPreviewKey((prev) => prev + 1);
-  };
+  }, []);
 
   const handleCopyJSON = () => {
     navigator.clipboard.writeText(exportDataJSON());
@@ -296,13 +353,13 @@ export const AdminPage: React.FC = () => {
               <h1 className="text-sm sm:text-base font-semibold text-white tracking-tight leading-none">
                 {data.brandName} Studio CMS
               </h1>
-              <span className={`inline-flex items-center gap-1 text-[9px] font-mono px-2 py-0.5 rounded-full border transition-all ${
-                isLiveSyncBlinking
-                  ? 'bg-emerald-500/40 text-emerald-100 border-emerald-400 scale-105'
+              <span className={`inline-flex items-center gap-1.5 text-[9px] font-mono px-2 py-0.5 rounded-full border transition-all ${
+                isLiveSyncPaused
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                   : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
               }`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live Real-Time Sync
+                <span className={`w-1.5 h-1.5 rounded-full ${isLiveSyncPaused ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'}`} />
+                {isLiveSyncPaused ? 'Sync Paused' : 'Live Real-Time Sync'}
               </span>
             </div>
           </div>
@@ -313,7 +370,7 @@ export const AdminPage: React.FC = () => {
           {/* Split Screen Toggle */}
           <button
             type="button"
-            onClick={() => setIsSplitPreviewOpen(!isSplitPreviewOpen)}
+            onClick={toggleSplitPreview}
             className={`px-3 py-1.5 rounded-xl text-xs font-mono flex items-center gap-1.5 cursor-pointer transition-all border ${
               isSplitPreviewOpen
                 ? 'bg-sky-500/20 text-sky-300 border-sky-400/40 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
@@ -325,6 +382,34 @@ export const AdminPage: React.FC = () => {
             <span className="hidden sm:inline">Split Screen Preview</span>
             <span className="sm:hidden">Preview</span>
           </button>
+
+          {/* Mobile/Tablet view switcher between Editor and Live Preview */}
+          {isSplitPreviewOpen && !isDesktop && (
+            <div className="flex items-center bg-black/60 border border-white/15 rounded-xl p-0.5">
+              <button
+                type="button"
+                onClick={() => setMobileViewMode('editor')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+                  mobileViewMode === 'editor'
+                    ? 'bg-sky-500 text-black font-semibold shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Editor
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileViewMode('preview')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+                  mobileViewMode === 'preview'
+                    ? 'bg-sky-500 text-black font-semibold shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Preview
+              </button>
+            </div>
+          )}
 
           {/* Device selector (when split is open) */}
           {isSplitPreviewOpen && (
@@ -426,7 +511,7 @@ export const AdminPage: React.FC = () => {
       </header>
 
       {/* Main Workspace: Left Sidebar + Center Editor + Right Live Real-Time Website Preview */}
-      <div ref={mainWorkspaceRef} className="flex-1 flex overflow-hidden relative z-10">
+      <div className="flex-1 flex overflow-hidden relative z-10 min-w-0">
         {/* Left Navigation Sidebar */}
         <aside
           className={`shrink-0 w-56 bg-[#0a0d14]/95 backdrop-blur-xl border-r border-white/10 flex flex-col justify-between p-3 fixed md:static top-[49px] bottom-0 z-30 transition-transform duration-300 ease-in-out ${
@@ -617,7 +702,7 @@ export const AdminPage: React.FC = () => {
               <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
                 <span className="flex items-center gap-1.5 truncate max-w-[130px]" title={user?.email}>
                   <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span className="truncate">{user?.email || 'admin@aibuild.studio'}</span>
+                  <span className="truncate">{user?.email || 'aibuild1629@gmail.com'}</span>
                 </span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
                   {user?.role || 'admin'}
@@ -644,216 +729,236 @@ export const AdminPage: React.FC = () => {
           />
         )}
 
-        {/* Center / Left Pane: Editor Workspace */}
-        <section
-          style={{ width: isSplitPreviewOpen && typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${splitRatio}%` : '100%' }}
-          className={`overflow-y-auto p-4 sm:p-6 transition-[width] duration-75 shrink-0 ${
-            isSplitPreviewOpen ? 'w-full lg:w-auto lg:border-r border-white/10' : 'w-full'
-          }`}
+        {/* Split Container for Editor + Divider + Live Preview */}
+        <div
+          ref={splitContainerRef}
+          className="flex-1 flex flex-col lg:flex-row overflow-hidden relative min-w-0 h-full"
         >
-          {/* Breadcrumb row */}
-          <div className="flex items-center justify-between flex-wrap gap-2 pb-3 mb-4 border-b border-white/10">
-            <div className="flex items-center gap-2 text-xs font-mono text-white/50">
-              <Link to="/admin" onClick={() => handleSelectTab('overview')} className="hover:text-white transition-colors">
-                Admin
-              </Link>
-              <span>/</span>
-              <span className="text-sky-300 font-medium capitalize">{activeTab}</span>
+          {/* Center / Left Pane: Editor Workspace */}
+          <section
+            style={{
+              width: isDesktop && isSplitPreviewOpen ? `${splitRatio}%` : '100%',
+              maxWidth: isDesktop && isSplitPreviewOpen ? `${splitRatio}%` : '100%',
+              flex: isDesktop && isSplitPreviewOpen ? `0 0 ${splitRatio}%` : '1 1 auto',
+            }}
+            className={`h-full overflow-y-auto p-4 sm:p-6 min-w-0 ${
+              !isDesktop && isSplitPreviewOpen && mobileViewMode === 'preview' ? 'hidden' : 'block'
+            } ${
+              isDraggingSplit ? 'transition-none select-none pointer-events-none' : 'transition-[width] duration-150'
+            } ${
+              isDesktop && isSplitPreviewOpen ? 'border-r border-white/10' : ''
+            }`}
+          >
+            {/* Breadcrumb row */}
+            <div className="flex items-center justify-between flex-wrap gap-2 pb-3 mb-4 border-b border-white/10">
+              <div className="flex items-center gap-2 text-xs font-mono text-white/50">
+                <Link to="/admin" onClick={() => handleSelectTab('overview')} className="hover:text-white transition-colors">
+                  Admin
+                </Link>
+                <span>/</span>
+                <span className="text-sky-300 font-medium capitalize">{activeTab}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px] font-mono text-white/40">
+                <Clock className="w-3 h-3 text-sky-400/70" />
+                <span>Real-Time Editor</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] font-mono text-white/40">
-              <Clock className="w-3 h-3 text-sky-400/70" />
-              <span>Real-Time Editor</span>
-            </div>
-          </div>
+            {/* Tab 1: Overview */}
+            {activeTab === 'overview' && (
+              <AdminDashboardOverview onSelectTab={handleSelectTab} />
+            )}
 
-          {/* Tab 1: Overview */}
-          {activeTab === 'overview' && (
-            <AdminDashboardOverview onSelectTab={handleSelectTab} />
+            {activeTab === 'inquiries' && <InquiriesManager />}
+            {activeTab === 'projects' && <ProjectsManager />}
+            {activeTab === 'media' && <MediaLibraryManager />}
+            {activeTab === 'journal' && <JournalManager />}
+            {activeTab === 'explorations' && <ExplorationsManager />}
+            {activeTab === 'services' && <ServicesManager />}
+            {activeTab === 'brand' && <BrandSettingsManager />}
+            {activeTab === 'reviews' && <ReviewsManager />}
+          </section>
+
+          {/* Draggable Resizer Divider Bar (Desktop only) */}
+          {isDesktop && isSplitPreviewOpen && (
+            <div
+              onMouseDown={(e) => {
+                e.preventDefault();
+                isDraggingSplitRef.current = true;
+                setIsDraggingSplit(true);
+              }}
+              className={`w-2.5 hover:w-3.5 bg-white/5 hover:bg-sky-500/50 cursor-col-resize transition-all shrink-0 z-30 items-center justify-center flex select-none relative group ${
+                isDraggingSplit ? 'bg-sky-500 w-3.5 shadow-[0_0_20px_rgba(56,189,248,0.8)]' : ''
+              }`}
+              title="Drag left/right to adjust split width (or click quick presets 35% / 50% / 65%)"
+            >
+              <div className="w-1 h-9 rounded-full bg-white/30 group-hover:bg-white flex flex-col justify-between py-1.5 items-center pointer-events-none">
+                <span className="w-0.5 h-0.5 rounded-full bg-white" />
+                <span className="w-0.5 h-0.5 rounded-full bg-white" />
+                <span className="w-0.5 h-0.5 rounded-full bg-white" />
+              </div>
+            </div>
           )}
 
-          {activeTab === 'inquiries' && <InquiriesManager />}
-          {activeTab === 'projects' && <ProjectsManager />}
-          {activeTab === 'media' && <MediaLibraryManager />}
-          {activeTab === 'journal' && <JournalManager />}
-          {activeTab === 'explorations' && <ExplorationsManager />}
-          {activeTab === 'services' && <ServicesManager />}
-          {activeTab === 'brand' && <BrandSettingsManager />}
-          {activeTab === 'reviews' && <ReviewsManager />}
-        </section>
-
-        {/* Draggable Resizer Divider Bar */}
-        {isSplitPreviewOpen && (
-          <div
-            onMouseDown={() => setIsDraggingSplit(true)}
-            className={`hidden lg:flex w-2.5 hover:w-3.5 bg-white/5 hover:bg-sky-500/50 cursor-col-resize transition-all shrink-0 z-30 items-center justify-center group select-none relative ${
-              isDraggingSplit ? 'bg-sky-500 w-3.5 shadow-[0_0_20px_rgba(56,189,248,0.8)]' : ''
-            }`}
-            title="Drag left/right to adjust split width (or click quick presets 35% / 50% / 65%)"
-          >
-            <div className="w-1 h-9 rounded-full bg-white/30 group-hover:bg-white flex flex-col justify-between py-1.5 items-center pointer-events-none">
-              <span className="w-0.5 h-0.5 rounded-full bg-white" />
-              <span className="w-0.5 h-0.5 rounded-full bg-white" />
-              <span className="w-0.5 h-0.5 rounded-full bg-white" />
-            </div>
-          </div>
-        )}
-
-        {/* Right Split: NATIVE REAL-TIME LIVE WEBSITE PREVIEW */}
-        {isSplitPreviewOpen && (
-          <aside
-            style={{ width: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${100 - splitRatio}%` : '100%' }}
-            className="flex-1 bg-[#05070a] flex flex-col overflow-hidden relative border-t lg:border-t-0 border-white/10 min-w-0 lg:min-w-[320px]"
-          >
-            {/* Live Preview Toolbar Header */}
-            <div className="shrink-0 bg-[#0c1018] border-b border-white/10 px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-wrap sm:flex-nowrap">
-              <div className="flex items-center gap-2 min-w-0">
-                {/* Live Sync Status Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setIsLiveSyncPaused(!isLiveSyncPaused)}
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
-                    isLiveSyncPaused
-                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                      : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                  }`}
-                  title={isLiveSyncPaused ? 'Live Sync is paused. Click to resume real-time sync.' : 'Real-time Live Sync active. Click to pause if editing large text.'}
-                >
-                  <span className="relative flex h-2 w-2">
-                    {!isLiveSyncPaused && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveSyncPaused ? 'bg-amber-400' : 'bg-emerald-500'}`} />
-                  </span>
-                  <span>{isLiveSyncPaused ? 'Sync Paused' : 'Live Sync'}</span>
-                </button>
-
-                {/* Quick Split Ratio Presets */}
-                <div className="hidden xl:flex items-center gap-0.5 bg-white/5 p-0.5 rounded-lg text-[10px] font-mono text-white/60">
+          {/* Right Split: NATIVE REAL-TIME LIVE WEBSITE PREVIEW */}
+          {isSplitPreviewOpen && (
+            <aside
+              style={{
+                width: isDesktop ? `${100 - splitRatio}%` : '100%',
+                maxWidth: isDesktop ? `${100 - splitRatio}%` : '100%',
+                flex: isDesktop ? `0 0 ${100 - splitRatio}%` : '1 1 auto',
+              }}
+              className={`h-full bg-[#05070a] flex flex-col overflow-hidden relative min-w-0 ${
+                !isDesktop && mobileViewMode === 'editor' ? 'hidden' : 'flex'
+              } ${isDraggingSplit ? 'pointer-events-none select-none' : ''}`}
+            >
+              {/* Live Preview Toolbar Header */}
+              <div className="shrink-0 bg-[#0c1018] border-b border-white/10 px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  {/* Live Sync Status Toggle */}
                   <button
                     type="button"
-                    onClick={() => { setSplitRatio(35); localStorage.setItem('ai_build_split_ratio', '35'); }}
-                    className={`px-1.5 py-0.5 rounded hover:text-white transition-colors cursor-pointer ${splitRatio === 35 ? 'bg-sky-500 text-black font-semibold' : ''}`}
-                    title="35% Editor / 65% Preview"
+                    onClick={() => setIsLiveSyncPaused(!isLiveSyncPaused)}
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+                      isLiveSyncPaused
+                        ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                        : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                    }`}
+                    title={isLiveSyncPaused ? 'Live Sync is paused. Click to resume real-time sync.' : 'Real-time Live Sync active. Click to pause if editing large text.'}
                   >
-                    35%
+                    <span className="relative flex h-2 w-2">
+                      {!isLiveSyncPaused && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveSyncPaused ? 'bg-amber-400' : 'bg-emerald-500'}`} />
+                    </span>
+                    <span>{isLiveSyncPaused ? 'Sync Paused' : 'Live Sync'}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSplitRatio(50); localStorage.setItem('ai_build_split_ratio', '50'); }}
-                    className={`px-1.5 py-0.5 rounded hover:text-white transition-colors cursor-pointer ${splitRatio === 50 ? 'bg-sky-500 text-black font-semibold' : ''}`}
-                    title="50% Balanced Split"
-                  >
-                    50%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSplitRatio(65); localStorage.setItem('ai_build_split_ratio', '65'); }}
-                    className={`px-1.5 py-0.5 rounded hover:text-white transition-colors cursor-pointer ${splitRatio === 65 ? 'bg-sky-500 text-black font-semibold' : ''}`}
-                    title="65% Editor / 35% Preview"
-                  >
-                    65%
-                  </button>
+
+                  {/* Quick Split Ratio Presets */}
+                  <div className="hidden xl:flex items-center gap-0.5 bg-white/5 p-0.5 rounded-lg text-[10px] font-mono text-white/60">
+                    <button
+                      type="button"
+                      onClick={() => { setSplitRatio(35); localStorage.setItem('ai_build_split_ratio', '35'); }}
+                      className={`px-1.5 py-0.5 rounded hover:text-white transition-colors cursor-pointer ${splitRatio === 35 ? 'bg-sky-500 text-black font-semibold' : ''}`}
+                      title="35% Editor / 65% Preview"
+                    >
+                      35%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setSplitRatio(50); localStorage.setItem('ai_build_split_ratio', '50'); }}
+                      className={`px-1.5 py-0.5 rounded hover:text-white transition-colors cursor-pointer ${splitRatio === 50 ? 'bg-sky-500 text-black font-semibold' : ''}`}
+                      title="50% Balanced Split"
+                    >
+                      50%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setSplitRatio(65); localStorage.setItem('ai_build_split_ratio', '65'); }}
+                      className={`px-1.5 py-0.5 rounded hover:text-white transition-colors cursor-pointer ${splitRatio === 65 ? 'bg-sky-500 text-black font-semibold' : ''}`}
+                      title="65% Editor / 35% Preview"
+                    >
+                      65%
+                    </button>
+                  </div>
+
+                  {/* Anchor Jump Buttons */}
+                  <div className="hidden sm:flex items-center gap-1 ml-1">
+                    <button
+                      type="button"
+                      onClick={() => handleScrollPreviewTo('hero')}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      #hero
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleScrollPreviewTo('work')}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      #work
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleScrollPreviewTo('journal')}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      #journal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleScrollPreviewTo('explorations')}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      #explorations
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleScrollPreviewTo('contact')}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      #contact
+                    </button>
+                  </div>
                 </div>
 
-                {/* Anchor Jump Buttons */}
-                <div className="hidden sm:flex items-center gap-1 ml-1">
+                <div className="flex items-center gap-1.5">
+                  {/* Manual refresh button */}
                   <button
                     type="button"
-                    onClick={() => handleScrollPreviewTo('hero')}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    onClick={handleRefreshPreview}
+                    className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Reload Live Preview"
                   >
-                    #hero
+                    <RefreshCw className="w-3.5 h-3.5" />
                   </button>
+                  <Link
+                    to="/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Expand to Full Tab"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </Link>
                   <button
                     type="button"
-                    onClick={() => handleScrollPreviewTo('work')}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    onClick={() => setIsSplitPreviewOpen(false)}
+                    className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Close Split View"
                   >
-                    #work
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleScrollPreviewTo('journal')}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
-                  >
-                    #journal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleScrollPreviewTo('explorations')}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
-                  >
-                    #explorations
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleScrollPreviewTo('contact')}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/60 hover:text-white transition-colors cursor-pointer"
-                  >
-                    #contact
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                {/* Manual refresh button */}
-                <button
-                  type="button"
-                  onClick={handleRefreshPreview}
-                  className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Reload Live Preview"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </button>
-                <Link
-                  to="/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                  title="Expand to Full Tab"
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsSplitPreviewOpen(false)}
-                  className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Close Split View"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Native Real-time Scrollable Viewport with Device Framing */}
-            <div className="flex-1 bg-[#040608] p-3 flex items-center justify-center overflow-hidden">
-              <div
-                className={`transition-all duration-300 h-full flex flex-col ${
-                  previewDevice === 'mobile'
-                    ? 'w-[390px] max-h-[844px] rounded-[44px] border-[10px] border-[#1e2330] shadow-[0_25px_60px_rgba(0,0,0,0.9)] bg-black overflow-hidden relative ring-1 ring-white/10'
-                    : previewDevice === 'tablet'
-                    ? 'w-[768px] max-h-[1024px] rounded-[32px] border-[12px] border-[#1e2330] shadow-[0_25px_60px_rgba(0,0,0,0.9)] bg-black overflow-hidden relative ring-1 ring-white/10'
-                    : 'w-full h-full rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-bg'
-                }`}
-              >
-                {/* Mobile Speaker Notch */}
-                {previewDevice === 'mobile' && (
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#1e2330] rounded-full z-30 pointer-events-none" />
-                )}
-
-                {/* Direct Native React Render: 0ms delay, instantaneous real-time sync with shared state! */}
+              {/* Native Real-time Scrollable Viewport with Device Framing */}
+              <div className="flex-1 bg-[#040608] p-3 flex items-center justify-center overflow-hidden">
                 <div
-                  key={previewKey}
-                  ref={previewScrollContainerRef}
-                  className="w-full h-full overflow-y-auto overflow-x-hidden relative scroll-smooth bg-bg"
+                  className={`transition-all duration-300 h-full flex flex-col ${
+                    previewDevice === 'mobile'
+                      ? 'w-[390px] max-h-[844px] rounded-[44px] border-[10px] border-[#1e2330] shadow-[0_25px_60px_rgba(0,0,0,0.9)] bg-black overflow-hidden relative ring-1 ring-white/10'
+                      : previewDevice === 'tablet'
+                      ? 'w-[768px] max-h-[1024px] rounded-[32px] border-[12px] border-[#1e2330] shadow-[0_25px_60px_rgba(0,0,0,0.9)] bg-black overflow-hidden relative ring-1 ring-white/10'
+                      : 'w-full h-full rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-bg'
+                  }`}
                 >
-                  <PreviewErrorBoundary onRetry={handleRefreshPreview}>
-                    <PortfolioHome isPreview={true} />
-                  </PreviewErrorBoundary>
+                  {/* Mobile Speaker Notch */}
+                  {previewDevice === 'mobile' && (
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#1e2330] rounded-full z-30 pointer-events-none" />
+                  )}
+
+                  {/* Memoized Native React Render: 0ms delay, instantaneous real-time sync with shared state! */}
+                  <MemoizedPreview
+                    previewKey={previewKey}
+                    previewScrollRef={previewScrollContainerRef}
+                    onRetry={handleRefreshPreview}
+                  />
                 </div>
               </div>
-            </div>
-          </aside>
-        )}
+            </aside>
+          )}
+        </div>
       </div>
 
       {/* Export Modal */}

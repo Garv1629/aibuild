@@ -82,8 +82,8 @@ export const Journal: React.FC<JournalProps> = ({
               }}
               onClick={() => onSelectArticle(entry)}
               tabIndex={0}
-              role="button"
-              aria-label={`Read article: ${entry.title}`}
+              role="article"
+              aria-label={`Article: ${entry.title}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();

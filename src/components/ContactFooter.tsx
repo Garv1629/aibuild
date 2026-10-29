@@ -8,7 +8,9 @@ import gsap from 'gsap';
 import Hls from 'hls.js';
 import { ArrowUpRight, Github, Mail, Sliders } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
+import { normalizeContactEmail } from '../utils/portfolio.ts';
 import { Button, buttonVariants } from './Button.tsx';
+import { EmailContactPill } from './EmailContactPill.tsx';
 
 interface ContactFooterProps {
   onStartConversation: () => void;
@@ -18,6 +20,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
   onStartConversation,
 }) => {
   const { data, setIsAdminOpen } = usePortfolio();
+  const contactEmail = normalizeContactEmail(data.email);
   const brandName = data.brandName;
   const brandTagline = data.brandTagline;
   const githubUrl = data.githubUrl;
@@ -183,15 +186,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
 
             {/* Direct Studio Email */}
             <div className="mt-4 pt-4 border-t border-white/10 w-full flex items-center justify-center">
-              <a
-                href={`mailto:${data.email || 'aibuild1629@gmail.com'}`}
-                className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass-pill hover:bg-white/10 border border-white/10 hover:border-sky-400/40 transition-all text-xs font-mono text-white/70 hover:text-white shadow-sm cursor-pointer"
-                title="Email AI Build directly"
-              >
-                <Mail className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
-                <span className="tracking-wide">{data.email || 'aibuild1629@gmail.com'}</span>
-                <span className="text-2xs text-white/40 group-hover:text-sky-300 transition-colors">↗</span>
-              </a>
+              <EmailContactPill email={contactEmail} variant="footer" />
             </div>
           </div>
         </div>

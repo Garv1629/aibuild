@@ -9,6 +9,37 @@ export interface ProjectVideo {
   poster?: string;
 }
 
+export function normalizeContactEmail(email?: string | null): string {
+  if (!email || typeof email !== 'string') return 'aibuild1629@gmail.com';
+  const clean = email.trim().toLowerCase();
+  if (
+    clean.includes('garv@aibuild.studio') ||
+    clean.includes('aibuild.studio') ||
+    clean.includes('garv@') ||
+    clean.includes('aibuld') ||
+    clean.includes('2026') ||
+    !clean.includes('@')
+  ) {
+    return 'aibuild1629@gmail.com';
+  }
+  return email.trim();
+}
+
+export function isRlsError(err?: string | null): boolean {
+  if (!err || typeof err !== 'string') return false;
+  const lower = err.toLowerCase();
+  return (
+    lower.includes('row-level security') ||
+    lower.includes('violates row-level') ||
+    lower.includes('violates row level') ||
+    lower.includes('permission denied') ||
+    lower.includes('pgrst301') ||
+    lower.includes('42501')
+  );
+}
+
+
+
 export interface Project {
   id: string;
   title: string;
@@ -128,14 +159,38 @@ export interface ClientInquiry {
   serviceType: string;
   ideaDescription: string;
   createdAt: string;
+  submittedAt?: string;
   status: 'new' | 'contacted' | 'in_progress' | 'archived';
   notes?: string;
 }
 
+export type ActivityAction =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'publish'
+  | 'unpublish'
+  | 'upload'
+  | 'reorder'
+  | 'login'
+  | 'settings';
+
+export type ActivityTarget =
+  | 'project'
+  | 'journal'
+  | 'exploration'
+  | 'service'
+  | 'media'
+  | 'content'
+  | 'review'
+  | 'auth'
+  | 'inquiry'
+  | 'settings';
+
 export interface ActivityLog {
   id: string;
-  action: 'create' | 'update' | 'delete' | 'publish' | 'unpublish' | 'upload' | 'reorder' | 'login' | 'settings';
-  target: 'project' | 'journal' | 'exploration' | 'service' | 'media' | 'content' | 'review' | 'auth' | 'inquiry';
+  action: ActivityAction;
+  target: ActivityTarget;
   title: string;
   timestamp: string;
   details?: string;
@@ -861,5 +916,3 @@ export const DEFAULT_INQUIRIES: ClientInquiry[] = [
     notes: 'Sent initial discovery email and pricing breakdown.',
   },
 ];
-
-

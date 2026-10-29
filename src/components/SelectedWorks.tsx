@@ -145,8 +145,8 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                   onClick={() => onSelectProject(project)}
                   className={`group relative liquid-glass-card rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer min-h-[280px] xs:min-h-[320px] sm:min-h-[380px] md:min-h-[460px] flex flex-col justify-end p-3.5 xs:p-5 sm:p-6 md:p-8 ${colSpanClass}`}
                   tabIndex={0}
-                  role="button"
-                  aria-label={`View project details for ${project.title}`}
+                  role="article"
+                  aria-label={`Project: ${project.title}`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -188,7 +188,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     {project.status}
                   </span>
                   {project.isPublished === false && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/90 text-black font-semibold shadow-md">
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-amber-500/90 text-black font-semibold shadow-md">
                       DRAFT (HIDDEN)
                     </span>
                   )}

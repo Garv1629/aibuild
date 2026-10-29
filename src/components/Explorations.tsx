@@ -223,8 +223,8 @@ export const Explorations: React.FC<ExplorationsProps> = ({
               onClick={() => onSelectExploration(item)}
               className="group aspect-video sm:aspect-square w-full rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-xl shadow-black/60 transition-all duration-300 hover:scale-[1.02] relative"
               tabIndex={0}
-              role="button"
-              aria-label={`View exploration: ${item.title}`}
+              role="article"
+              aria-label={`Exploration: ${item.title}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
@@ -340,8 +340,8 @@ export const Explorations: React.FC<ExplorationsProps> = ({
                   style={{ transform: `rotate(${item.rotation}deg)` }}
                   className="pointer-events-auto group aspect-square w-full max-w-[320px] rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-2xl transition-all duration-500 hover:scale-105 hover:rotate-0 hover:z-20 relative"
                   tabIndex={0}
-                  role="button"
-                  aria-label={`View exploration: ${item.title}`}
+                  role="article"
+                  aria-label={`Exploration: ${item.title}`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -407,8 +407,8 @@ export const Explorations: React.FC<ExplorationsProps> = ({
                   style={{ transform: `rotate(${item.rotation}deg)` }}
                   className="pointer-events-auto group aspect-square w-full max-w-[320px] rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-2xl transition-all duration-500 hover:scale-105 hover:rotate-0 hover:z-20 relative"
                   tabIndex={0}
-                  role="button"
-                  aria-label={`View exploration: ${item.title}`}
+                  role="article"
+                  aria-label={`Exploration: ${item.title}`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();

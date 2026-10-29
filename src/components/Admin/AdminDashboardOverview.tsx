@@ -104,7 +104,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
                 )}
               </div>
               <p className="text-xs text-muted font-mono mt-0.5">
-                Logged in as <strong className="text-white/80">{user?.email || 'admin@aibuild.studio'}</strong> • Last published: {formatPublishDate(data.lastPublishedAt)}
+                Logged in as <strong className="text-white/80">{user?.email || 'aibuild1629@gmail.com'}</strong> • Last published: {formatPublishDate(data.lastPublishedAt)}
               </p>
             </div>
           </div>
@@ -152,7 +152,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
       </div>
 
       {/* 6 Core Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         {/* Card 1: Client Inquiries / Leads (High Priority) */}
         <div
           onClick={() => onSelectTab('inquiries')}
@@ -365,7 +365,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
             No client inquiries yet. When visitors click &quot;Say hi&quot; or &quot;Start a Conversation&quot;, their submissions will appear here.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {inquiries.slice(0, 3).map((item) => (
               <div
                 key={item.id}
@@ -389,7 +389,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
                 </p>
                 <div className="flex items-center justify-between text-[10px] font-mono text-white/40 pt-1 border-t border-white/5">
                   <span className="text-sky-300">{item.serviceType}</span>
-                  <span>{new Date(item.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                  <span>{new Date((item.submittedAt || item.createdAt || Date.now())).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 </div>
               </div>
             ))}
@@ -398,7 +398,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
       </div>
 
       {/* Two Column Section: Recent Activity Audit Feed + Project Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* Recent Activity Log */}
         <div className="liquid-glass rounded-3xl p-5 border border-white/10 space-y-4">
           <div className="flex items-center justify-between">

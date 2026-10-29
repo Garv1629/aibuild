@@ -9,6 +9,7 @@ import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star
 import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
 import { ProjectInteractiveDemo } from './ProjectInteractiveDemo.tsx';
 import { Button } from './Button.tsx';
+import { EmailContactPill } from './EmailContactPill.tsx';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 
 interface ProjectModalProps {
@@ -747,9 +748,12 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                   <h3 className="text-xl sm:text-3xl font-display text-text-primary mb-1 sm:mb-2">
                     Start a Conversation
                   </h3>
-                  <p className="text-xs text-muted leading-relaxed">
-                    Have an idea, prototype, or creative project? Tell us what you want to build.
+                  <p className="text-xs text-muted leading-relaxed mb-2.5">
+                    Have an idea, prototype, or creative project? Send a note below or reach us directly:
                   </p>
+                  <div className="mb-2">
+                    <EmailContactPill variant="modal" />
+                  </div>
                 </div>
 
                 <div>

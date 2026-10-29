@@ -50,7 +50,7 @@ export const AdminLoginPage: React.FC = () => {
   };
 
   const handleFillDefaults = () => {
-    setEmail('admin@aibuild.studio');
+    setEmail('aibuild1629@gmail.com');
     setPassword('YourSecureAdminPassword2026!');
     setError(null);
   };
@@ -133,7 +133,7 @@ export const AdminLoginPage: React.FC = () => {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@aibuild.studio"
+                placeholder="aibuild1629@gmail.com"
                 className="w-full liquid-glass-input text-xs font-mono px-4 py-3 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-sky-400/60 transition-all"
               />
             </div>

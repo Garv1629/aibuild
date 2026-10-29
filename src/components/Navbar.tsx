@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="font-display font-medium text-white text-base tracking-tight block">
                     {data.brandName || 'AI Build'}
                   </span>
-                  <span className="text-[10px] font-mono text-accent block">Studio Navigation</span>
+                  <span className="text-2xs font-mono text-accent block">Studio Navigation</span>
                 </div>
               </div>
 

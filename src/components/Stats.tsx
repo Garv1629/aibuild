@@ -253,7 +253,7 @@ export const Stats: React.FC = () => {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
-            <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.12em] sm:tracking-[0.18em] text-accent font-medium mb-1.5 sm:mb-2">
+            <span className="text-xs sm:text-sm font-mono text-accent font-medium mb-1.5 sm:mb-2">
               Foundational Pillars
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-normal text-text-primary tracking-tight">
@@ -292,7 +292,7 @@ export const Stats: React.FC = () => {
           
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
-            <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.12em] sm:tracking-[0.18em] text-accent font-medium mb-1.5 sm:mb-2">
+            <span className="text-xs sm:text-sm font-mono text-accent font-medium mb-1.5 sm:mb-2">
               Foundational Pillars
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-normal text-text-primary tracking-tight">

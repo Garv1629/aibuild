@@ -295,6 +295,8 @@ export const InquiriesManager: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-muted mt-1">
                         <a
                           href={`mailto:${inq.email}?subject=Regarding your inquiry on AI Build Studio&body=Hi ${encodeURIComponent(inq.name)},\n\nThank you for reaching out to AI Build Studio regarding your ${encodeURIComponent(inq.serviceType)} project.\n\n`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-sky-300 hover:text-white flex items-center gap-1 underline underline-offset-2"
                         >
                           <Mail className="w-3 h-3 text-sky-400" />
@@ -325,8 +327,10 @@ export const InquiriesManager: React.FC = () => {
                     {/* Direct Mailto Reply Button */}
                     <a
                       href={`mailto:${inq.email}?subject=Regarding your ${encodeURIComponent(inq.serviceType)} project with AI Build&body=Hi ${encodeURIComponent(inq.name)},\n\nThank you for reaching out through AI Build regarding your ${encodeURIComponent(inq.serviceType)} concept.\n\nWe would love to discuss your vision in detail.\n\nBest regards,\nAI Build Studio`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-mono text-xs font-medium flex items-center gap-1.5 shadow-md transition-all shrink-0 cursor-pointer"
-                      title="Open default email client to reply"
+                      title="Open email client to reply"
                     >
                       <Send className="w-3 h-3" />
                       <span>Reply via Email</span>
