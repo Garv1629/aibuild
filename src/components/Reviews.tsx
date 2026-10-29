@@ -74,7 +74,6 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
               variant="glass"
               size="md"
               onClick={onOpenReviewModal}
-              className="rounded-2xl hover:scale-105 shadow-[0_0_20px_rgba(56,189,248,0.25)] min-h-[44px]"
               aria-label="Add your review"
             >
               <Plus className="w-4 h-4 text-accent" />

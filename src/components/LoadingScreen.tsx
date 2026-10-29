@@ -7,6 +7,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { motion, useReducedMotion } from 'framer-motion';
 import { Check, X, ArrowRight, AlertTriangle, RotateCw } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
+import { Button } from './Button.tsx';
 
 interface LoadingScreenProps {
   onComplete: () => void;
@@ -979,28 +980,28 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
           {/* Action Controls: Cancel & Fast Forward */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             {/* Cancel Button */}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCancel}
-              className="px-3 sm:px-4 py-1.5 rounded-full bg-black/40 hover:bg-black/70 border border-white/15 hover:border-white/35 text-[10.5px] sm:text-xs font-mono text-white/65 hover:text-white transition-all duration-300 flex items-center gap-1.5 cursor-pointer backdrop-blur-md focus-visible:ring-1 focus-visible:ring-[#00e5ff] focus-visible:outline-none"
               title="Cancel loading & enter site immediately (Esc)"
               aria-label="Cancel loading and enter website"
             >
               <X className="w-3 h-3 text-white/50" />
               <span>Cancel</span>
-            </button>
+            </Button>
 
             {/* Fast Forward Button */}
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleFastForward}
-              className="px-4 sm:px-5 py-1.5 rounded-full bg-[#07131e]/90 hover:bg-[#0c1f30] border border-[#00e5ff]/50 hover:border-[#00e5ff] text-[10.5px] sm:text-xs font-mono text-[#00e5ff] hover:text-white font-medium shadow-[0_0_16px_rgba(0,229,255,0.22)] hover:shadow-[0_0_24px_rgba(0,229,255,0.45)] transition-all duration-300 flex items-center gap-1.5 cursor-pointer active:scale-95 backdrop-blur-md focus-visible:ring-1 focus-visible:ring-[#00e5ff] focus-visible:outline-none"
               title="Fast forward loading sequence (Space or Enter)"
               aria-label="Fast forward loading sequence"
             >
               <span>Fast Forward</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#00e5ff]" />
-            </button>
+              <ArrowRight className="w-3.5 h-3.5 text-accent" />
+            </Button>
           </div>
         </div>
 

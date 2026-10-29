@@ -121,10 +121,21 @@ export interface MediaAsset {
   tags?: string[];
 }
 
+export interface ClientInquiry {
+  id: string;
+  name: string;
+  email: string;
+  serviceType: string;
+  ideaDescription: string;
+  createdAt: string;
+  status: 'new' | 'contacted' | 'in_progress' | 'archived';
+  notes?: string;
+}
+
 export interface ActivityLog {
   id: string;
   action: 'create' | 'update' | 'delete' | 'publish' | 'unpublish' | 'upload' | 'reorder' | 'login' | 'settings';
-  target: 'project' | 'journal' | 'exploration' | 'service' | 'media' | 'content' | 'review' | 'auth';
+  target: 'project' | 'journal' | 'exploration' | 'service' | 'media' | 'content' | 'review' | 'auth' | 'inquiry';
   title: string;
   timestamp: string;
   details?: string;
@@ -826,6 +837,28 @@ export const DEFAULT_ACTIVITY_LOGS: ActivityLog[] = [
     title: 'Approved review from Aura Horizon Labs',
     timestamp: '2 days ago',
     details: '5-star rating verified',
+  },
+];
+
+export const DEFAULT_INQUIRIES: ClientInquiry[] = [
+  {
+    id: 'inq-1',
+    name: 'Sophia Chen',
+    email: 'sophia.chen@stratafin.io',
+    serviceType: 'Web Development',
+    ideaDescription: 'Looking to build an ultra-high performance landing page with interactive 3D asset previews and cinematic transitions for our Series A product launch.',
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    status: 'new',
+  },
+  {
+    id: 'inq-2',
+    name: 'Marcus Vance',
+    email: 'm.vance@lumina-media.co',
+    serviceType: 'AI Videos',
+    ideaDescription: 'Need a series of 5 cinematic 4K generative AI teaser videos with bespoke sound design for an upcoming luxury fashion and digital wearables drop.',
+    createdAt: new Date(Date.now() - 3600000 * 28).toISOString(),
+    status: 'contacted',
+    notes: 'Sent initial discovery email and pricing breakdown.',
   },
 ];
 

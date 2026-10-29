@@ -34,6 +34,7 @@ import {
   Zap,
   Star,
   MessageSquareHeart,
+  MessageSquareText,
   Images,
   LogOut,
   ShieldCheck,
@@ -42,6 +43,7 @@ import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { PortfolioHome } from './PortfolioHome.tsx';
 import { AdminDashboardOverview } from '../components/Admin/AdminDashboardOverview.tsx';
+import { InquiriesManager } from '../components/Admin/InquiriesManager.tsx';
 import { ProjectsManager } from '../components/Admin/ProjectsManager.tsx';
 import { JournalManager } from '../components/Admin/JournalManager.tsx';
 import { ExplorationsManager } from '../components/Admin/ExplorationsManager.tsx';
@@ -50,7 +52,7 @@ import { BrandSettingsManager } from '../components/Admin/BrandSettingsManager.t
 import { ReviewsManager } from '../components/Admin/ReviewsManager.tsx';
 import { MediaLibraryManager } from '../components/Admin/MediaLibraryManager.tsx';
 
-type AdminTab = 'overview' | 'projects' | 'journal' | 'explorations' | 'services' | 'brand' | 'reviews' | 'media';
+type AdminTab = 'overview' | 'inquiries' | 'projects' | 'journal' | 'explorations' | 'services' | 'brand' | 'reviews' | 'media';
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 class PreviewErrorBoundary extends React.Component<
@@ -102,7 +104,7 @@ export const AdminPage: React.FC = () => {
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
-    const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews', 'media'];
+    const validTabs: AdminTab[] = ['overview', 'inquiries', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews', 'media'];
     if (tab && validTabs.includes(tab as AdminTab)) {
       return tab as AdminTab;
     }
@@ -151,7 +153,7 @@ export const AdminPage: React.FC = () => {
 
   useEffect(() => {
     if (tab) {
-      const validTabs: AdminTab[] = ['overview', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews', 'media'];
+      const validTabs: AdminTab[] = ['overview', 'inquiries', 'projects', 'journal', 'explorations', 'services', 'brand', 'reviews', 'media'];
       if (validTabs.includes(tab as AdminTab)) {
         setActiveTab(tab as AdminTab);
       }
@@ -454,6 +456,31 @@ export const AdminPage: React.FC = () => {
 
               <button
                 type="button"
+                onClick={() => handleSelectTab('inquiries')}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                  activeTab === 'inquiries'
+                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquareText className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Client Inquiries</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {data.inquiries && data.inquiries.filter((i) => i.status === 'new').length > 0 && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/30 text-emerald-300 font-mono border border-emerald-500/40 animate-pulse">
+                      {data.inquiries.filter((i) => i.status === 'new').length} new
+                    </span>
+                  )}
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.inquiries?.length || 0}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleSelectTab('projects')}
                 className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
                   activeTab === 'projects'
@@ -645,6 +672,7 @@ export const AdminPage: React.FC = () => {
             <AdminDashboardOverview onSelectTab={handleSelectTab} />
           )}
 
+          {activeTab === 'inquiries' && <InquiriesManager />}
           {activeTab === 'projects' && <ProjectsManager />}
           {activeTab === 'media' && <MediaLibraryManager />}
           {activeTab === 'journal' && <JournalManager />}

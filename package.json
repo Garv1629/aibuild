@@ -8,8 +8,8 @@
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview --port=3000 --host=0.0.0.0",
     "lint": "node ./node_modules/typescript/bin/tsc --noEmit",
-    "test": "node push.js",
-    "push": "node push.js"
+    "test": "git add -A; git commit -m \"Add client inquiries management system to Admin Panel and connect conversation modal\"; git push origin main",
+    "push": "git add -A; git commit -m \"Add client inquiries management system to Admin Panel and connect conversation modal\"; git push origin main"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

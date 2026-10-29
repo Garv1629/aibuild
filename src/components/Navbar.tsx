@@ -54,26 +54,29 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-[max(0.5rem,env(safe-area-inset-top))] sm:pt-4 md:pt-6 px-2 sm:px-4 pointer-events-none">
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-[max(0.6rem,env(safe-area-inset-top))] sm:pt-4 md:pt-6 px-3 sm:px-4 pointer-events-none">
         <nav
           aria-label="Main Navigation"
-          className="pointer-events-auto inline-flex items-center rounded-full liquid-glass-nav liquid-glass-gloss px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-300 shadow-2xl gap-1 sm:gap-1.5"
+          className="pointer-events-auto flex items-center justify-between w-full max-w-[94%] md:max-w-max md:justify-center rounded-full liquid-glass-nav liquid-glass-gloss px-3 sm:px-4 py-1.5 sm:py-2 transition-all duration-300 shadow-2xl gap-2 sm:gap-3"
         >
-          {/* 1. Logo */}
-          <Button
-            variant="icon"
-            size="sm"
+          {/* 1. Brand Logo & Name */}
+          <button
+            type="button"
             onClick={() => onNavigate('hero')}
-            className="relative group p-[1.5px] shrink-0"
+            className="flex items-center gap-2 group shrink-0 cursor-pointer text-left select-none"
             aria-label="AI Build Home"
           >
-            <div className="absolute inset-0 rounded-full accent-gradient group-hover:rotate-180 transition-transform duration-700 ease-in-out pointer-events-none opacity-80" />
-            <div className="w-full h-full bg-black/60 rounded-full flex items-center justify-center relative z-10 backdrop-blur-md border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
-              <span className="font-display italic text-xs sm:text-sm text-white font-normal leading-none select-none tracking-tight">
-                AB
-              </span>
+            <div className="relative w-7 h-7 sm:w-8 sm:h-8 p-[1.5px] rounded-full accent-gradient group-hover:rotate-180 transition-transform duration-700 ease-in-out shrink-0">
+              <div className="w-full h-full bg-black/70 rounded-full flex items-center justify-center relative z-10 backdrop-blur-md border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                <span className="font-display italic text-xs text-white font-normal leading-none select-none tracking-tight">
+                  AB
+                </span>
+              </div>
             </div>
-          </Button>
+            <span className="font-display font-semibold text-xs sm:text-sm text-white tracking-tight">
+              {data.brandName || 'AI Build'}
+            </span>
+          </button>
 
           {/* 2. Desktop Nav Links (>= md) */}
           <div className="hidden md:flex items-center gap-1 sm:gap-1.5 shrink-0">
@@ -92,49 +95,36 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
-          {/* 3. Mobile Compact Quick Links (< md) */}
-          <div className="flex md:hidden items-center gap-1 shrink-0">
-            <div className="w-px h-3.5 bg-white/15 mx-0.5" aria-hidden="true" />
+          {/* 3. Right Actions: Say hi + Mobile Menu Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="hidden md:block w-px h-5 bg-white/20 mx-0.5" aria-hidden="true" />
             <Button
-              variant="pill"
+              variant="glass"
               size="sm"
-              active={activeSection === 'work'}
-              onClick={() => onNavigate('work')}
-              className="whitespace-nowrap text-2xs px-2.5 py-1"
+              onClick={onOpenContact}
+              className="group whitespace-nowrap text-2xs sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5"
+              aria-label="Start a Conversation"
             >
-              Work
+              <span>Say hi</span>
+              <span className="text-2xs sm:text-xs leading-none transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
+            </Button>
+
+            {/* Mobile Menu Hamburger Toggle (< md) */}
+            <Button
+              variant="icon"
+              size="sm"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="flex md:hidden shrink-0 w-8 h-8 rounded-full"
+              aria-label={isMobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-4 h-4 text-sky-300" />
+              ) : (
+                <Menu className="w-4 h-4 text-white" />
+              )}
             </Button>
           </div>
-
-          {/* 4. Divider */}
-          <div className="w-px h-3.5 sm:h-5 bg-white/20 mx-0.5 shrink-0" aria-hidden="true" />
-
-          {/* 5. "Say hi" button */}
-          <Button
-            variant="glass"
-            size="sm"
-            onClick={onOpenContact}
-            className="group whitespace-nowrap text-2xs sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5"
-            aria-label="Start a Conversation"
-          >
-            <span>Say hi</span>
-            <span className="text-2xs sm:text-xs leading-none transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
-          </Button>
-
-          {/* 6. Mobile Menu Hamburger Toggle (< md) */}
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex md:hidden p-1.5 rounded-full liquid-glass text-white/90 hover:text-white transition-all active:scale-90 cursor-pointer shadow-md shrink-0 ml-0.5"
-            aria-label={isMobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-4 h-4 text-sky-300" />
-            ) : (
-              <Menu className="w-4 h-4 text-white" />
-            )}
-          </button>
         </nav>
       </header>
 
@@ -164,14 +154,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              <button
-                type="button"
+              <Button
+                variant="icon"
+                size="sm"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-full liquid-glass text-white/80 hover:text-white transition-colors cursor-pointer"
                 aria-label="Close Navigation Menu"
               >
                 <X className="w-5 h-5 text-white" />
-              </button>
+              </Button>
             </div>
 
             {/* Navigation Links with large touch targets */}

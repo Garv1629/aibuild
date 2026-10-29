@@ -9,6 +9,7 @@ import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star
 import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
 import { ProjectInteractiveDemo } from './ProjectInteractiveDemo.tsx';
 import { Button } from './Button.tsx';
+import { usePortfolio } from '../context/PortfolioContext.tsx';
 
 interface ProjectModalProps {
   project: Project | null;
@@ -643,7 +644,9 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { addInquiry } = usePortfolio();
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -665,20 +668,33 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.ideaDescription.trim()) return;
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-      setFormData({
-        name: '',
-        email: '',
-        serviceType: 'Web Development',
-        ideaDescription: '',
+    setIsSubmitting(true);
+    try {
+      await addInquiry({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        serviceType: formData.serviceType,
+        ideaDescription: formData.ideaDescription.trim(),
       });
-    }, 2500);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        onClose();
+        setFormData({
+          name: '',
+          email: '',
+          serviceType: 'Web Development',
+          ideaDescription: '',
+        });
+      }, 2500);
+    } catch (err) {
+      console.error('Failed to submit inquiry:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

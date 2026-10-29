@@ -8,6 +8,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExplorationItem } from '../utils/portfolio.ts';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
+import { buttonVariants } from './Button.tsx';
 
 // Safe plugin registration helper
 const getActiveGsap = () => {
@@ -198,13 +199,13 @@ export const Explorations: React.FC<ExplorationsProps> = ({
               'A curated gallery of live AI video experiments, high-converting UGC mockups, web interactions, and digital publication concepts.'}
           </p>
 
-          {/* GitHub button - Apple visionOS Liquid Glass */}
+          {/* GitHub button - Standardized Secondary Button */}
           <div className="mb-8">
             <a
               href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="liquid-glass-button rounded-full text-xs font-mono uppercase tracking-wider px-6 py-3 text-white flex items-center gap-2 shadow-lg active:scale-95 inline-flex"
+              className={buttonVariants({ variant: 'secondary', size: 'md' })}
             >
               <span>{data.siteTexts?.explorationsGithubText || 'Explore on GitHub'}</span>
               <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">

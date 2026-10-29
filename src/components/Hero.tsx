@@ -230,8 +230,9 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
 
         {/* Hero Content (centered, z-10) */}
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center my-auto py-1 xs:py-2 sm:py-4 w-full">
-          {/* Brand Name */}
-          <h1 className="name-reveal text-3xl sm:text-5xl md:text-7xl font-display italic leading-[0.92] sm:leading-[0.9] tracking-tight text-text-primary mb-1.5 xs:mb-2 sm:mb-5 selection:bg-white/20 break-words max-w-full">
+
+          {/* Brand Name / Main Headline */}
+          <h1 className="name-reveal text-5xl sm:text-7xl md:text-8xl lg:text-[104px] font-display font-extrabold tracking-tight sm:tracking-tighter leading-[0.92] text-text-primary mb-1.5 xs:mb-2 sm:mb-5 selection:bg-white/20 break-words max-w-full text-center">
             {data.siteTexts?.heroHeadline || data.brandName || 'AI Build'}
           </h1>
 
@@ -240,7 +241,7 @@ export const Hero: React.FC<HeroProps> = ({ onSeeWorks, onReachOut }) => {
             <span>{data.siteTexts?.heroRolePrefix || 'Ideas into reality through'}</span>
             <span
               key={activeRole}
-              className="font-display italic text-text-primary animate-role-fade-in inline-block min-w-[110px] xs:min-w-[130px] sm:min-w-[210px] text-center px-1"
+              className="font-serif italic text-text-primary animate-role-fade-in inline-block min-w-[110px] xs:min-w-[130px] sm:min-w-[210px] text-center px-1"
             >
               {activeRole}
             </span>

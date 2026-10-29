@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Send,
   Zap,
+  MessageSquareText,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
 import { useAuth } from '../../context/AuthContext.tsx';
@@ -52,6 +53,8 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
 
   const mediaCount = data.mediaAssets?.length || 0;
   const activityLogs = data.activityLogs || [];
+  const inquiries = data.inquiries || [];
+  const newInquiries = inquiries.filter((i) => i.status === 'new').length;
 
   const handlePublishAll = () => {
     publishAllChanges();
@@ -148,9 +151,29 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
         )}
       </div>
 
-      {/* 5 Core Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        {/* Card 1: Projects */}
+      {/* 6 Core Metric Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {/* Card 1: Client Inquiries / Leads (High Priority) */}
+        <div
+          onClick={() => onSelectTab('inquiries')}
+          className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-white/[0.03] to-transparent hover:bg-white/[0.07] border border-emerald-500/30 hover:border-emerald-400/50 transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-mono text-emerald-300 font-medium">Inquiries</span>
+            <MessageSquareText className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-display text-white">{inquiries.length}</div>
+            <div className="flex items-center gap-1.5 mt-1 text-[10px] font-mono">
+              <span className={newInquiries > 0 ? 'text-emerald-400 font-bold animate-pulse' : 'text-emerald-400'}>
+                {newInquiries} New
+              </span>
+              <span className="text-white/40">• {inquiries.length - newInquiries} Handled</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Projects */}
         <div
           onClick={() => onSelectTab('projects')}
           className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer group flex flex-col justify-between"
@@ -168,7 +191,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
           </div>
         </div>
 
-        {/* Card 2: Journal */}
+        {/* Card 3: Journal */}
         <div
           onClick={() => onSelectTab('journal')}
           className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer group flex flex-col justify-between"
@@ -186,7 +209,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
           </div>
         </div>
 
-        {/* Card 3: Explorations */}
+        {/* Card 4: Explorations */}
         <div
           onClick={() => onSelectTab('explorations')}
           className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer group flex flex-col justify-between"
@@ -201,38 +224,38 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
           </div>
         </div>
 
-        {/* Card 4: Reviews */}
+        {/* Card 5: Reviews */}
         <div
           onClick={() => onSelectTab('reviews')}
           className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-white/50">Client Reviews</span>
+            <span className="text-[11px] font-mono text-white/50">Reviews</span>
             <Star className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
           </div>
           <div>
             <div className="text-2xl sm:text-3xl font-display text-white">{reviews.length}</div>
             <div className="flex items-center gap-1.5 mt-1 text-[10px] font-mono">
-              <span className="text-emerald-400">{approvedReviews} Approved</span>
+              <span className="text-emerald-400">{approvedReviews} Live</span>
               {pendingReviews > 0 && (
-                <span className="text-amber-400 font-semibold">• {pendingReviews} Pending</span>
+                <span className="text-amber-400 font-semibold">• {pendingReviews} New</span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Card 5: Media Library */}
+        {/* Card 6: Media Library */}
         <div
           onClick={() => onSelectTab('media')}
-          className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer group flex flex-col justify-between col-span-2 sm:col-span-1"
+          className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all cursor-pointer group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono text-white/50">Media Library</span>
+            <span className="text-[11px] font-mono text-white/50">Media</span>
             <Upload className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
           </div>
           <div>
             <div className="text-2xl sm:text-3xl font-display text-white">{mediaCount}</div>
-            <p className="text-[10px] text-muted font-mono mt-1">Images & Videos</p>
+            <p className="text-[10px] text-muted font-mono mt-1">Files & Videos</p>
           </div>
         </div>
       </div>
@@ -245,6 +268,17 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <button
+            type="button"
+            onClick={() => onSelectTab('inquiries')}
+            className="p-3.5 rounded-2xl bg-white/[0.02] hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 flex flex-col items-center justify-center text-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <MessageSquareText className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-medium text-white">Client Inbox</span>
+          </button>
+
           <button
             type="button"
             onClick={() => onSelectTab('projects')}
@@ -299,19 +333,68 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
             </div>
             <span className="text-xs font-medium text-white">Brand & Texts</span>
           </button>
-
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-3.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 flex flex-col items-center justify-center text-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <ExternalLink className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-medium text-white">Open Live Site</span>
-          </a>
         </div>
+      </div>
+
+      {/* Latest Client Inquiries / Leads Banner */}
+      <div className="liquid-glass rounded-3xl p-5 border border-white/10 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquareText className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-xs font-mono uppercase tracking-wider text-emerald-300">
+              Recent Client Inquiries
+            </h3>
+            {newInquiries > 0 && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold animate-pulse">
+                {newInquiries} New Lead{newInquiries > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => onSelectTab('inquiries')}
+            className="text-[11px] font-mono text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer transition-colors"
+          >
+            <span>View All Leads ({inquiries.length})</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+
+        {inquiries.length === 0 ? (
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-dashed border-white/10 text-center text-xs text-white/50 font-mono">
+            No client inquiries yet. When visitors click &quot;Say hi&quot; or &quot;Start a Conversation&quot;, their submissions will appear here.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {inquiries.slice(0, 3).map((item) => (
+              <div
+                key={item.id}
+                onClick={() => onSelectTab('inquiries')}
+                className="p-3.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-emerald-500/30 transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-white group-hover:text-emerald-300 truncate">
+                    {item.name}
+                  </span>
+                  <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${
+                    item.status === 'new'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 animate-pulse'
+                      : 'bg-white/10 text-white/60 border-white/10'
+                  }`}>
+                    {item.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/70 line-clamp-2 leading-relaxed font-mono">
+                  &quot;{item.ideaDescription}&quot;
+                </p>
+                <div className="flex items-center justify-between text-[10px] font-mono text-white/40 pt-1 border-t border-white/5">
+                  <span className="text-sky-300">{item.serviceType}</span>
+                  <span>{new Date(item.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Two Column Section: Recent Activity Audit Feed + Project Overview */}

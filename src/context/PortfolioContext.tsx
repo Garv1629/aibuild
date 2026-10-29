@@ -27,6 +27,8 @@ import {
   DEFAULT_MEDIA_ASSETS,
   ActivityLog,
   DEFAULT_ACTIVITY_LOGS,
+  ClientInquiry,
+  DEFAULT_INQUIRIES,
 } from '../utils/portfolio.ts';
 import { api } from '../services/api.ts';
 import { checkSupabaseConnection, isSupabaseConfigured } from '../services/supabase.ts';
@@ -47,6 +49,7 @@ export interface PortfolioData {
   explorations: ExplorationItem[];
   stats: BrandPrincipleStat[];
   reviews: Review[];
+  inquiries: ClientInquiry[];
   siteTexts: SiteTexts;
   mediaAssets: MediaAsset[];
   activityLogs: ActivityLog[];
@@ -71,6 +74,7 @@ export const DEFAULT_PORTFOLIO_DATA: PortfolioData = {
   explorations: [...EXPLORATIONS],
   stats: [...STATS],
   reviews: [...REVIEWS],
+  inquiries: [...DEFAULT_INQUIRIES],
   siteTexts: { ...DEFAULT_SITE_TEXTS },
   mediaAssets: [...DEFAULT_MEDIA_ASSETS],
   activityLogs: [...DEFAULT_ACTIVITY_LOGS],
@@ -116,6 +120,10 @@ interface PortfolioContextType {
   updateReview: (id: string, updated: Partial<Review>) => Promise<{ success: boolean; error?: string }>;
   verifyReview: (id: string, approve?: boolean) => Promise<{ success: boolean; error?: string }>;
   deleteReview: (id: string) => Promise<{ success: boolean; error?: string }>;
+  // Client Inquiries / Leads
+  addInquiry: (inquiry: Omit<ClientInquiry, 'id' | 'createdAt' | 'status'>) => Promise<{ success: boolean; error?: string }>;
+  updateInquiryStatus: (id: string, status: ClientInquiry['status'], notes?: string) => Promise<{ success: boolean; error?: string }>;
+  deleteInquiry: (id: string) => Promise<{ success: boolean; error?: string }>;
   // Media Assets
   addMediaAsset: (asset: MediaAsset) => Promise<{ success: boolean; error?: string }>;
   updateMediaAsset: (id: string, updated: Partial<MediaAsset>) => Promise<{ success: boolean; error?: string }>;
@@ -993,6 +1001,58 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // ----------------------------------------------------------------------------
+  // Client Inquiries / Leads
+  // ----------------------------------------------------------------------------
+  const addInquiry = async (
+    newInquiry: Omit<ClientInquiry, 'id' | 'createdAt' | 'status'>
+  ): Promise<{ success: boolean; error?: string }> => {
+    const inquiry: ClientInquiry = {
+      ...newInquiry,
+      id: `inq-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'new',
+    };
+
+    setData((prev) => ({
+      ...prev,
+      inquiries: [inquiry, ...(prev.inquiries || [])],
+      hasUnpublishedChanges: true,
+    }));
+    logActivity('create', 'inquiry', `New client inquiry received from "${inquiry.name}" (${inquiry.serviceType})`);
+    notifyContentUpdated();
+    return { success: true };
+  };
+
+  const updateInquiryStatus = async (
+    id: string,
+    status: ClientInquiry['status'],
+    notes?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    setData((prev) => ({
+      ...prev,
+      inquiries: (prev.inquiries || []).map((inq) =>
+        inq.id === id ? { ...inq, status, ...(notes !== undefined ? { notes } : {}) } : inq
+      ),
+      hasUnpublishedChanges: true,
+    }));
+    logActivity('update', 'inquiry', `Updated inquiry status to "${status}"`);
+    notifyContentUpdated();
+    return { success: true };
+  };
+
+  const deleteInquiry = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    const inq = data.inquiries?.find((i) => i.id === id);
+    setData((prev) => ({
+      ...prev,
+      inquiries: (prev.inquiries || []).filter((i) => i.id !== id),
+      hasUnpublishedChanges: true,
+    }));
+    logActivity('delete', 'inquiry', `Deleted inquiry from "${inq?.name || id}"`);
+    notifyContentUpdated();
+    return { success: true };
+  };
+
+  // ----------------------------------------------------------------------------
   // Media Assets
   // ----------------------------------------------------------------------------
   const addMediaAsset = async (asset: MediaAsset): Promise<{ success: boolean; error?: string }> => {
@@ -1151,6 +1211,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateReview,
         verifyReview,
         deleteReview,
+        addInquiry,
+        updateInquiryStatus,
+        deleteInquiry,
         addMediaAsset,
         updateMediaAsset,
         deleteMediaAsset,

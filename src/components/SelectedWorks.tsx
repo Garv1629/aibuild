@@ -249,7 +249,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
 
                     {/* Hover label: visionOS liquid glass pill */}
                     <div className="mt-1 sm:mt-2 inline-flex self-start">
-                      <div className={buttonVariants({ variant: 'glass', size: 'sm', className: 'bg-white/20 text-white px-5 py-2 font-medium shadow-lg' })}>
+                      <div className={buttonVariants({ variant: 'glass', size: 'sm' })}>
                         <span>View —</span>
                         <span className="font-display italic text-sm sm:text-base tracking-tight">
                           {project.title}
