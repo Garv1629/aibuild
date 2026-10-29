@@ -4,9 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { ScrollProgressBar } from '../components/ScrollProgressBar.tsx';
-import { LoadingScreen } from '../components/LoadingScreen.tsx';
 import { Navbar } from '../components/Navbar.tsx';
 import { Hero } from '../components/Hero.tsx';
 import { SelectedWorks } from '../components/SelectedWorks.tsx';
@@ -29,25 +27,7 @@ interface PortfolioHomeProps {
   isPreview?: boolean;
 }
 
-export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false }) => {
-  const isInsideIframe = typeof window !== 'undefined' && (isPreview || window.self !== window.top);
-
-  const [isLoading, setIsLoading] = useState(() => {
-    if (isPreview) return false;
-    if (typeof window !== 'undefined') {
-      const search = window.location.search.toLowerCase();
-      if (
-        isInsideIframe ||
-        search.includes('skip-intro') ||
-        search.includes('autostart') ||
-        search.includes('preview')
-      ) {
-        return false;
-      }
-    }
-    return true;
-  });
-
+export const PortfolioHome: React.FC<PortfolioHomeProps> = () => {
   const { addReview } = usePortfolio();
   const [activeSection, setActiveSection] = useState('hero');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -109,13 +89,6 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false 
 
       {/* Top scroll progress bar */}
       <ScrollProgressBar />
-
-      {/* Loading Screen */}
-      <AnimatePresence>
-        {isLoading && (
-          <LoadingScreen onComplete={() => setIsLoading(false)} />
-        )}
-      </AnimatePresence>
 
       {/* Floating Navbar */}
       <Navbar
