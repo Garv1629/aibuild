@@ -324,7 +324,7 @@ export const InquiriesManager: React.FC = () => {
 
                     {/* Direct Mailto Reply Button */}
                     <a
-                      href={`mailto:${inq.email}?subject=Regarding your ${encodeURIComponent(inq.serviceType)} project with AI Build&body=Hi ${encodeURIComponent(inq.name)},\n\nThank you for reaching out through AI Build regarding your ${encodeURIComponent(inq.serviceType)} concept.\n\nWe would love to discuss your vision in detail.\n\nBest regards,\nAI Build Studio\naibuld2026@gmail.com`}
+                      href={`mailto:${inq.email}?subject=Regarding your ${encodeURIComponent(inq.serviceType)} project with AI Build&body=Hi ${encodeURIComponent(inq.name)},\n\nThank you for reaching out through AI Build regarding your ${encodeURIComponent(inq.serviceType)} concept.\n\nWe would love to discuss your vision in detail.\n\nBest regards,\nAI Build Studio`}
                       className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-mono text-xs font-medium flex items-center gap-1.5 shadow-md transition-all shrink-0 cursor-pointer"
                       title="Open default email client to reply"
                     >

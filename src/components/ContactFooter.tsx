@@ -163,21 +163,6 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
                 <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Button>
 
-              {/* Direct Mailto CTA */}
-              <a
-                href={`mailto:${data.email || 'aibuld2026@gmail.com'}`}
-                className={buttonVariants({
-                  variant: 'secondary',
-                  size: 'lg',
-                  className: 'w-full sm:w-auto group',
-                })}
-                aria-label={`Email ${brandName}`}
-              >
-                <Mail className="w-4 h-4 text-sky-400" />
-                <span>{data.email || 'aibuld2026@gmail.com'}</span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
-
               {/* GitHub button (strictly verified link) */}
               <a
                 href={githubUrl}
@@ -195,6 +180,19 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
                 <ArrowUpRight className="w-3.5 h-3.5 text-muted" />
               </a>
             </div>
+
+            {/* Direct Studio Email */}
+            <div className="mt-4 pt-4 border-t border-white/10 w-full flex items-center justify-center">
+              <a
+                href={`mailto:${data.email || 'aibuild2026@gmail.com'}`}
+                className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full liquid-glass-pill hover:bg-white/10 border border-white/10 hover:border-sky-400/40 transition-all text-xs font-mono text-white/70 hover:text-white shadow-sm cursor-pointer"
+                title="Email AI Build directly"
+              >
+                <Mail className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+                <span className="tracking-wide">{data.email || 'aibuild2026@gmail.com'}</span>
+                <span className="text-2xs text-white/40 group-hover:text-sky-300 transition-colors">↗</span>
+              </a>
+            </div>
           </div>
         </div>
 
@@ -208,16 +206,6 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
               {data.siteTexts?.footerSubtext ||
                 'Specializing in Web Development • AI Videos • UGC Videos • E-books. Concepts transformed into reality.'}
             </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href={`mailto:${data.email || 'aibuld2026@gmail.com'}`}
-              className="text-xs font-mono text-white/70 hover:text-sky-300 flex items-center gap-1.5 transition-colors"
-            >
-              <Mail className="w-3.5 h-3.5 text-sky-400" />
-              <span>{data.email || 'aibuld2026@gmail.com'}</span>
-            </a>
           </div>
         </div>
       </div>

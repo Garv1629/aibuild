@@ -37,7 +37,7 @@ const getEnv = (key: string, fallback: string): string => {
   return fallback;
 };
 
-const DEFAULT_ADMIN_EMAIL = getEnv('VITE_ADMIN_EMAIL', 'aibuld2026@gmail.com').toLowerCase();
+const DEFAULT_ADMIN_EMAIL = getEnv('VITE_ADMIN_EMAIL', 'admin@aibuild.studio').toLowerCase();
 const DEFAULT_ADMIN_PASSWORD = getEnv('VITE_ADMIN_PASSWORD', 'YourSecureAdminPassword2026!');
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -122,8 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // 2. Secure Local Fallback Authentication
-    // Verify against configured administrator credentials (supports aibuld2026@gmail.com and legacy fallback)
-    const matchesEmail = cleanEmail === DEFAULT_ADMIN_EMAIL || cleanEmail === 'aibuld2026@gmail.com' || cleanEmail === 'admin@aibuild.studio';
+    // Verify against configured administrator credentials
+    const matchesEmail = cleanEmail === DEFAULT_ADMIN_EMAIL;
     const matchesPassword = cleanPassword === DEFAULT_ADMIN_PASSWORD;
 
     if (matchesEmail && matchesPassword) {
