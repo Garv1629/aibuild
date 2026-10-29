@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Plus,
   Edit2,
@@ -18,9 +18,14 @@ import {
   EyeOff,
   CheckCircle2,
   Image as ImageIcon,
+  Upload,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
+import { useAuth } from '../../context/AuthContext.tsx';
 import { JournalEntry, PROJECT_CATEGORIES } from '../../utils/portfolio.ts';
+import { uploadMediaFile } from '../../services/storage.ts';
 
 const SAMPLE_JOURNAL_IMAGES = [
   'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
@@ -30,7 +35,8 @@ const SAMPLE_JOURNAL_IMAGES = [
 ];
 
 export const JournalManager: React.FC = () => {
-  const { data, addJournalEntry, updateJournalEntry, deleteJournalEntry, reorderJournal, togglePublishJournal } = usePortfolio();
+  const { data, addJournalEntry, updateJournalEntry, deleteJournalEntry, reorderJournal, togglePublishJournal, addMediaAsset } = usePortfolio();
+  const { session } = useAuth();
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -39,12 +45,41 @@ export const JournalManager: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingCover(true);
+    setSaveError(null);
+    setUploadNotice(null);
+    try {
+      const res = await uploadMediaFile(file, {
+        title: `${formData.title || 'Article'} Cover`,
+        tags: ['Journal Cover', formData.category || 'Editorial'],
+        authToken: session?.token,
+      });
+      addMediaAsset(res.asset);
+      setFormData((prev) => ({ ...prev, image: res.asset.url }));
+      setUploadNotice(`Cover photo "${file.name}" uploaded successfully!`);
+      setTimeout(() => setUploadNotice(null), 3500);
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to upload photo.');
+    } finally {
+      setIsUploadingCover(false);
+      if (coverFileInputRef.current) coverFileInputRef.current.value = '';
+    }
+  };
 
   const entriesList = [...data.journalEntries].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
 
   const handleStartCreate = () => {
     setSaveError(null);
     setSaveSuccess(null);
+    setUploadNotice(null);
+    setShowMediaPicker(false);
     const newId = `journal-${Date.now()}`;
     const initial: JournalEntry = {
       id: newId,
@@ -67,6 +102,8 @@ export const JournalManager: React.FC = () => {
   const handleStartEdit = (entry: JournalEntry) => {
     setSaveError(null);
     setSaveSuccess(null);
+    setUploadNotice(null);
+    setShowMediaPicker(false);
     setFormData({ ...entry });
     setEditingEntry(entry);
     setIsCreating(false);
@@ -347,41 +384,137 @@ export const JournalManager: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-mono text-white/80">Cover Image URL</label>
-                  <button
-                    type="button"
-                    onClick={() => setShowMediaPicker(!showMediaPicker)}
-                    className="text-[11px] font-mono text-sky-400 hover:text-sky-300 underline underline-offset-2"
-                  >
-                    {showMediaPicker ? 'Hide Library' : 'Choose from Media Library'}
-                  </button>
+              {/* Cover Image & Upload */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-xs font-mono text-white/90 font-medium flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Article Cover Photo</span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => coverFileInputRef.current?.click()}
+                      disabled={isUploadingCover}
+                      className="text-[11px] font-mono px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50"
+                      title="Upload photo from device"
+                    >
+                      {isUploadingCover ? (
+                        <Loader2 className="w-3 h-3 animate-spin text-sky-300" />
+                      ) : (
+                        <Upload className="w-3 h-3 text-sky-300" />
+                      )}
+                      <span>{isUploadingCover ? 'Uploading...' : 'Upload Photo'}</span>
+                    </button>
+
+                    <input
+                      type="file"
+                      ref={coverFileInputRef}
+                      accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml,image/avif"
+                      className="hidden"
+                      onChange={handleCoverFileUpload}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(!showMediaPicker)}
+                      className={`text-[11px] font-mono px-3 py-1.5 rounded-xl border flex items-center gap-1.5 cursor-pointer transition-colors ${
+                        showMediaPicker
+                          ? 'bg-sky-500/30 text-sky-200 border-sky-400/50'
+                          : 'bg-white/5 hover:bg-white/10 text-white/80 border-white/15'
+                      }`}
+                    >
+                      <ImageIcon className="w-3 h-3 text-sky-400" />
+                      <span>{showMediaPicker ? 'Hide Library' : 'Choose Library'}</span>
+                    </button>
+                  </div>
                 </div>
+
+                {formData.image ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-white/20 bg-black/60 p-2.5 flex items-center gap-3.5 group shadow-lg">
+                    <div className="w-20 h-14 sm:w-24 sm:h-16 rounded-xl overflow-hidden bg-black/80 border border-white/15 shrink-0 relative">
+                      <img src={formData.image} alt="Cover preview" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                        ✓ Active Cover Photo
+                      </span>
+                      <p className="text-[11px] font-mono text-white/70 truncate select-all">{formData.image}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => coverFileInputRef.current?.click()}
+                        className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 text-xs font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Replace photo"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span className="hidden sm:inline text-[11px]">Replace</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, image: '' })}
+                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/30 cursor-pointer transition-colors"
+                        title="Clear photo"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => coverFileInputRef.current?.click()}
+                    className="border-2 border-dashed border-white/20 hover:border-sky-400/60 rounded-2xl p-3 text-center cursor-pointer transition-all bg-white/[0.02] hover:bg-sky-500/[0.04]"
+                  >
+                    <div className="flex flex-col items-center gap-1 text-xs text-white/70">
+                      <Upload className="w-5 h-5 text-sky-400" />
+                      <span className="font-medium text-white">Click here to upload article cover image</span>
+                    </div>
+                  </div>
+                )}
+
                 <input
-                  type="url"
-                  required
+                  type="text"
                   value={formData.image || ''}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
-                  placeholder="https://images.unsplash.com/..."
+                  className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none placeholder:text-white/30"
+                  placeholder="Or paste external image URL..."
                 />
 
                 {showMediaPicker && (
-                  <div className="mt-3 p-3 rounded-2xl bg-black/60 border border-white/10 space-y-2 animate-fadeIn">
-                    <div className="text-[11px] font-mono text-white/60">Select an asset:</div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
+                  <div className="mt-2.5 p-3 rounded-2xl bg-black/75 border border-white/15 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-white/70">
+                      <span>Click an asset to set as cover image:</span>
+                      <button
+                        type="button"
+                        onClick={() => coverFileInputRef.current?.click()}
+                        className="text-sky-400 hover:text-sky-300 underline underline-offset-2 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Upload New File</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
                       {(data.mediaAssets || []).filter((m) => m.type === 'image').map((media) => (
-                        <div
+                        <button
                           key={media.id}
+                          type="button"
                           onClick={() => {
                             setFormData({ ...formData, image: media.url });
                             setShowMediaPicker(false);
                           }}
-                          className="aspect-video rounded-lg overflow-hidden border border-white/15 hover:border-sky-400 cursor-pointer"
+                          className={`aspect-video rounded-lg overflow-hidden border cursor-pointer relative group text-left ${
+                            formData.image === media.url
+                              ? 'border-sky-400 ring-2 ring-sky-400/50'
+                              : 'border-white/15 hover:border-sky-400/70'
+                          }`}
                         >
                           <img src={media.url} alt={media.title} className="w-full h-full object-cover" />
-                        </div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-mono transition-opacity">
+                            Select
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>

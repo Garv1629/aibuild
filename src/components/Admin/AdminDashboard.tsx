@@ -21,6 +21,7 @@ import {
   Copy,
   MessageSquareQuote,
   Star,
+  Images,
 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
 import { ProjectsManager } from './ProjectsManager.tsx';
@@ -29,8 +30,9 @@ import { ExplorationsManager } from './ExplorationsManager.tsx';
 import { ServicesManager } from './ServicesManager.tsx';
 import { BrandSettingsManager } from './BrandSettingsManager.tsx';
 import { ReviewsManager } from './ReviewsManager.tsx';
+import { MediaLibraryManager } from './MediaLibraryManager.tsx';
 
-type AdminTab = 'projects' | 'journal' | 'explorations' | 'services' | 'reviews' | 'brand';
+type AdminTab = 'projects' | 'journal' | 'explorations' | 'services' | 'reviews' | 'brand' | 'media';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -268,6 +270,24 @@ export const AdminDashboard: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setActiveTab('media')}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+              activeTab === 'media'
+                ? 'liquid-glass-pill-active text-white font-semibold'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Images className="w-4 h-4 text-sky-400" />
+              <span>Media & Assets</span>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">
+              {(data.mediaAssets || []).length}
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('brand')}
             className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
               activeTab === 'brand'
@@ -295,6 +315,7 @@ export const AdminDashboard: React.FC = () => {
             {activeTab === 'explorations' && <ExplorationsManager />}
             {activeTab === 'services' && <ServicesManager />}
             {activeTab === 'reviews' && <ReviewsManager />}
+            {activeTab === 'media' && <MediaLibraryManager />}
             {activeTab === 'brand' && <BrandSettingsManager />}
           </div>
         </main>

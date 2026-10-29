@@ -44,6 +44,15 @@ export interface ConnectionStatus {
 }
 
 /**
+ * Safely check if a string is a 3-part JSON Web Token (Header.Payload.Signature)
+ */
+export function isValidJwt(token?: string | null): boolean {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.trim().split('.');
+  return parts.length === 3 && parts[0].length > 0 && parts[1].length > 0 && parts[2].length > 0;
+}
+
+/**
  * Check if the live Supabase cloud database is reachable
  */
 export async function checkSupabaseConnection(): Promise<ConnectionStatus> {
@@ -59,7 +68,7 @@ export async function checkSupabaseConnection(): Promise<ConnectionStatus> {
     const headers: Record<string, string> = {
       apikey: supabaseConfig.anonKey,
     };
-    if (supabaseConfig.anonKey.startsWith('ey')) {
+    if (isValidJwt(supabaseConfig.anonKey)) {
       headers['Authorization'] = `Bearer ${supabaseConfig.anonKey}`;
     }
 
@@ -123,7 +132,7 @@ export const supabase = {
     },
 
     async signOut(accessToken?: string) {
-      if (!isSupabaseConfigured || !accessToken) return { error: null };
+      if (!isSupabaseConfigured || !isValidJwt(accessToken)) return { error: null };
       try {
         await fetch(`${supabaseConfig.url}/auth/v1/logout`, {
           method: 'POST',
@@ -139,7 +148,7 @@ export const supabase = {
     },
 
     async getUser(accessToken: string) {
-      if (!isSupabaseConfigured || !accessToken) return { data: null, error: null };
+      if (!isSupabaseConfigured || !isValidJwt(accessToken)) return { data: null, error: null };
       try {
         const res = await fetch(`${supabaseConfig.url}/auth/v1/user`, {
           method: 'GET',
@@ -164,9 +173,9 @@ export const supabase = {
         apikey: supabaseConfig.anonKey,
         Prefer: extraPrefer || 'return=representation',
       };
-      if (token) {
+      if (isValidJwt(token)) {
         headers['Authorization'] = `Bearer ${token}`;
-      } else if (supabaseConfig.anonKey && supabaseConfig.anonKey.startsWith('ey')) {
+      } else if (isValidJwt(supabaseConfig.anonKey)) {
         headers['Authorization'] = `Bearer ${supabaseConfig.anonKey}`;
       }
       return headers;
@@ -275,13 +284,19 @@ export const supabase = {
           if (!isSupabaseConfigured) return { data: null, error: new Error('Supabase Storage not configured') };
           try {
             const cleanPath = path.replace(/^\/+/, '');
+            const headers: Record<string, string> = {
+              apikey: supabaseConfig.anonKey,
+              'Content-Type': file.type || 'application/octet-stream',
+            };
+            if (isValidJwt(token)) {
+              headers['Authorization'] = `Bearer ${token}`;
+            } else if (isValidJwt(supabaseConfig.anonKey)) {
+              headers['Authorization'] = `Bearer ${supabaseConfig.anonKey}`;
+            }
+
             const res = await fetch(`${supabaseConfig.url}/storage/v1/object/${bucketName}/${cleanPath}`, {
               method: 'POST',
-              headers: {
-                apikey: supabaseConfig.anonKey,
-                Authorization: `Bearer ${token || supabaseConfig.anonKey}`,
-                'Content-Type': file.type || 'application/octet-stream',
-              },
+              headers,
               body: file,
             });
             const data = await res.json();
@@ -296,13 +311,19 @@ export const supabase = {
         async remove(paths: string[], token?: string) {
           if (!isSupabaseConfigured) return { error: new Error('Supabase Storage not configured') };
           try {
+            const headers: Record<string, string> = {
+              'Content-Type': 'application/json',
+              apikey: supabaseConfig.anonKey,
+            };
+            if (isValidJwt(token)) {
+              headers['Authorization'] = `Bearer ${token}`;
+            } else if (isValidJwt(supabaseConfig.anonKey)) {
+              headers['Authorization'] = `Bearer ${supabaseConfig.anonKey}`;
+            }
+
             const res = await fetch(`${supabaseConfig.url}/storage/v1/object/${bucketName}`, {
               method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                apikey: supabaseConfig.anonKey,
-                Authorization: `Bearer ${token || supabaseConfig.anonKey}`,
-              },
+              headers,
               body: JSON.stringify({ prefixes: paths }),
             });
             if (!res.ok) {

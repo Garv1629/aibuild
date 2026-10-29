@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Check, Compass, Video, Image as ImageIcon, Film } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Edit2, Trash2, X, Check, Compass, Video, Image as ImageIcon, Film, Upload, Loader2 } from 'lucide-react';
 import { usePortfolio } from '../../context/PortfolioContext.tsx';
+import { useAuth } from '../../context/AuthContext.tsx';
 import { ExplorationItem, ProjectVideo } from '../../utils/portfolio.ts';
+import { uploadMediaFile } from '../../services/storage.ts';
 
 const SAMPLE_EXPLORATION_IMAGES = [
   'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80',
@@ -16,7 +18,8 @@ const SAMPLE_EXPLORATION_IMAGES = [
 ];
 
 export const ExplorationsManager: React.FC = () => {
-  const { data, addExploration, updateExploration, deleteExploration } = usePortfolio();
+  const { data, addExploration, updateExploration, deleteExploration, addMediaAsset } = usePortfolio();
+  const { session } = useAuth();
   const [editingItem, setEditingItem] = useState<ExplorationItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -25,6 +28,54 @@ export const ExplorationsManager: React.FC = () => {
   const [galleryInput, setGalleryInput] = useState('');
   const [videoTitleInput, setVideoTitleInput] = useState('');
   const [videoUrlInput, setVideoUrlInput] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingImage(true);
+    setSaveError(null);
+    try {
+      const res = await uploadMediaFile(file, {
+        title: `${formData.title || 'Playground'} Image`,
+        tags: ['Playground Image', formData.category || 'Explorations'],
+        authToken: session?.token,
+      });
+      addMediaAsset(res.asset);
+      setFormData((prev) => ({ ...prev, image: res.asset.url }));
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to upload image.');
+    } finally {
+      setIsUploadingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingVideo(true);
+    setSaveError(null);
+    try {
+      const res = await uploadMediaFile(file, {
+        title: `${formData.title || 'Playground'} Video`,
+        tags: ['Playground Video', formData.category || 'Explorations'],
+        authToken: session?.token,
+      });
+      addMediaAsset(res.asset);
+      setFormData((prev) => ({ ...prev, video: res.asset.url }));
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to upload video.');
+    } finally {
+      setIsUploadingVideo(false);
+      if (videoInputRef.current) videoInputRef.current.value = '';
+    }
+  };
 
   const handleStartCreate = () => {
     const newId = `exp-${Date.now()}`;
@@ -107,9 +158,6 @@ export const ExplorationsManager: React.FC = () => {
   const handleSetPrimaryVideo = (videoObj: ProjectVideo) => {
     setFormData({ ...formData, video: videoObj.url });
   };
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,9 +384,27 @@ export const ExplorationsManager: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono text-muted mb-1">Primary Cover Image URL</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-mono text-muted">Primary Cover Image</label>
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={isUploadingImage}
+                      className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-400/30 flex items-center gap-1 cursor-pointer"
+                    >
+                      {isUploadingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isUploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                    </button>
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleUploadImageFile}
+                    />
+                  </div>
                   <input
-                    type="url"
+                    type="text"
                     required
                     value={formData.image || ''}
                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
@@ -428,9 +494,27 @@ export const ExplorationsManager: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono text-muted mb-1">Primary Video URL (Direct MP4 / Stream)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-mono text-muted">Primary Video (Direct MP4 / Stream)</label>
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={isUploadingVideo}
+                      className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-400/30 flex items-center gap-1 cursor-pointer"
+                    >
+                      {isUploadingVideo ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isUploadingVideo ? 'Uploading...' : 'Upload Video'}</span>
+                    </button>
+                    <input
+                      type="file"
+                      ref={videoInputRef}
+                      accept="video/*"
+                      className="hidden"
+                      onChange={handleUploadVideoFile}
+                    />
+                  </div>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.video || ''}
                     onChange={(e) => setFormData({ ...formData, video: e.target.value })}
                     className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none"

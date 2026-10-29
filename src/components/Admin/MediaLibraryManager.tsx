@@ -291,7 +291,8 @@ export const MediaLibraryManager: React.FC = () => {
                   <video
                     src={asset.url}
                     muted
-                    preload="metadata"
+                    preload="none"
+                    playsInline
                     className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">

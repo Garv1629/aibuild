@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sliders,
   Check,
@@ -45,7 +45,7 @@ export const BrandSettingsManager: React.FC = () => {
     brandTagline: data.brandTagline,
     heroDescription: data.heroDescription,
     githubUrl: data.githubUrl,
-    email: data.email,
+    email: data.email || 'aibuild1629@gmail.com',
     linkedinUrl: data.linkedinUrl,
   });
 
@@ -56,13 +56,16 @@ export const BrandSettingsManager: React.FC = () => {
 
   const [statsList, setStatsList] = useState<BrandPrincipleStat[]>([...data.stats]);
 
+  const isDirtyRef = useRef(false);
+
   useEffect(() => {
+    if (isDirtyRef.current) return;
     setBrandForm({
       brandName: data.brandName,
       brandTagline: data.brandTagline,
       heroDescription: data.heroDescription,
       githubUrl: data.githubUrl,
-      email: data.email,
+      email: data.email || 'aibuild1629@gmail.com',
       linkedinUrl: data.linkedinUrl,
     });
     setSiteTextsForm({
@@ -79,10 +82,9 @@ export const BrandSettingsManager: React.FC = () => {
     try {
       await updateGeneralSettings(brandForm);
       await updateSiteTexts(siteTextsForm);
+      await Promise.all(statsList.map((stat, idx) => updateStat(idx, stat)));
 
-      for (let idx = 0; idx < statsList.length; idx++) {
-        await updateStat(idx, statsList[idx]);
-      }
+      isDirtyRef.current = false;
 
       if (publishImmediately) {
         await publishAllChanges();
@@ -99,13 +101,20 @@ export const BrandSettingsManager: React.FC = () => {
     }
   };
 
+  const handleBrandChange = (field: keyof typeof brandForm, val: string) => {
+    isDirtyRef.current = true;
+    setBrandForm((prev) => ({ ...prev, [field]: val }));
+  };
+
   const handleStatChange = (idx: number, field: keyof BrandPrincipleStat, val: string) => {
+    isDirtyRef.current = true;
     const updated = [...statsList];
     updated[idx] = { ...updated[idx], [field]: val };
     setStatsList(updated);
   };
 
   const handleTextChange = (field: keyof SiteTexts, val: string) => {
+    isDirtyRef.current = true;
     setSiteTextsForm((prev) => ({
       ...prev,
       [field]: val,
@@ -239,14 +248,14 @@ export const BrandSettingsManager: React.FC = () => {
               <span>Hero Section & Brand Identity</span>
             </h5>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-mono text-white/80 mb-1.5">Brand Name</label>
                 <input
                   type="text"
                   required
                   value={brandForm.brandName}
-                  onChange={(e) => setBrandForm({ ...brandForm, brandName: e.target.value })}
+                  onChange={(e) => handleBrandChange('brandName', e.target.value)}
                   className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                 />
               </div>
@@ -257,7 +266,7 @@ export const BrandSettingsManager: React.FC = () => {
                   type="text"
                   required
                   value={brandForm.brandTagline}
-                  onChange={(e) => setBrandForm({ ...brandForm, brandTagline: e.target.value })}
+                  onChange={(e) => handleBrandChange('brandTagline', e.target.value)}
                   className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
                 />
               </div>
@@ -311,7 +320,7 @@ export const BrandSettingsManager: React.FC = () => {
                 <textarea
                   rows={3}
                   value={brandForm.heroDescription}
-                  onChange={(e) => setBrandForm({ ...brandForm, heroDescription: e.target.value })}
+                  onChange={(e) => handleBrandChange('heroDescription', e.target.value)}
                   className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none leading-relaxed"
                 />
               </div>
@@ -355,7 +364,7 @@ export const BrandSettingsManager: React.FC = () => {
                   <span className="text-[10px] font-mono text-sky-400 uppercase tracking-widest font-semibold">
                     Principle Card #{idx + 1}
                   </span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-mono text-white/70 mb-1">Pillar Value / Headline</label>
                       <input
@@ -374,7 +383,7 @@ export const BrandSettingsManager: React.FC = () => {
                         className="w-full liquid-glass-input rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none"
                       />
                     </div>
-                    <div className="md:col-span-2">
+                    <div className="xl:col-span-2">
                       <label className="block text-xs font-mono text-white/70 mb-1">Narrative Description</label>
                       <textarea
                         rows={2}
@@ -402,7 +411,7 @@ export const BrandSettingsManager: React.FC = () => {
               {/* Selected Works Headings */}
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
                 <span className="text-xs font-mono text-sky-300 font-semibold">Selected Works Section</span>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-mono text-white/70 mb-1">Eyebrow</label>
                     <input
@@ -430,7 +439,7 @@ export const BrandSettingsManager: React.FC = () => {
                       className="w-full liquid-glass-input rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-display italic"
                     />
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="sm:col-span-2 xl:col-span-3">
                     <label className="block text-xs font-mono text-white/70 mb-1">Subtext</label>
                     <textarea
                       rows={2}
@@ -445,7 +454,7 @@ export const BrandSettingsManager: React.FC = () => {
               {/* Explorations Headings */}
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
                 <span className="text-xs font-mono text-sky-300 font-semibold">Visual Playground / Explorations</span>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-mono text-white/70 mb-1">Eyebrow</label>
                     <input
@@ -473,7 +482,7 @@ export const BrandSettingsManager: React.FC = () => {
                       className="w-full liquid-glass-input rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-display italic"
                     />
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="sm:col-span-2 xl:col-span-3">
                     <label className="block text-xs font-mono text-white/70 mb-1">Subtext</label>
                     <textarea
                       rows={2}
@@ -488,7 +497,7 @@ export const BrandSettingsManager: React.FC = () => {
               {/* Journal Headings */}
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
                 <span className="text-xs font-mono text-sky-300 font-semibold">Journal & Thoughts Section</span>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-mono text-white/70 mb-1">Eyebrow</label>
                     <input
@@ -516,7 +525,7 @@ export const BrandSettingsManager: React.FC = () => {
                       className="w-full liquid-glass-input rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-display italic"
                     />
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="sm:col-span-2 xl:col-span-3">
                     <label className="block text-xs font-mono text-white/70 mb-1">Subtext</label>
                     <textarea
                       rows={2}
@@ -539,7 +548,7 @@ export const BrandSettingsManager: React.FC = () => {
               <span>Contact Card, Social Links & Footer</span>
             </h5>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-mono text-white/80 mb-1.5">Contact Card Eyebrow</label>
                 <input
@@ -580,7 +589,7 @@ export const BrandSettingsManager: React.FC = () => {
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="xl:col-span-2">
                 <label className="block text-xs font-mono text-white/80 mb-1.5">Contact Card Subtext</label>
                 <textarea
                   rows={2}
@@ -618,7 +627,7 @@ export const BrandSettingsManager: React.FC = () => {
                 <input
                   type="email"
                   value={brandForm.email}
-                  onChange={(e) => setBrandForm({ ...brandForm, email: e.target.value })}
+                  onChange={(e) => handleBrandChange('email', e.target.value)}
                   className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
                 />
               </div>
@@ -631,7 +640,7 @@ export const BrandSettingsManager: React.FC = () => {
                 <input
                   type="url"
                   value={brandForm.githubUrl}
-                  onChange={(e) => setBrandForm({ ...brandForm, githubUrl: e.target.value })}
+                  onChange={(e) => handleBrandChange('githubUrl', e.target.value)}
                   className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
                 />
               </div>
@@ -644,7 +653,7 @@ export const BrandSettingsManager: React.FC = () => {
                 <input
                   type="url"
                   value={brandForm.linkedinUrl}
-                  onChange={(e) => setBrandForm({ ...brandForm, linkedinUrl: e.target.value })}
+                  onChange={(e) => handleBrandChange('linkedinUrl', e.target.value)}
                   className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
                 />
               </div>
