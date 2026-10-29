@@ -63,7 +63,7 @@ export const DEFAULT_PORTFOLIO_DATA: PortfolioData = {
   brandName: BRAND_NAME,
   brandTagline: BRAND_TAGLINE,
   githubUrl: GITHUB_URL,
-  email: 'aibuild2026@gmail.com',
+  email: 'aibuild1629@gmail.com',
   linkedinUrl: 'https://linkedin.com',
   heroDescription:
     'Specializing in Web Development, AI Videos, UGC Videos, and E-books. AI Build transforms concepts into high-impact digital products through modern code, creative direction, and generative media.',
@@ -157,9 +157,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           const parsed = JSON.parse(saved);
           const email =
             !parsed.email ||
+            parsed.email.includes('garv@aibuild.studio') ||
             parsed.email.includes('aibuld') ||
-            parsed.email.includes('garv@aibuild.studio')
-              ? 'aibuild2026@gmail.com'
+            parsed.email.includes('2026')
+              ? 'aibuild1629@gmail.com'
               : parsed.email;
           return {
             ...DEFAULT_PORTFOLIO_DATA,

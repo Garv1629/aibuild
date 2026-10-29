@@ -586,7 +586,7 @@ VALUES
       "brandName": "AI Build",
       "brandTagline": "Build Smarter. Create Faster. Think Beyond.",
       "githubUrl": "https://github.com/Garv1629",
-      "email": "garv@aibuild.studio",
+      "email": "aibuild1629@gmail.com",
       "linkedinUrl": "https://linkedin.com",
       "heroDescription": "Specializing in Web Development, AI Videos, UGC Videos, and E-books. AI Build transforms concepts into high-impact digital products through modern code, creative direction, and generative media.",
       "roles": ["Web Development", "AI Videos", "UGC Videos", "E-books"]
