@@ -104,7 +104,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
                 )}
               </div>
               <p className="text-xs text-muted font-mono mt-0.5">
-                Logged in as <strong className="text-white/80">{user?.email || 'admin@aibuild.studio'}</strong> • Last published: {formatPublishDate(data.lastPublishedAt)}
+                Logged in as <strong className="text-white/80">{user?.email || 'aibuld2026@gmail.com'}</strong> • Last published: {formatPublishDate(data.lastPublishedAt)}
               </p>
             </div>
           </div>

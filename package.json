@@ -8,8 +8,8 @@
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview --port=3000 --host=0.0.0.0",
     "lint": "node ./node_modules/typescript/bin/tsc --noEmit",
-    "test": "git pull origin main --no-rebase --no-edit; git push origin main",
-    "push": "git pull origin main --no-rebase --no-edit; git push origin main"
+    "test": "git add .",
+    "push": "git add ."
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

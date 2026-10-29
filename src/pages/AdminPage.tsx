@@ -617,7 +617,7 @@ export const AdminPage: React.FC = () => {
               <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
                 <span className="flex items-center gap-1.5 truncate max-w-[130px]" title={user?.email}>
                   <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span className="truncate">{user?.email || 'admin@aibuild.studio'}</span>
+                  <span className="truncate">{user?.email || 'aibuld2026@gmail.com'}</span>
                 </span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
                   {user?.role || 'admin'}
