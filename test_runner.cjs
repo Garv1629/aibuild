@@ -73,10 +73,10 @@ for (const f of tempFiles) {
 }
 
 console.log('4. Staging files for commit...');
-git(['add', 'src/', 'public/', 'serve.mjs', 'test_runner.cjs']);
+git(['add', 'src/', 'public/', 'serve.mjs', 'test_runner.cjs', 'clean.js']);
 
 console.log('5. Committing changes...');
-git(['commit', '-m', 'feat: Redesign Projects Manager to match reference UI and fix gallery image blur']);
+git(['commit', '-m', 'feat: Fix build import in Modals and ensure multi-port preview server']);
 
 console.log('6. Pushing to origin main...');
 const pushRes = git(['push', 'origin', 'main']);
