@@ -129,7 +129,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             {/* Static Project Detail Section */}
             <div className="space-y-6">
               {/* Main Media Viewport */}
-              <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden border border-stroke relative bg-black">
+              <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/15 relative bg-neutral-950 shadow-2xl">
                 {activeMedia.type === 'video' ? (
                   <video
                     key={activeMedia.url}
@@ -144,10 +144,12 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                     key={activeMedia.url}
                     src={activeMedia.url || project.image}
                     alt={project.title}
-                    className="w-full h-full object-cover transition-opacity duration-300"
+                    loading="eager"
+                    decoding="sync"
+                    className="w-full h-full object-cover transition-opacity duration-300 select-none"
+                    style={{ imageRendering: 'auto' }}
                   />
                 )}
-                <div className="halftone-overlay absolute inset-0 opacity-20 pointer-events-none" />
               </div>
 
               {/* Media Switcher Bar (Multiple Images and Videos) */}

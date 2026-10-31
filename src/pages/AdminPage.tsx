@@ -38,6 +38,7 @@ import {
   Images,
   LogOut,
   ShieldCheck,
+  Globe,
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
@@ -342,10 +343,10 @@ export const AdminPage: React.FC = () => {
 
           <Link
             to="/"
-            className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white font-display italic text-xs shadow-[0_0_12px_rgba(56,189,248,0.5)] hover:scale-105 active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-xl bg-[#09101d] border border-cyan-400/50 flex items-center justify-center text-cyan-400 font-display font-bold text-sm shadow-[0_0_12px_rgba(34,211,238,0.35)] hover:scale-105 active:scale-95 transition-transform"
             title="Return to Public Website"
           >
-            AB
+            <span className="bg-gradient-to-br from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent font-bold">A</span>
           </Link>
 
           <div>
@@ -460,8 +461,8 @@ export const AdminPage: React.FC = () => {
             className="liquid-glass-button text-xs font-mono px-3 py-1.5 rounded-xl text-white flex items-center gap-1.5 cursor-pointer hover:bg-white/20 transition-all shadow-md"
             title="Open website in standalone new tab"
           >
+            <Globe className="w-3.5 h-3.5 text-cyan-400" />
             <span className="hidden md:inline">Live Site</span>
-            <ExternalLink className="w-3 h-3 text-sky-400" />
           </Link>
 
           {/* Export JSON */}
@@ -527,29 +528,32 @@ export const AdminPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleSelectTab('overview')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'overview'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <LayoutDashboard className="w-3.5 h-3.5 text-sky-400" />
+                  <LayoutDashboard className={`w-3.5 h-3.5 ${activeTab === 'overview' ? 'text-cyan-400' : 'text-sky-400'}`} />
                   <span>Overview</span>
                 </div>
+                {activeTab === 'overview' && (
+                  <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                )}
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('inquiries')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'inquiries'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <MessageSquareText className="w-3.5 h-3.5 text-emerald-400" />
+                  <MessageSquareText className={`w-3.5 h-3.5 ${activeTab === 'inquiries' ? 'text-cyan-400' : 'text-emerald-400'}`} />
                   <span>Client Inquiries</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -561,125 +565,156 @@ export const AdminPage: React.FC = () => {
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
                     {data.inquiries?.length || 0}
                   </span>
+                  {activeTab === 'inquiries' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('projects')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'projects'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <FolderKanban className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Projects (Bento)</span>
+                  <FolderKanban className={`w-3.5 h-3.5 ${activeTab === 'projects' ? 'text-cyan-400' : 'text-sky-400'}`} />
+                  <span>Projects</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
-                  {data.projects.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.projects.length}
+                  </span>
+                  {activeTab === 'projects' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('media')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'media'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Images className="w-3.5 h-3.5 text-sky-400" />
+                  <Images className={`w-3.5 h-3.5 ${activeTab === 'media' ? 'text-cyan-400' : 'text-sky-400'}`} />
                   <span>Media Library</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
-                  {data.mediaAssets?.length || 0}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.mediaAssets?.length || 0}
+                  </span>
+                  {activeTab === 'media' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('journal')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'journal'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+                  <BookOpen className={`w-3.5 h-3.5 ${activeTab === 'journal' ? 'text-cyan-400' : 'text-sky-400'}`} />
                   <span>Journal</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
-                  {data.journalEntries.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.journalEntries.length}
+                  </span>
+                  {activeTab === 'journal' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('explorations')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'explorations'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Compass className="w-3.5 h-3.5 text-sky-400" />
+                  <Compass className={`w-3.5 h-3.5 ${activeTab === 'explorations' ? 'text-cyan-400' : 'text-sky-400'}`} />
                   <span>Visual Playground</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
-                  {data.explorations.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.explorations.length}
+                  </span>
+                  {activeTab === 'explorations' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('services')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'services'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Layers className="w-3.5 h-3.5 text-sky-400" />
+                  <Layers className={`w-3.5 h-3.5 ${activeTab === 'services' ? 'text-cyan-400' : 'text-sky-400'}`} />
                   <span>4 Core Services</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
-                  {data.services.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
+                    {data.services.length}
+                  </span>
+                  {activeTab === 'services' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('brand')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'brand'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Settings className="w-3.5 h-3.5 text-sky-400" />
+                  <Settings className={`w-3.5 h-3.5 ${activeTab === 'brand' ? 'text-cyan-400' : 'text-sky-400'}`} />
                   <span>Brand & Identity</span>
                 </div>
+                {activeTab === 'brand' && (
+                  <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                )}
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectTab('reviews')}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition-all cursor-pointer relative group ${
                   activeTab === 'reviews'
-                    ? 'liquid-glass-pill-active text-white font-semibold shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-sky-500/20 via-cyan-500/15 to-transparent border border-cyan-400/40 text-white font-medium shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Star className="w-3.5 h-3.5 text-amber-400" />
+                  <Star className={`w-3.5 h-3.5 ${activeTab === 'reviews' ? 'text-cyan-400' : 'text-amber-400'}`} />
                   <span>Client Reviews</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -691,6 +726,9 @@ export const AdminPage: React.FC = () => {
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 font-mono">
                     {data.reviews?.length || 0}
                   </span>
+                  {activeTab === 'reviews' && (
+                    <span className="w-1.5 h-5 rounded-full bg-cyan-400 absolute right-1.5 shadow-[0_0_8px_rgba(34,211,238,0.9)]" />
+                  )}
                 </div>
               </button>
             </div>

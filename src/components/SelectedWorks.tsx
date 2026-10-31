@@ -153,15 +153,9 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     className="w-full h-full object-cover absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
                   />
 
-                  {/* Halftone overlay */}
-                  <div
-                    className="halftone-overlay absolute inset-0 opacity-15 mix-blend-multiply pointer-events-none"
-                    aria-hidden="true"
-                  />
-
                   {/* Base subtle dark gradient vignette */}
                   <div
-                    className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 md:group-hover:opacity-30 pointer-events-none"
+                    className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 md:group-hover:opacity-40 pointer-events-none"
                     aria-hidden="true"
                   />
 
@@ -192,7 +186,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                   </div>
 
                   {/* Liquid Glass Hover overlay: visionOS frosted backdrop (desktop only) */}
-                  <div className="hidden md:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-2xl flex-col justify-between p-6 md:p-8 z-20 pointer-events-none border border-white/20 rounded-2xl sm:rounded-3xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
+                  <div className="hidden md:flex absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-all duration-300 flex-col justify-between p-6 md:p-8 z-20 pointer-events-none border border-white/20 rounded-2xl sm:rounded-3xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
                     <div className="flex items-center justify-between w-full">
                       <span className="text-xs text-sky-400 uppercase tracking-[0.15em] font-mono font-medium">
                         {project.category}

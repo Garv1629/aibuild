@@ -440,15 +440,22 @@ export function filterProjects(projects: Project[], category: string): Project[]
 export const PROJECTS: Project[] = [
   {
     id: 'sri-balaji-real-estate',
-    title: 'Sri Balaji Real Estate',
+    title: 'Sri Balaji Real Estate Platform',
     category: 'Web Development',
     description:
-      'A modern real estate website concept designed to showcase property listings through a responsive interface, contemporary visual design, smooth animations, and user-friendly navigation.',
+      'A comprehensive real estate platform showcasing luxury residential and commercial properties. Features advanced search filters, map integration, user profiles, and inquiry forms for seamless agent connectivity.',
     image:
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2000&q=90',
     galleryImages: [
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=90',
+    ],
+    videoList: [
+      {
+        title: 'Sri Balaji Platform Walkthrough',
+        url: 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8',
+      },
     ],
     projectUrl: 'https://sribalajirealestate.in',
     isPublished: true,
@@ -462,7 +469,12 @@ export const PROJECTS: Project[] = [
     description:
       'A collection of AI-assisted creative experiments exploring product commercials, cinematic 3D product visuals, promotional scripts, and short-form video storytelling.',
     image:
-      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=2000&q=90',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=2000&q=90',
+    ],
     videoList: [
       {
         title: 'Commercial Showcase Reel',
@@ -480,7 +492,12 @@ export const PROJECTS: Project[] = [
     description:
       'Authentic user-generated content style ad creatives engineered for viral distribution on TikTok, Instagram Reels, and YouTube Shorts with proven 3-second hook structures.',
     image:
-      'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=2000&q=90',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1598128558393-70ff21433be0?auto=format&fit=crop&w=2000&q=90',
+    ],
     isPublished: true,
     order: 3,
     createdAt: '2026-10-20T14:30:00.000Z',
@@ -492,7 +509,12 @@ export const PROJECTS: Project[] = [
     description:
       'Bespoke digital book publishing, interactive PDF & ePub guides, high-converting lead magnets, and launch-ready 3D visual mockups for modern educators and brands.',
     image:
-      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=2000&q=90',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=2000&q=90',
+      'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=2000&q=90',
+    ],
     isPublished: true,
     order: 4,
     createdAt: '2026-10-22T09:15:00.000Z',
