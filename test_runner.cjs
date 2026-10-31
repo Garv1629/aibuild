@@ -10,6 +10,17 @@ if (fs.existsSync(ogSrc)) {
   fs.copyFileSync(ogSrc, destPng);
 }
 
+// Normalize files to LF
+const normFiles = ['src/components/ContactFooter.tsx', 'src/components/Navbar.tsx', 'src/App.tsx'];
+for (const f of normFiles) {
+  if (fs.existsSync(f)) {
+    const content = fs.readFileSync(f, 'utf8');
+    if (content.includes('\r\n')) {
+      fs.writeFileSync(f, content.replace(/\r\n/g, '\n'), 'utf8');
+    }
+  }
+}
+
 const run = (cmd, args) => {
   const res = spawnSync(cmd, args, {
     encoding: 'utf-8',
