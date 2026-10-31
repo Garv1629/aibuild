@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles } from 'lucide-react';
+import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles, Share2, Check, Loader2 } from 'lucide-react';
 import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
 import { ProjectInteractiveDemo } from './ProjectInteractiveDemo.tsx';
 import { Button } from './Button.tsx';
@@ -23,11 +23,32 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   onStartConversation,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'demo' | 'workflow'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'showcase' | 'workflow'>('overview');
+  const [copied, setCopied] = useState(false);
   const [activeMedia, setActiveMedia] = useState<{ url: string; type: 'image' | 'video'; title?: string }>({
     url: '',
     type: 'image',
   });
+
+  const handleShare = async () => {
+    if (!project) return;
+    const shareUrl = `${window.location.origin}/?project=${project.id}`;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: `AI Build — ${project.title}`,
+          text: project.description,
+          url: shareUrl,
+        });
+        return;
+      } catch (e) {}
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,15 +88,31 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             aria-modal="true"
             aria-label={project.title}
           >
-            <Button
-              variant="icon"
-              size="md"
-              onClick={onClose}
-              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20"
-              aria-label="Close dialog"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20 flex items-center gap-1.5 sm:gap-2">
+              <Button
+                variant="icon"
+                size="md"
+                onClick={handleShare}
+                aria-label="Share or copy project link"
+                title={copied ? 'Copied link to clipboard!' : 'Share or copy project link'}
+                className="relative"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-success" />
+                ) : (
+                  <Share2 className="w-4 h-4 text-text-primary" />
+                )}
+              </Button>
+
+              <Button
+                variant="icon"
+                size="md"
+                onClick={onClose}
+                aria-label="Close dialog"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
 
             <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3 font-mono text-xs pr-8">
               <span className="liquid-glass-pill px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-text-primary flex items-center gap-1.5">
@@ -118,14 +155,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               <Button
                 variant="pill"
                 size="sm"
-                active={activeTab === 'demo'}
+                active={activeTab === 'showcase'}
                 role="tab"
-                aria-selected={activeTab === 'demo'}
-                onClick={() => setActiveTab('demo')}
+                aria-selected={activeTab === 'showcase'}
+                onClick={() => setActiveTab('showcase')}
                 className="flex-1 min-w-[130px] sm:min-w-[140px] whitespace-nowrap"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                <span>Demo &amp; Reel</span>
+                <span>Interactive Showcase</span>
               </Button>
 
               <Button
@@ -179,6 +216,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                       {/* Main Cover */}
                       <button
                         type="button"
+                        aria-label="View Cover Image"
                         onClick={() => setActiveMedia({ url: project.image, type: 'image', title: 'Cover' })}
                         className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                           activeMedia.url === project.image && activeMedia.type === 'image'
@@ -195,6 +233,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                         <button
                           key={`img-${i}`}
                           type="button"
+                          aria-label={`View Gallery Image ${i + 1}`}
                           onClick={() => setActiveMedia({ url: imgUrl, type: 'image', title: `Gallery ${i + 1}` })}
                           className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                             activeMedia.url === imgUrl && activeMedia.type === 'image'
@@ -211,6 +250,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                       {project.video && !project.videoList?.some(v => v.url === project.video) && (
                         <button
                           type="button"
+                          aria-label="Play Project Video Reel"
                           onClick={() => setActiveMedia({ url: project.video!, type: 'video', title: 'Main Reel' })}
                           className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                             activeMedia.url === project.video && activeMedia.type === 'video'
@@ -227,6 +267,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
                         <button
                           key={`vid-${i}`}
                           type="button"
+                          aria-label={`Play Video: ${vid.title || `Reel ${i + 1}`}`}
                           onClick={() => setActiveMedia({ url: vid.url, type: 'video', title: vid.title })}
                           className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                             activeMedia.url === vid.url && activeMedia.type === 'video'
@@ -270,8 +311,8 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
             )}
 
-            {/* Tab 2: Interactive Demo */}
-            {activeTab === 'demo' && (
+            {/* Tab 2: Interactive Showcase */}
+            {activeTab === 'showcase' && (
               <ProjectInteractiveDemo project={project} />
             )}
 
@@ -331,14 +372,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               </span>
 
               <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-                {activeTab !== 'demo' && (
+                {activeTab !== 'showcase' && (
                   <Button
                     variant="ghost"
                     size="md"
-                    onClick={() => setActiveTab('demo')}
+                    onClick={() => setActiveTab('showcase')}
                     className="flex-1 sm:flex-none text-center"
                   >
-                    Open Live Demo →
+                    View Showcase →
                   </Button>
                 )}
 
@@ -369,6 +410,28 @@ interface ArticleModalProps {
 }
 
 export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (!article) return;
+    const shareUrl = `${window.location.origin}/?article=${article.id}`;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: `AI Build — ${article.title}`,
+          text: article.excerpt,
+          url: shareUrl,
+        });
+        return;
+      } catch (e) {}
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -404,15 +467,31 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
             aria-modal="true"
             aria-label={article.title}
           >
-            <Button
-              variant="icon"
-              size="md"
-              onClick={onClose}
-              className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20"
-              aria-label="Close dialog"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 z-20 flex items-center gap-1.5 sm:gap-2">
+              <Button
+                variant="icon"
+                size="md"
+                onClick={handleShare}
+                aria-label="Share or copy article link"
+                title={copied ? 'Copied link to clipboard!' : 'Share or copy article link'}
+                className="relative"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-success" />
+                ) : (
+                  <Share2 className="w-4 h-4 text-text-primary" />
+                )}
+              </Button>
+
+              <Button
+                variant="icon"
+                size="md"
+                onClick={onClose}
+                aria-label="Close dialog"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs uppercase tracking-widest text-muted font-mono mb-3 sm:mb-4 pr-8">
               <span className="liquid-glass-pill px-3 py-1 rounded-full text-text-primary">{article.category}</span>
@@ -547,6 +626,7 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                   {/* Image */}
                   <button
                     type="button"
+                    aria-label="View Cover Image"
                     onClick={() => setActiveMedia({ url: item.image, type: 'image', title: 'Cover' })}
                     className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                       activeMedia.url === item.image && activeMedia.type === 'image'
@@ -563,6 +643,7 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                     <button
                       key={`exp-img-${i}`}
                       type="button"
+                      aria-label={`View Gallery Image ${i + 1}`}
                       onClick={() => setActiveMedia({ url: imgUrl, type: 'image', title: `Gallery ${i + 1}` })}
                       className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
                         activeMedia.url === imgUrl && activeMedia.type === 'image'
@@ -579,6 +660,7 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                   {item.video && !item.videoList?.some(v => v.url === item.video) && (
                     <button
                       type="button"
+                      aria-label="Play Exploration Video Reel"
                       onClick={() => setActiveMedia({ url: item.video!, type: 'video', title: 'Main Reel' })}
                       className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                         activeMedia.url === item.video && activeMedia.type === 'video'
@@ -596,6 +678,7 @@ export const ExplorationModal: React.FC<ExplorationModalProps> = ({ item, onClos
                     <button
                       key={`exp-vid-${i}`}
                       type="button"
+                      aria-label={`Play Video: ${vid.title || `Vid ${i + 1}`}`}
                       onClick={() => setActiveMedia({ url: vid.url, type: 'video', title: vid.title })}
                       className={`relative aspect-video w-18 h-12 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
                         activeMedia.url === vid.url && activeMedia.type === 'video'
@@ -764,7 +847,7 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                     id="user-name"
                     required
                     type="text"
-                    placeholder="e.g. Alex Vance"
+                    placeholder="Your name or organization"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted focus:outline-none"
@@ -778,7 +861,7 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                   <input
                     id="user-email"
                     type="email"
-                    placeholder="alex@example.com"
+                    placeholder="your.email@domain.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full liquid-glass-input rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-base sm:text-sm text-text-primary placeholder:text-muted focus:outline-none"
@@ -838,11 +921,26 @@ export const ConversationModal: React.FC<ConversationModalProps> = ({
                   type="submit"
                   variant="glass"
                   size="md"
-                  className="w-full uppercase tracking-wider mt-2 py-3.5 sm:py-4"
+                  disabled={isSubmitting}
+                  aria-busy={isSubmitting}
+                  className="w-full uppercase tracking-wider mt-2 py-3.5 sm:py-4 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Message</span>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Message</span>
+                    </>
+                  )}
                 </Button>
+
+                <p className="text-2xs font-mono text-muted/80 text-center leading-relaxed pt-1 select-none">
+                  Privacy Assurance: Inquiry details are encrypted and handled exclusively by AI Build studio for project collaboration. Information is never shared or sold.
+                </p>
               </form>
             )}
           </motion.div>
@@ -1010,7 +1108,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                       id="reviewer-name"
                       required
                       type="text"
-                      placeholder="e.g. Sarah Jenkins"
+                      placeholder="Your full name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted focus:outline-none"
@@ -1024,7 +1122,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                     <input
                       id="reviewer-role"
                       type="text"
-                      placeholder="e.g. Product Lead / Founder"
+                      placeholder="e.g. Product Lead / Founder / Creative Director"
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
                       className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted focus:outline-none"
@@ -1040,7 +1138,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                     <input
                       id="reviewer-company"
                       type="text"
-                      placeholder="e.g. Nova Media"
+                      placeholder="Company or Studio Name"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       className="w-full liquid-glass-input rounded-xl px-3.5 py-2 text-sm text-text-primary placeholder:text-muted focus:outline-none"
@@ -1084,10 +1182,21 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                   type="submit"
                   variant="glass"
                   size="md"
-                  className="w-full uppercase tracking-wider mt-4 py-3.5 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)]"
+                  disabled={isSubmitted}
+                  aria-busy={isSubmitted}
+                  className="w-full uppercase tracking-wider mt-4 py-3.5 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Sparkles className="w-4 h-4 text-warning" />
-                  <span>Submit Client Review</span>
+                  {isSubmitted ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-warning" />
+                      <span>Submitting Review...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-warning" />
+                      <span>Submit Client Review</span>
+                    </>
+                  )}
                 </Button>
               </form>
             )}

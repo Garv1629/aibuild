@@ -700,12 +700,16 @@ export const AdminPage: React.FC = () => {
           <div className="pt-3 border-t border-white/10 space-y-2">
             <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
-                <span className="flex items-center gap-1.5 truncate max-w-[130px]" title={user?.email}>
-                  <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span className="truncate">{user?.email || 'aibuild1629@gmail.com'}</span>
+                <span className="flex items-center gap-1.5 truncate max-w-[130px]" title={user?.email || ''}>
+                  <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${user?.isAdmin ? 'text-sky-400' : 'text-amber-400'}`} />
+                  <span className="truncate">{user?.email || 'No Active Account'}</span>
                 </span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-                  {user?.role || 'admin'}
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono border ${
+                  user?.isAdmin
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : 'bg-red-500/20 text-red-300 border-red-500/30'
+                }`}>
+                  {user?.isAdmin ? 'Verified Owner' : 'Unauthorized'}
                 </span>
               </div>
               <button

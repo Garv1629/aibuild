@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './supabase.ts';
 import { api } from './api.ts';
-import { MediaAsset } from '../utils/portfolio.ts';
+import type { MediaAsset } from '../utils/portfolio.ts';
 
 export interface UploadResult {
   asset: MediaAsset;
@@ -31,11 +31,11 @@ const MAX_IMAGE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
 const MAX_VIDEO_SIZE_BYTES = 60 * 1024 * 1024; // 60MB
 
 /**
- * Upload a media file (Image or Video) to cloud Supabase Storage or persistent local storage
+ * Upload a media file (Image or Video) to cloud Supabase Storage or persistent storage
  */
 export async function uploadMediaFile(
   file: File,
-  options?: { title?: string; tags?: string[]; authToken?: string }
+  options?: { title?: string; tags?: string[] }
 ): Promise<UploadResult> {
   const isVideo = file.type.startsWith('video/');
 
@@ -60,20 +60,27 @@ export async function uploadMediaFile(
   const assetTitle = options?.title?.trim() || file.name.replace(/\.[^/.]+$/, '');
   const id = `media-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-  // 1. Try Supabase Storage if configured
+  // 1. Upload to Supabase Storage Bucket
   if (isSupabaseConfigured) {
     try {
       const storagePath = `uploads/${uniqueFileName}`;
       const { data, error } = await supabase.storage
         .from('portfolio-media')
-        .upload(storagePath, file, options?.authToken);
+        .upload(storagePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
 
-      if (!error && data?.publicUrl) {
+      if (!error && data) {
+        const { data: urlData } = supabase.storage
+          .from('portfolio-media')
+          .getPublicUrl(storagePath);
+
         const asset: MediaAsset = {
           id,
           title: assetTitle,
           fileName: file.name,
-          url: data.publicUrl,
+          url: urlData.publicUrl,
           type: isVideo ? 'video' : 'image',
           mimeType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
           sizeBytes: file.size,
@@ -84,16 +91,18 @@ export async function uploadMediaFile(
         };
 
         // Persist media record to Supabase database
-        await api.upsertMediaAsset(asset, options?.authToken);
+        await api.upsertMediaAsset(asset);
 
         return { asset, provider: 'supabase' };
+      } else if (error) {
+        console.warn('Supabase storage returned error:', error.message);
       }
-    } catch (err) {
-      console.warn('Supabase storage upload failed, falling back to persistent local storage:', err);
+    } catch (err: any) {
+      console.warn('Supabase storage upload failed:', err);
     }
   }
 
-  // 2. Fallback: Convert to Base64 Data URL for persistent browser storage
+  // 2. Fallback to Local Data URL
   const base64Url = await fileToBase64(file);
   const asset: MediaAsset = {
     id,
@@ -112,21 +121,21 @@ export async function uploadMediaFile(
     asset,
     provider: 'local',
     warning: isSupabaseConfigured
-      ? 'Cloud upload failed; saved to local persistent storage.'
-      : 'Saved to local browser storage. Configure Supabase storage in .env for permanent cross-device cloud persistence.',
+      ? 'Cloud storage upload was unsuccessful; cached locally.'
+      : 'Saved locally. Configure Supabase storage for cloud media hosting.',
   };
 }
 
 /**
  * Delete a media file from Supabase storage or local store
  */
-export async function deleteMediaFile(asset: MediaAsset, authToken?: string): Promise<boolean> {
+export async function deleteMediaFile(asset: MediaAsset): Promise<boolean> {
   if (asset.storageProvider === 'supabase' && isSupabaseConfigured) {
     try {
       if (asset.storagePath) {
-        await supabase.storage.from('portfolio-media').remove([asset.storagePath], authToken);
+        await supabase.storage.from('portfolio-media').remove([asset.storagePath]);
       }
-      await api.deleteMediaAsset(asset.id, authToken);
+      await api.deleteMediaAsset(asset.id);
       return true;
     } catch (err) {
       console.warn('Failed to delete from Supabase storage:', err);
@@ -146,4 +155,3 @@ function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
-

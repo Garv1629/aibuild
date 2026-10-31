@@ -48,6 +48,7 @@ export const Explorations: React.FC<ExplorationsProps> = ({
 
   // Dynamic height calculation so center text stays pinned until all background cards finish scrolling
   const [dynamicHeight, setDynamicHeight] = useState<number>(() => {
+    if (explorations.length === 0) return 0;
     return Math.max(maxItemsInCol * 520 + 750, 2400);
   });
 
@@ -72,6 +73,10 @@ export const Explorations: React.FC<ExplorationsProps> = ({
     if (typeof window === 'undefined') return;
 
     const measureHeight = () => {
+      if (explorations.length === 0) {
+        setDynamicHeight(0);
+        return;
+      }
       if (!columnsContainerRef.current) return;
       const colHeight = columnsContainerRef.current.offsetHeight;
       if (colHeight > 0) {
@@ -164,7 +169,7 @@ export const Explorations: React.FC<ExplorationsProps> = ({
       id="explorations"
       ref={containerRef}
       style={{
-        minHeight: isLargeScreen && dynamicHeight ? `${dynamicHeight}px` : undefined,
+        minHeight: isLargeScreen && explorations.length > 0 && dynamicHeight ? `${dynamicHeight}px` : undefined,
       }}
       className="relative z-10 py-12 lg:py-0 overflow-x-clip"
       aria-label="Explorations and Visual Experiments"
@@ -196,7 +201,7 @@ export const Explorations: React.FC<ExplorationsProps> = ({
           {/* Description */}
           <p className="text-sm sm:text-base text-muted max-w-md mx-auto mb-6 leading-relaxed">
             {data.siteTexts?.explorationsSubtext ||
-              'A curated gallery of live AI video experiments, high-converting UGC mockups, web interactions, and digital publication concepts.'}
+              'A curated gallery of live AI video experiments, high-converting UGC creative concepts, web interactions, and digital publication designs.'}
           </p>
 
           {/* GitHub button - Standardized Secondary Button */}
@@ -216,18 +221,25 @@ export const Explorations: React.FC<ExplorationsProps> = ({
         </div>
 
         {/* Mobile / Tablet Cards Grid: Liquid Glass Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          {explorations.map((item) => (
-            <div
-              key={`mobile-${item.id}`}
-              onClick={() => onSelectExploration(item)}
-              className="group aspect-video sm:aspect-square w-full rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-xl shadow-black/60 transition-all duration-300 hover:scale-[1.02] relative"
-              tabIndex={0}
-              role="article"
-              aria-label={`Exploration: ${item.title}`}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
+        {explorations.length === 0 ? (
+          <div className="py-16 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
+            <p className="text-secondary font-mono text-sm">
+              No visual experiments published yet.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            {explorations.map((item) => (
+              <div
+                key={`mobile-${item.id}`}
+                onClick={() => onSelectExploration(item)}
+                className="group aspect-video sm:aspect-square w-full rounded-2xl overflow-hidden liquid-glass-card cursor-pointer shadow-xl shadow-black/60 transition-all duration-300 hover:scale-[1.02] relative"
+                tabIndex={0}
+                role="article"
+                aria-label={`Exploration: ${item.title}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
                   onSelectExploration(item);
                 }
               }}
@@ -278,14 +290,15 @@ export const Explorations: React.FC<ExplorationsProps> = ({
             </div>
           ))}
         </div>
+        )}
       </div>
 
-      {/* DESKTOP LAYOUT (>= 1024px): Pinned Center Text */}
+      {/* DESKTOP LAYOUT (>= 1024px): Pinned Center Text (or in-flow if empty) */}
       <div
         ref={pinnedContentRef}
-        className="hidden lg:flex sticky top-0 h-screen z-30 flex-col items-center justify-center text-center px-4 sm:px-6 pointer-events-none"
+        className={`hidden lg:flex ${explorations.length > 0 ? 'sticky top-0 h-screen pointer-events-none' : 'py-24'} z-30 flex-col items-center justify-center text-center px-4 sm:px-6`}
       >
-        <div className="relative max-w-xl mx-auto flex flex-col items-center text-center">
+        <div className={`relative max-w-xl mx-auto flex flex-col items-center text-center ${explorations.length === 0 ? 'pointer-events-auto' : ''}`}>
           {/* Eyebrow */}
           <div className="flex items-center gap-3 mb-4">
             <span className="w-8 h-px bg-stroke" aria-hidden="true" />
@@ -304,31 +317,40 @@ export const Explorations: React.FC<ExplorationsProps> = ({
           {/* Description */}
           <p className="text-sm md:text-base text-muted max-w-md mx-auto mb-7 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
             {data.siteTexts?.explorationsSubtext ||
-              'A curated gallery of live AI video experiments, high-converting UGC mockups, web interactions, and digital publication concepts.'}
+              'A curated gallery of live AI video experiments, high-converting UGC creative concepts, web interactions, and digital publication designs.'}
           </p>
 
           {/* GitHub button (verified link) - Apple Liquid Glass */}
-            <a
-              href={githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({
-                variant: 'glass',
-                size: 'md',
-                className: 'group shadow-xl',
-              })}
-              aria-label="Explore AI Build projects on GitHub"
-            >
-              <span>{data.siteTexts?.explorationsGithubText || 'Explore on GitHub'}</span>
-              <span className="text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                ↗
-              </span>
-            </a>
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({
+              variant: 'glass',
+              size: 'md',
+              className: 'group shadow-xl',
+            })}
+            aria-label="Explore AI Build projects on GitHub"
+          >
+            <span>{data.siteTexts?.explorationsGithubText || 'Explore on GitHub'}</span>
+            <span className="text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+              ↗
+            </span>
+          </a>
+
+          {/* Desktop Empty State */}
+          {explorations.length === 0 && (
+            <div className="mt-8 py-10 px-8 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.02] w-full">
+              <p className="text-secondary font-mono text-sm">
+                No visual experiments published yet. Check back soon for new case studies and experiments.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* DESKTOP BACKGROUND LAYER (>= 1024px): Parallax Columns */}
-      {isLargeScreen && (
+      {isLargeScreen && explorations.length > 0 && (
         <div
           ref={columnsContainerRef}
           className="hidden lg:block relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 -mt-[100vh] pointer-events-none"

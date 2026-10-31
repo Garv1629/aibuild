@@ -12,8 +12,13 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+
+  // Guarantee /admin/login is treated as a 100% public route even if wrapped or visited
+  if (location.pathname.startsWith('/admin/login')) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
@@ -26,8 +31,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  if (!isAuthenticated || !user?.isAdmin) {
+    const fromState = location.pathname && !location.pathname.startsWith('/admin/login') ? { from: location } : undefined;
+    return <Navigate to="/admin/login" state={fromState} replace />;
   }
 
   return <>{children}</>;

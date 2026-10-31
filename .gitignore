@@ -10,6 +10,7 @@ coverage/
 scratch_test.js
 scan_report.json
 clean.js
+gitinfo.js
 bun.lock
 extract.js
 check_diff.mjs
@@ -17,7 +18,6 @@ git-runner.mjs
 git_push.bat
 push.js
 push.cjs
-test_runner.cjs
 test_out.json
 verify_build.mjs
 check_status.cjs
@@ -27,3 +27,8 @@ install_deps.mjs
 test_supabase_live.mjs
 git_result.json
 commit_msg.txt
+clean_junk.js
+test_supabase.js
+supabase_audit_master.json
+test_results.json
+audit_master_summary.json

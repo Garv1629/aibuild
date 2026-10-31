@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Plus, CheckCircle2, Quote, Sparkles } from 'lucide-react';
+import { Star, Plus, CheckCircle2, Quote, Sparkles, MessageSquareQuote } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Review } from '../utils/portfolio.ts';
 import { Button } from './Button.tsx';
@@ -21,7 +21,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   // Only show verified & approved reviews to public visitors
-  const reviewsList = (data.reviews || []).filter((r) => r.status !== 'pending');
+  const reviewsList = (data.reviews || []).filter((r) => r.status === 'approved');
 
   const filteredReviews = selectedCategory === 'All'
     ? reviewsList
@@ -29,7 +29,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
 
   const averageRating = reviewsList.length > 0
     ? (reviewsList.reduce((acc, r) => acc + r.rating, 0) / reviewsList.length).toFixed(1)
-    : '5.0';
+    : null;
 
   return (
     <section id="reviews" className="py-16 sm:py-32 px-3 xs:px-4 sm:px-6 md:px-12 relative z-10">
@@ -50,31 +50,33 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
             </h2>
 
             <p className="mt-4 text-sm sm:text-base text-muted max-w-lg leading-relaxed font-sans">
-              Real reviews from founders, brands, and creators who trusted us with Web Development, AI Productions, UGC, and Publications.
+              Real reviews from founders, brands, and creators who trusted AI Build with Web Development, AI Productions, UGC, and Publications.
             </p>
           </div>
 
           {/* Action & Stats Summary */}
           <div className="flex flex-wrap items-center gap-4">
-            {/* Rating pill */}
-            <div className="liquid-glass rounded-2xl px-4 py-3 flex items-center gap-3 border border-white/10 shadow-lg">
-              <div className="flex items-center gap-1 text-warning">
-                <Star className="w-5 h-5 fill-warning drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
-                <span className="font-display font-medium text-lg text-white">{averageRating}</span>
+            {/* Rating pill - ONLY displayed if genuine verified reviews exist */}
+            {averageRating && reviewsList.length > 0 && (
+              <div className="liquid-glass rounded-2xl px-4 py-3 flex items-center gap-3 border border-white/10 shadow-lg">
+                <div className="flex items-center gap-1 text-warning">
+                  <Star className="w-5 h-5 fill-warning drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                  <span className="font-display font-medium text-lg text-white">{averageRating}</span>
+                </div>
+                <div className="h-6 w-px bg-white/15" />
+                <div className="text-left font-mono text-xs text-muted">
+                  <div className="text-white font-medium">{reviewsList.length} Verified {reviewsList.length === 1 ? 'Review' : 'Reviews'}</div>
+                  <div>Client Feedback</div>
+                </div>
               </div>
-              <div className="h-6 w-px bg-white/15" />
-              <div className="text-left font-mono text-xs text-muted">
-                <div className="text-white font-medium">{reviewsList.length} Reviews</div>
-                <div>100% Verified</div>
-              </div>
-            </div>
+            )}
 
             {/* Submit Review Button */}
             <Button
               variant="glass"
               size="md"
               onClick={onOpenReviewModal}
-              aria-label="Add your review"
+              aria-label="Leave a client review"
             >
               <Plus className="w-4 h-4 text-accent" />
               <span>Leave a Review</span>
@@ -82,136 +84,160 @@ export const Reviews: React.FC<ReviewsProps> = ({ onOpenReviewModal }) => {
           </div>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none touch-pan-x">
-          {CATEGORIES.map((cat) => {
-            const count = cat === 'All'
-              ? reviewsList.length
-              : reviewsList.filter((r) => r.category === cat).length;
-            const isActive = selectedCategory === cat;
+        {reviewsList.length === 0 ? (
+          /* Empty State - Honest, Authentic Invitation */
+          <div className="liquid-glass-card rounded-3xl p-8 sm:p-14 text-center max-w-xl mx-auto flex flex-col items-center border border-white/15 shadow-2xl space-y-4 animate-fadeIn">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-sky-400/20 via-blue-600/20 to-indigo-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shadow-lg">
+              <MessageSquareQuote className="w-6 h-6 text-sky-300" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-display text-white tracking-tight">
+              Client Feedback Wall
+            </h3>
+            <p className="text-xs sm:text-sm text-muted leading-relaxed font-sans max-w-md">
+              We are currently accepting reviews from our recent collaboration partners. If you have worked with AI Build on a web app, generative video, viral ad, or publication, share your feedback with our community.
+            </p>
+            <Button
+              variant="glass"
+              size="md"
+              onClick={onOpenReviewModal}
+              className="mt-3 group"
+            >
+              <Plus className="w-4 h-4 text-accent group-hover:rotate-90 transition-transform" />
+              <span>Be the First to Review</span>
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none touch-pan-x">
+              {CATEGORIES.map((cat) => {
+                const count = cat === 'All'
+                  ? reviewsList.length
+                  : reviewsList.filter((r) => r.category === cat).length;
+                const isActive = selectedCategory === cat;
 
-            return (
-              <Button
-                key={cat}
-                variant="pill"
-                size="sm"
-                active={isActive}
-                onClick={() => setSelectedCategory(cat)}
-                className="shrink-0"
-              >
-                <span>{cat}</span>
-                <span className={`text-2xs px-1.5 py-0.2 rounded-full ${isActive ? 'bg-accent/20 text-accent' : 'bg-white/10 text-muted'}`}>
-                  {count}
-                </span>
-              </Button>
-            );
-          })}
-        </div>
+                return (
+                  <Button
+                    key={cat}
+                    variant="pill"
+                    size="sm"
+                    active={isActive}
+                    onClick={() => setSelectedCategory(cat)}
+                    className="shrink-0"
+                  >
+                    <span>{cat}</span>
+                    <span className={`text-2xs px-1.5 py-0.2 rounded-full ${isActive ? 'bg-accent/20 text-accent' : 'bg-white/10 text-muted'}`}>
+                      {count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
 
-        {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <AnimatePresence mode="popLayout">
-            {filteredReviews.map((review, idx) => (
+            {/* Reviews Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <AnimatePresence mode="popLayout">
+                {filteredReviews.map((review, idx) => (
+                  <motion.div
+                    key={review.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.35, delay: idx * 0.05 }}
+                    className="liquid-glass rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-7 flex flex-col justify-between border border-white/10 hover:border-white/20 transition-all hover:-translate-y-1 group relative overflow-hidden shadow-xl"
+                  >
+                    <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-sky-500/10 via-indigo-500/5 to-transparent rounded-full blur-xl pointer-events-none" />
+
+                    <div>
+                      {/* Top row: stars and category tag */}
+                      <div className="flex items-center justify-between gap-2 mb-4">
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3.5 h-3.5 ${
+                                star <= review.rating
+                                  ? 'text-warning fill-warning drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
+                                  : 'text-muted'
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        <span className="text-2xs font-mono px-2.5 py-0.5 rounded-full liquid-glass-subtle text-accent border border-accent/20">
+                          {review.category}
+                        </span>
+                      </div>
+
+                      {/* Quote icon & Review Content */}
+                      <div className="relative mb-6">
+                        <Quote className="w-6 h-6 text-white/10 absolute -top-1 -left-2 -scale-x-100 pointer-events-none" />
+                        <p className="text-sm text-text-primary leading-relaxed font-sans relative z-10 pl-2">
+                          "{review.content}"
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Reviewer Details Footer */}
+                    <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400/30 to-indigo-600/30 border border-white/20 flex items-center justify-center shrink-0 text-xs font-medium text-white shadow-inner">
+                          {review.avatar ? (
+                            <img src={review.avatar} alt={review.name} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            review.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-white truncate">
+                              {review.name}
+                            </span>
+                            {review.verified !== false && (
+                              <span title="Verified Client">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted truncate font-mono">
+                            {review.role}{review.company ? ` • ${review.company}` : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="text-2xs font-mono text-muted shrink-0">
+                        {review.date}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* "Add Your Review" Interactive Invitation Card */}
               <motion.div
-                key={review.id}
-                layout
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.35, delay: idx * 0.05 }}
-                className="liquid-glass rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-7 flex flex-col justify-between border border-white/10 hover:border-white/20 transition-all hover:-translate-y-1 group relative overflow-hidden shadow-xl"
+                onClick={onOpenReviewModal}
+                className="liquid-glass-subtle rounded-3xl p-6 sm:p-7 flex flex-col items-center justify-center text-center border border-dashed border-white/20 hover:border-sky-400/50 hover:bg-white/[0.04] transition-all cursor-pointer group min-h-[220px]"
               >
-                {/* Subtle top corner gradient glow */}
-                <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-sky-500/10 via-indigo-500/5 to-transparent rounded-full blur-xl pointer-events-none" />
-
-                <div>
-                  {/* Top row: stars and category tag */}
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-3.5 h-3.5 ${
-                            star <= review.rating
-                              ? 'text-warning fill-warning drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
-                              : 'text-muted'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    <span className="text-2xs font-mono px-2.5 py-0.5 rounded-full liquid-glass-subtle text-accent border border-accent/20">
-                      {review.category}
-                    </span>
-                  </div>
-
-                  {/* Quote icon & Review Content */}
-                  <div className="relative mb-6">
-                    <Quote className="w-6 h-6 text-white/10 absolute -top-1 -left-2 -scale-x-100 pointer-events-none" />
-                    <p className="text-sm text-text-primary leading-relaxed font-sans relative z-10 pl-2">
-                      "{review.content}"
-                    </p>
-                  </div>
+                <div className="w-12 h-12 rounded-full liquid-glass-pill flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-accent transition-all text-accent shadow-lg">
+                  <Plus className="w-6 h-6" />
                 </div>
-
-                {/* Reviewer Details Footer */}
-                <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* Avatar Initials Circle */}
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400/30 to-indigo-600/30 border border-white/20 flex items-center justify-center shrink-0 text-xs font-medium text-white shadow-inner">
-                      {review.avatar ? (
-                        <img src={review.avatar} alt={review.name} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        review.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-medium text-white truncate">
-                          {review.name}
-                        </span>
-                        {review.verified !== false && (
-                          <span title="Verified Client">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted truncate font-mono">
-                        {review.role}{review.company ? ` • ${review.company}` : ''}
-                      </div>
-                    </div>
-                  </div>
-
-                  <span className="text-2xs font-mono text-muted shrink-0">
-                    {review.date}
-                  </span>
-                </div>
+                <h3 className="text-sm sm:text-base font-medium text-white group-hover:text-accent transition-colors">
+                  Worked with us?
+                </h3>
+                <p className="text-sm leading-relaxed text-muted mt-2 max-w-[260px] xs:max-w-[280px] font-sans">
+                  Add your review and join our client feedback wall.
+                </p>
+                <span className="mt-3 font-mono text-xs text-accent underline underline-offset-4 opacity-80 group-hover:opacity-100">
+                  Submit Review →
+                </span>
               </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* "Add Your Review" Interactive Invitation Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={onOpenReviewModal}
-            className="liquid-glass-subtle rounded-3xl p-6 sm:p-7 flex flex-col items-center justify-center text-center border border-dashed border-white/20 hover:border-sky-400/50 hover:bg-white/[0.04] transition-all cursor-pointer group min-h-[220px]"
-          >
-            <div className="w-12 h-12 rounded-full liquid-glass-pill flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-accent transition-all text-accent shadow-lg">
-              <Plus className="w-6 h-6" />
             </div>
-            <h3 className="text-sm sm:text-base font-medium text-white group-hover:text-accent transition-colors">
-              Worked with us?
-            </h3>
-            <p className="text-sm leading-relaxed text-muted mt-2 max-w-[260px] xs:max-w-[280px] font-sans">
-              Add your review and join our client feedback wall.
-            </p>
-            <span className="mt-3 font-mono text-xs text-accent underline underline-offset-4 opacity-80 group-hover:opacity-100">
-              Submit Review →
-            </span>
-          </motion.div>
-        </div>
+          </>
+        )}
       </div>
     </section>
   );

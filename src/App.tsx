@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { PortfolioHome } from './pages/PortfolioHome.tsx';
 import { AdminPage } from './pages/AdminPage.tsx';
 import { AdminLoginPage } from './pages/AdminLoginPage.tsx';
+import { NotFoundPage } from './pages/NotFoundPage.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { ProtectedRoute } from './components/ProtectedRoute.tsx';
 
@@ -54,7 +55,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 onClick={() => {
                   try {
                     localStorage.removeItem('ai_build_portfolio_cms_v1');
-                  } catch (e) {}
+                  } catch (e) { }
                   window.location.reload();
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-xs text-white font-medium cursor-pointer transition-colors"
@@ -126,6 +127,7 @@ export default function App() {
         <AdminShortcutListener />
         <Routes>
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/login" element={<Navigate to="/admin/login" replace />} />
           <Route
             path="/admin"
             element={
@@ -143,7 +145,7 @@ export default function App() {
             }
           />
           <Route path="/" element={<PortfolioHome />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

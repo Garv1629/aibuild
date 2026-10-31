@@ -9,32 +9,112 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>AI Build — Web Development, AI Videos, UGC Videos &amp; E-books</title>
     <meta name="description" content="AI Build provides premier digital services: high-performance Web Development, cinematic AI Videos, authentic viral UGC Videos, and publication-ready E-books." />
+    <link rel="canonical" href="https://aibuild.studio/" />
+
+    <!-- Open Graph Protocol -->
+    <meta property="og:site_name" content="AI Build" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://aibuild.studio/" />
     <meta property="og:title" content="AI Build — Web Development, AI Videos, UGC Videos &amp; E-books" />
     <meta property="og:description" content="Build Smarter. Create Faster. Think Beyond. Premium Web Development, AI Videos, UGC Videos, and E-books." />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://aibuild.studio/og-image.jpg" />
+    <meta property="og:image:secure_url" content="https://aibuild.studio/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AI Build — Web Development, AI Videos, UGC Videos &amp; E-books" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AI Build — Web Development, AI Videos, UGC Videos &amp; E-books" />
+    <meta name="twitter:description" content="Build Smarter. Create Faster. Think Beyond. Premium Web Development, AI Videos, UGC Videos, and E-books." />
+    <meta name="twitter:image" content="https://aibuild.studio/og-image.jpg" />
+    <meta name="twitter:image:alt" content="AI Build — Digital Studio Portfolio" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://aibuild.studio/#organization",
+          "name": "AI Build",
+          "url": "https://aibuild.studio/",
+          "logo": "https://aibuild.studio/og-image.jpg",
+          "image": "https://aibuild.studio/og-image.jpg",
+          "description": "AI Build provides premier digital services: high-performance Web Development, cinematic AI Videos, authentic viral UGC Videos, and publication-ready E-books.",
+          "email": "aibuild1629@gmail.com"
+        },
+        {
+          "@type": "ProfessionalService",
+          "@id": "https://aibuild.studio/#service",
+          "name": "AI Build Digital Studio",
+          "url": "https://aibuild.studio/",
+          "image": "https://aibuild.studio/og-image.jpg",
+          "description": "Premier digital engineering and generative visual production studio specializing in Web Development, AI Videos, UGC Videos, and E-books.",
+          "provider": {
+            "@id": "https://aibuild.studio/#organization"
+          },
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Studio Services",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Web Development",
+                  "description": "High-performance web applications, fluid micro-interactions, responsive architectures, and full-stack solutions."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "AI Videos",
+                  "description": "Cinematic visual generation, photorealistic motion synthesis, dynamic storytelling, and high-impact concept ads."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "UGC Videos",
+                  "description": "Authentic creator-style video assets engineered for viral TikTok, Instagram Reels, and YouTube Shorts conversion."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "E-books",
+                  "description": "Editorial layouts, publication-grade digital guides, strategic whitepapers, and illustrated thought-leadership books."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Production Analytics Integration Slot (Activate with verified GA4 ID e.g. G-XXXXXXXXXX) -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> -->
   </head>
   <body>
     <div id="root"></div>
     <script>
       window.addEventListener('error', function(e) {
-        console.error('Captured Global Error:', e.error || e.message);
-        var el = document.getElementById('debug-error-overlay');
-        if (!el) {
-          el = document.createElement('div');
-          el.id = 'debug-error-overlay';
-          el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999999;background:#b91c1c;color:#fff;padding:16px;font-family:monospace;font-size:12px;white-space:pre-wrap;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-          document.body.appendChild(el);
-        }
-        el.innerText = 'Application Error:\n' + (e.error ? (e.error.stack || e.error.message) : e.message);
+        console.error('Unhandled Client Error:', e.error || e.message);
       });
       window.addEventListener('unhandledrejection', function(e) {
-        console.error('Unhandled Rejection:', e.reason);
+        console.error('Unhandled Promise Rejection:', e.reason);
       });
     </script>
     <script type="module" src="/src/main.tsx"></script>

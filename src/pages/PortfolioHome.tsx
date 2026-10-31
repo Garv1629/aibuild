@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ScrollProgressBar } from '../components/ScrollProgressBar.tsx';
 import { Navbar } from '../components/Navbar.tsx';
 import { Hero } from '../components/Hero.tsx';
@@ -28,13 +29,55 @@ interface PortfolioHomeProps {
 }
 
 export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false }) => {
-  const { addReview } = usePortfolio();
+  const { data, addReview } = usePortfolio();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState('hero');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<JournalEntry | null>(null);
   const [selectedExploration, setSelectedExploration] = useState<ExplorationItem | null>(null);
   const [isConversationOpen, setIsConversationOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // Sync URL search parameters with modal selection (Deep linking for social sharing & direct links)
+  useEffect(() => {
+    if (isPreview) return;
+
+    const projectId = searchParams.get('project');
+    const articleId = searchParams.get('article');
+    const explorationId = searchParams.get('exploration');
+
+    if (projectId && data?.projects) {
+      const match = data.projects.find((p) => p.id === projectId);
+      if (match) setSelectedProject(match);
+    } else if (!projectId) {
+      setSelectedProject(null);
+    }
+
+    if (articleId && data?.journalEntries) {
+      const match = data.journalEntries.find((a) => a.id === articleId || a.slug === articleId);
+      if (match) setSelectedArticle(match);
+    } else if (!articleId) {
+      setSelectedArticle(null);
+    }
+
+    if (explorationId && data?.explorations) {
+      const match = data.explorations.find((e) => e.id === explorationId);
+      if (match) setSelectedExploration(match);
+    } else if (!explorationId) {
+      setSelectedExploration(null);
+    }
+  }, [searchParams, data?.projects, data?.journalEntries, data?.explorations, isPreview]);
+
+  const updateParam = (key: string, value: string | null) => {
+    if (isPreview) return;
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set(key, value);
+    } else {
+      newParams.delete(key);
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
   // Monitor scroll position to update active navbar state (disabled in preview mode for maximum performance)
   useEffect(() => {
@@ -115,19 +158,28 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false 
 
         {/* Selected Works */}
         <SelectedWorks
-          onSelectProject={(project) => setSelectedProject(project)}
+          onSelectProject={(project) => {
+            setSelectedProject(project);
+            updateParam('project', project.id);
+          }}
           onViewAllWork={() => handleNavigate('work')}
         />
 
         {/* Journal Section */}
         <Journal
-          onSelectArticle={(article) => setSelectedArticle(article)}
+          onSelectArticle={(article) => {
+            setSelectedArticle(article);
+            updateParam('article', article.id);
+          }}
           onViewAllThoughts={() => handleNavigate('journal')}
         />
 
         {/* Explorations Section */}
         <Explorations
-          onSelectExploration={(item) => setSelectedExploration(item)}
+          onSelectExploration={(item) => {
+            setSelectedExploration(item);
+            updateParam('exploration', item.id);
+          }}
         />
 
         {/* Stats */}
@@ -144,21 +196,30 @@ export const PortfolioHome: React.FC<PortfolioHomeProps> = ({ isPreview = false 
         />
       </main>
 
-      {/* Interactive Modals */}
+      {/* Interactive Modals with Deep Linking & Share URL Synchronization */}
       <ProjectModal
         project={selectedProject}
-        onClose={() => setSelectedProject(null)}
+        onClose={() => {
+          setSelectedProject(null);
+          updateParam('project', null);
+        }}
         onStartConversation={() => setIsConversationOpen(true)}
       />
 
       <ArticleModal
         article={selectedArticle}
-        onClose={() => setSelectedArticle(null)}
+        onClose={() => {
+          setSelectedArticle(null);
+          updateParam('article', null);
+        }}
       />
 
       <ExplorationModal
         item={selectedExploration}
-        onClose={() => setSelectedExploration(null)}
+        onClose={() => {
+          setSelectedExploration(null);
+          updateParam('exploration', null);
+        }}
       />
 
       <ConversationModal

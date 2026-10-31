@@ -71,7 +71,7 @@ export const MediaLibraryManager: React.FC = () => {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const res = await uploadMediaFile(file, { authToken: session?.token });
+        const res = await uploadMediaFile(file);
         addMediaAsset(res.asset);
       }
     } catch (err: any) {
@@ -91,7 +91,7 @@ export const MediaLibraryManager: React.FC = () => {
   const handleDelete = async (id: string) => {
     const target = assets.find((a) => a.id === id);
     if (target) {
-      await deleteMediaFile(target, session?.token);
+      await deleteMediaFile(target);
       deleteMediaAsset(id);
     }
     setConfirmDeleteId(null);

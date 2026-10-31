@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'work', label: 'Work', fullLabel: 'Selected Works', num: '02', desc: 'Featured Projects & Systems', icon: FolderGit2 },
     { id: 'explorations', label: 'Explorations', fullLabel: 'Visual Playground', num: '03', desc: '3D & AI Video Experiments', icon: Compass },
     { id: 'journal', label: 'Journal', fullLabel: 'Journal & Insights', num: '04', desc: 'Articles & Perspectives', icon: BookOpen },
-    { id: 'reviews', label: 'Reviews', fullLabel: 'Client Reviews', num: '05', desc: '5.0 ★ Client Feedback', icon: MessageSquare },
+    { id: 'reviews', label: 'Reviews', fullLabel: 'Client Reviews', num: '05', desc: 'Client Feedback & Reviews', icon: MessageSquare },
   ];
 
   return (

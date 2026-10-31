@@ -62,7 +62,7 @@
   --bg: 0 0% 4%;
   --surface: 0 0% 8%;
   --text: 0 0% 96%;
-  --muted: 0 0% 53%;
+  --muted: 215 16% 65%; /* #94a3b8 Slate-400 for WCAG 2.2 AA (5.67:1 contrast on #0a0a0a) */
   --stroke: 0 0% 12%;
   --accent: 199 89% 60%; /* #38bdf8 Sky Blue brand accent */
   color-scheme: dark;

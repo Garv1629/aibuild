@@ -10,13 +10,6 @@ import { useAuth } from '../../context/AuthContext.tsx';
 import { ExplorationItem, ProjectVideo } from '../../utils/portfolio.ts';
 import { uploadMediaFile } from '../../services/storage.ts';
 
-const SAMPLE_EXPLORATION_IMAGES = [
-  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80',
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=700&q=80',
-  'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=700&q=80',
-  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=700&q=80',
-];
-
 export const ExplorationsManager: React.FC = () => {
   const { data, addExploration, updateExploration, deleteExploration, addMediaAsset } = usePortfolio();
   const { session } = useAuth();
@@ -44,7 +37,6 @@ export const ExplorationsManager: React.FC = () => {
       const res = await uploadMediaFile(file, {
         title: `${formData.title || 'Playground'} Image`,
         tags: ['Playground Image', formData.category || 'Explorations'],
-        authToken: session?.token,
       });
       addMediaAsset(res.asset);
       setFormData((prev) => ({ ...prev, image: res.asset.url }));
@@ -65,7 +57,6 @@ export const ExplorationsManager: React.FC = () => {
       const res = await uploadMediaFile(file, {
         title: `${formData.title || 'Playground'} Video`,
         tags: ['Playground Video', formData.category || 'Explorations'],
-        authToken: session?.token,
       });
       addMediaAsset(res.asset);
       setFormData((prev) => ({ ...prev, video: res.asset.url }));
@@ -85,7 +76,7 @@ export const ExplorationsManager: React.FC = () => {
       category: 'AI Videos',
       column: 1,
       rotation: 2,
-      image: SAMPLE_EXPLORATION_IMAGES[1],
+      image: '',
       description: 'Cinematic visual experiment exploring lighting, physics, and fluid camera choreography.',
       galleryImages: [],
       videoList: [],
@@ -432,21 +423,6 @@ export const ExplorationsManager: React.FC = () => {
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add</span>
                     </button>
-                  </div>
-
-                  {/* Sample Presets */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono text-muted">
-                    <span>Quick presets:</span>
-                    {SAMPLE_EXPLORATION_IMAGES.map((preset, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleAddGalleryImage(preset)}
-                        className="px-2 py-0.5 rounded-md liquid-glass-pill hover:bg-white/20 text-white/80 cursor-pointer"
-                      >
-                        + Sample {idx + 1}
-                      </button>
-                    ))}
                   </div>
 
                   {/* Gallery Thumbnails */}

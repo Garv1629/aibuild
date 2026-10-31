@@ -144,8 +144,7 @@ interface PortfolioContextType {
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { session, isAuthenticated } = useAuth();
-  const token = session?.token;
+  const { user, isAuthenticated } = useAuth();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
@@ -225,9 +224,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       setIsCloudConnected(true);
 
-      const isAdminUser = Boolean(isAuthenticated && token) || isAdminOpen || checkIsAdminUrl();
+      const isAdminUser = Boolean(isAuthenticated && user?.isAdmin);
 
-      // Fetch all tables in parallel
+      // Fetch all tables in parallel with role-appropriate filters
       const [
         projectsRes,
         journalRes,
@@ -237,15 +236,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         contentRes,
         mediaRes,
         activityRes,
+        inquiriesRes,
       ] = await Promise.allSettled([
-        api.fetchProjects({ publishedOnly: false, token: token || undefined }),
-        api.fetchJournal({ publishedOnly: false, token: token || undefined }),
-        api.fetchExplorations({ publishedOnly: false, token: token || undefined }),
-        api.fetchServices(token || undefined),
-        api.fetchReviews({ approvedOnly: false, token: token || undefined }),
-        api.fetchSiteContent(token || undefined),
-        api.fetchMediaAssets(token || undefined),
-        api.fetchActivityLogs(token || undefined),
+        api.fetchProjects({ publishedOnly: !isAdminUser }),
+        api.fetchJournal({ publishedOnly: !isAdminUser }),
+        api.fetchExplorations({ publishedOnly: !isAdminUser }),
+        api.fetchServices(),
+        api.fetchReviews({ approvedOnly: !isAdminUser }),
+        api.fetchSiteContent(),
+        api.fetchMediaAssets(),
+        api.fetchActivityLogs(),
+        isAdminUser ? api.fetchInquiries() : Promise.resolve({ data: null, error: null }),
       ]);
 
       setData((prev) => {
@@ -254,20 +255,26 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
         const next: PortfolioData = { ...prev };
 
-        if (projectsRes.status === 'fulfilled' && projectsRes.value.data && projectsRes.value.data.length > 0) {
-          next.projects = projectsRes.value.data;
+        if (projectsRes.status === 'fulfilled' && Array.isArray(projectsRes.value.data)) {
+          const dbProjects = projectsRes.value.data;
+          const dbIds = new Set(dbProjects.map((p: Project) => p.id));
+          const baseline = PROJECTS.filter((p) => !dbIds.has(p.id));
+          next.projects = [...dbProjects, ...baseline].sort((a, b) => (a.order || 0) - (b.order || 0));
         }
-        if (journalRes.status === 'fulfilled' && journalRes.value.data && journalRes.value.data.length > 0) {
+        if (journalRes.status === 'fulfilled' && Array.isArray(journalRes.value.data)) {
           next.journalEntries = journalRes.value.data;
         }
-        if (explorationsRes.status === 'fulfilled' && explorationsRes.value.data && explorationsRes.value.data.length > 0) {
+        if (explorationsRes.status === 'fulfilled' && Array.isArray(explorationsRes.value.data)) {
           next.explorations = explorationsRes.value.data;
         }
-        if (servicesRes.status === 'fulfilled' && servicesRes.value.data && servicesRes.value.data.length > 0) {
+        if (servicesRes.status === 'fulfilled' && Array.isArray(servicesRes.value.data)) {
           next.services = servicesRes.value.data;
         }
-        if (reviewsRes.status === 'fulfilled' && reviewsRes.value.data && reviewsRes.value.data.length > 0) {
+        if (reviewsRes.status === 'fulfilled' && Array.isArray(reviewsRes.value.data)) {
           next.reviews = reviewsRes.value.data;
+        }
+        if (inquiriesRes.status === 'fulfilled' && Array.isArray(inquiriesRes.value.data)) {
+          next.inquiries = inquiriesRes.value.data;
         }
         if (contentRes.status === 'fulfilled' && contentRes.value.data) {
           const contentMap = contentRes.value.data;
@@ -282,12 +289,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (Array.isArray(contentMap.stats) && contentMap.stats.length > 0) {
             next.stats = contentMap.stats;
           }
+          if (!Array.isArray(inquiriesRes.status === 'fulfilled' ? inquiriesRes.value.data : null) && Array.isArray(contentMap.client_inquiries)) {
+            next.inquiries = contentMap.client_inquiries;
+          }
         }
         next.email = normalizeContactEmail(next.email);
-        if (mediaRes.status === 'fulfilled' && mediaRes.value.data && mediaRes.value.data.length > 0) {
+        if (mediaRes.status === 'fulfilled' && Array.isArray(mediaRes.value.data)) {
           next.mediaAssets = mediaRes.value.data;
         }
-        if (activityRes.status === 'fulfilled' && activityRes.value.data && activityRes.value.data.length > 0) {
+        if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value.data)) {
           next.activityLogs = activityRes.value.data;
         }
 
@@ -300,7 +310,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setIsSyncing(false);
       setIsLoading(false);
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, user?.isAdmin]);
 
   // Initial mount load and check
   useEffect(() => {
@@ -397,9 +407,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
 
     if (isSupabaseConfigured) {
-      api.insertActivityLog(newEntry, token).catch(() => {});
+      api.insertActivityLog(newEntry).catch(() => {});
     }
-  }, [token]);
+  }, []);
 
   // ----------------------------------------------------------------------------
   // General & Site Settings
@@ -428,7 +438,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         heroDescription: cleanSettings.heroDescription ?? data.heroDescription,
         roles: data.roles,
       };
-      const res = await api.upsertSiteContent('brand_settings', merged, token);
+      const res = await api.upsertSiteContent('brand_settings', merged);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -445,7 +455,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'content', 'Updated Website Content Texts');
 
     if (isSupabaseConfigured) {
-      const res = await api.upsertSiteContent('site_texts', merged, token);
+      const res = await api.upsertSiteContent('site_texts', merged);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -473,7 +483,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('create', 'project', `Created project "${newProject.title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.upsertProject(newProject, token);
+      const res = await api.upsertProject(newProject);
       if (res.error && !isRlsError(res.error)) {
         return { success: false, error: toApiError(res.error) };
       }
@@ -501,7 +511,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'project', `Updated project "${updated.title || id}"`);
 
     if (isSupabaseConfigured && targetProject) {
-      const res = await api.upsertProject(targetProject, token);
+      const res = await api.upsertProject(targetProject);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -518,7 +528,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('delete', 'project', `Deleted project "${title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.deleteProject(id, token);
+      const res = await api.deleteProject(id);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -545,7 +555,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && reindexed.length > 0) {
       try {
-        await Promise.all(reindexed.map((p) => api.upsertProject(p, token)));
+        await Promise.all(reindexed.map((p) => api.upsertProject(p)));
       } catch (err: any) {
         if (!isRlsError(err?.message)) {
           return { success: false, error: err?.message || 'Failed to persist project ordering' };
@@ -583,7 +593,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     if (isSupabaseConfigured && targetProject) {
-      const res = await api.upsertProject(targetProject, token);
+      const res = await api.upsertProject(targetProject);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -609,7 +619,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('create', 'journal', `Created article "${newEntry.title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.upsertJournalEntry(newEntry, token);
+      const res = await api.upsertJournalEntry(newEntry);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -635,7 +645,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'journal', `Updated article "${updated.title || id}"`);
 
     if (isSupabaseConfigured && targetEntry) {
-      const res = await api.upsertJournalEntry(targetEntry, token);
+      const res = await api.upsertJournalEntry(targetEntry);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -652,7 +662,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('delete', 'journal', `Deleted article "${title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.deleteJournalEntry(id, token);
+      const res = await api.deleteJournalEntry(id);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -679,7 +689,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && reindexed.length > 0) {
       try {
-        await Promise.all(reindexed.map((j) => api.upsertJournalEntry(j, token)));
+        await Promise.all(reindexed.map((j) => api.upsertJournalEntry(j)));
       } catch (err: any) {
         if (!isRlsError(err?.message)) {
           return { success: false, error: err?.message || 'Failed to reorder journal' };
@@ -717,7 +727,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     if (isSupabaseConfigured && targetEntry) {
-      const res = await api.upsertJournalEntry(targetEntry, token);
+      const res = await api.upsertJournalEntry(targetEntry);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -742,7 +752,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('create', 'exploration', `Created visual exploration "${newItem.title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.upsertExploration(newItem, token);
+      const res = await api.upsertExploration(newItem);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -768,7 +778,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'exploration', `Updated visual exploration "${updated.title || id}"`);
 
     if (isSupabaseConfigured && targetItem) {
-      const res = await api.upsertExploration(targetItem, token);
+      const res = await api.upsertExploration(targetItem);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -785,7 +795,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('delete', 'exploration', `Deleted visual exploration "${title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.deleteExploration(id, token);
+      const res = await api.deleteExploration(id);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -812,7 +822,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && reindexed.length > 0) {
       try {
-        await Promise.all(reindexed.map((exp) => api.upsertExploration(exp, token)));
+        await Promise.all(reindexed.map((exp) => api.upsertExploration(exp)));
       } catch (err: any) {
         if (!isRlsError(err?.message)) {
           return { success: false, error: err?.message || 'Failed to reorder explorations' };
@@ -850,7 +860,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     if (isSupabaseConfigured && targetItem) {
-      const res = await api.upsertExploration(targetItem, token);
+      const res = await api.upsertExploration(targetItem);
       if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -882,7 +892,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'service', `Updated service offering "${updated.title || id}"`);
 
     if (isSupabaseConfigured && targetService) {
-      const res = await api.upsertService(targetService, orderIndex, token);
+      const res = await api.upsertService(targetService, orderIndex);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -904,7 +914,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'content', `Updated brand principle #${index + 1}`);
 
     if (isSupabaseConfigured && nextStats.length > 0) {
-      const res = await api.upsertSiteContent('stats', nextStats, token);
+      const res = await api.upsertSiteContent('stats', nextStats);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -950,7 +960,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'review', `Updated review for "${updated.name || id}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.updateReview(id, updated, token);
+      const res = await api.updateReview(id, updated);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -969,7 +979,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('publish', 'review', `${approve ? 'Approved' : 'Unapproved'} review from "${r?.name || id}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.updateReview(id, { status: approve ? 'approved' : 'pending', verified: approve }, token);
+      const res = await api.updateReview(id, { status: approve ? 'approved' : 'pending', verified: approve });
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -986,7 +996,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('delete', 'review', `Deleted review from "${r?.name || id}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.deleteReview(id, token);
+      const res = await api.deleteReview(id);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -1001,17 +1011,33 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   ): Promise<{ success: boolean; error?: string }> => {
     const inquiry: ClientInquiry = {
       ...newInquiry,
-      id: `inq-${Date.now()}`,
+      id: `inq-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString(),
       status: 'new',
     };
 
-    setData((prev) => ({
-      ...prev,
-      inquiries: [inquiry, ...(prev.inquiries || [])],
-      hasUnpublishedChanges: true,
-    }));
+    let nextInquiries: ClientInquiry[] = [];
+    setData((prev) => {
+      nextInquiries = [inquiry, ...(prev.inquiries || [])];
+      return {
+        ...prev,
+        inquiries: nextInquiries,
+        hasUnpublishedChanges: true,
+      };
+    });
     logActivity('create', 'inquiry', `New client inquiry received from "${inquiry.name}" (${inquiry.serviceType})`);
+
+    if (isSupabaseConfigured) {
+      try {
+        const res = await api.submitPublicInquiry(inquiry);
+        if (!res.success && !isRlsError(res.error)) {
+          // Fallback to site_content if inquiries table is pending migration
+          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('Could not persist inquiry to cloud:', err);
+      }
+    }
     notifyContentUpdated();
     return { success: true };
   };
@@ -1021,26 +1047,56 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     status: ClientInquiry['status'],
     notes?: string
   ): Promise<{ success: boolean; error?: string }> => {
-    setData((prev) => ({
-      ...prev,
-      inquiries: (prev.inquiries || []).map((inq) =>
+    let nextInquiries: ClientInquiry[] = [];
+    setData((prev) => {
+      nextInquiries = (prev.inquiries || []).map((inq) =>
         inq.id === id ? { ...inq, status, ...(notes !== undefined ? { notes } : {}) } : inq
-      ),
-      hasUnpublishedChanges: true,
-    }));
+      );
+      return {
+        ...prev,
+        inquiries: nextInquiries,
+        hasUnpublishedChanges: true,
+      };
+    });
     logActivity('update', 'inquiry', `Updated inquiry status to "${status}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        const res = await api.updateInquiryStatus(id, status, notes);
+        if (!res.success && !isRlsError(res.error)) {
+          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('Could not persist inquiry update to cloud:', err);
+      }
+    }
     notifyContentUpdated();
     return { success: true };
   };
 
   const deleteInquiry = async (id: string): Promise<{ success: boolean; error?: string }> => {
     const inq = data.inquiries?.find((i) => i.id === id);
-    setData((prev) => ({
-      ...prev,
-      inquiries: (prev.inquiries || []).filter((i) => i.id !== id),
-      hasUnpublishedChanges: true,
-    }));
+    let nextInquiries: ClientInquiry[] = [];
+    setData((prev) => {
+      nextInquiries = (prev.inquiries || []).filter((i) => i.id !== id);
+      return {
+        ...prev,
+        inquiries: nextInquiries,
+        hasUnpublishedChanges: true,
+      };
+    });
     logActivity('delete', 'inquiry', `Deleted inquiry from "${inq?.name || id}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        const res = await api.deleteInquiry(id);
+        if (!res.success && !isRlsError(res.error)) {
+          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('Could not persist inquiry deletion to cloud:', err);
+      }
+    }
     notifyContentUpdated();
     return { success: true };
   };
@@ -1057,7 +1113,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('upload', 'media', `Uploaded media asset "${asset.title}"`);
 
     if (isSupabaseConfigured) {
-      const res = await api.upsertMediaAsset(asset, token);
+      const res = await api.upsertMediaAsset(asset);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -1083,7 +1139,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('update', 'media', `Updated media asset "${updated.title || id}"`);
 
     if (isSupabaseConfigured && targetAsset) {
-      const res = await api.upsertMediaAsset(targetAsset, token);
+      const res = await api.upsertMediaAsset(targetAsset);
       if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
@@ -1100,7 +1156,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logActivity('delete', 'media', `Deleted media asset "${m?.title || id}"`);
 
     if (m) {
-      await deleteMediaFile(m, token);
+      await deleteMediaFile(m);
     }
     notifyContentUpdated();
     return { success: true };
@@ -1129,10 +1185,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           linkedinUrl: data.linkedinUrl,
           heroDescription: data.heroDescription,
           roles: data.roles,
-        }, token);
+        });
 
-        await api.upsertSiteContent('site_texts', data.siteTexts, token);
-        await api.upsertSiteContent('stats', data.stats, token);
+        await api.upsertSiteContent('site_texts', data.siteTexts);
+        await api.upsertSiteContent('stats', data.stats);
       } catch (err: any) {
         if (!isRlsError(err?.message)) {
           return { success: false, error: err?.message || 'Publish sync failed' };

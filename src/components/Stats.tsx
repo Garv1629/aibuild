@@ -178,7 +178,8 @@ const MobilePrincipleCard: React.FC<MobilePrincipleCardProps> = ({
 export const Stats: React.FC = () => {
   const { data } = usePortfolio();
   const stats = data.stats;
-  const count = stats.length || 4;
+  const count = stats.length || 3;
+  const gridColsClass = count === 3 ? 'md:grid-cols-3' : count === 2 ? 'md:grid-cols-2' : count === 1 ? 'md:grid-cols-1' : 'md:grid-cols-4';
   const shouldReduceMotion = useReducedMotion();
   const containerRef = useRef<HTMLElement | null>(null);
 
@@ -253,15 +254,19 @@ export const Stats: React.FC = () => {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
-            <span className="text-xs sm:text-sm font-mono text-accent font-medium mb-1.5 sm:mb-2">
-              Foundational Pillars
-            </span>
+            <div className="flex items-center gap-3 mb-2 sm:mb-3">
+              <span className="w-8 h-px bg-stroke" aria-hidden="true" />
+              <span className="text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
+                Foundational Pillars
+              </span>
+              <span className="w-8 h-px bg-stroke" aria-hidden="true" />
+            </div>
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-normal text-text-primary tracking-tight">
               Driven by purpose &amp; <span className="font-display italic">precision</span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridColsClass} gap-6 lg:gap-8`}>
             {stats.map((stat, idx) => (
               <PrincipleColumn
                 key={stat.value}
@@ -292,9 +297,13 @@ export const Stats: React.FC = () => {
           
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
-            <span className="text-xs sm:text-sm font-mono text-accent font-medium mb-1.5 sm:mb-2">
-              Foundational Pillars
-            </span>
+            <div className="flex items-center gap-3 mb-2 sm:mb-3">
+              <span className="w-8 h-px bg-stroke" aria-hidden="true" />
+              <span className="text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
+                Foundational Pillars
+              </span>
+              <span className="w-8 h-px bg-stroke" aria-hidden="true" />
+            </div>
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-normal text-text-primary tracking-tight">
               Driven by purpose &amp; <span className="font-display italic">precision</span>
             </h2>
@@ -340,8 +349,8 @@ export const Stats: React.FC = () => {
             </div>
           </div>
 
-          {/* DESKTOP VIEW (>= md): All 4 Columns in a Single Lane with Connecting Line */}
-          <div className="hidden md:grid md:grid-cols-4 gap-6 lg:gap-8 w-full relative">
+          {/* DESKTOP VIEW (>= md): Columns in a Single Lane with Connecting Line */}
+          <div className={`hidden md:grid ${gridColsClass} gap-6 lg:gap-8 w-full relative`}>
             
             {/* The horizontal connecting line: runs directly from center of Col 1 to center of Col 4 */}
             <div

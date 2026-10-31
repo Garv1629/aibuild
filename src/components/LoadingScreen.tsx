@@ -173,19 +173,25 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
   // Real preloading of crucial architectural assets & fonts
   useEffect(() => {
     let isMounted = true;
-    const preloadList = [
-      '/assets/cinematic-pathway-bg.jpg',
-      '/assets/panel-01-strategy.jpg',
-      '/assets/panel-02-creative.jpg',
-      '/assets/panel-03-dev.jpg',
-      '/assets/panel-04-content.jpg',
-      '/assets/panel-05-launch.jpg',
-    ];
+    // Preload immediate initial background panel
+    const firstImg = new Image();
+    firstImg.src = '/assets/panel-01-strategy.jpg';
 
-    preloadList.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
+    // Stagger non-critical background panels to preserve initial render network bandwidth
+    const idleTimer = setTimeout(() => {
+      if (!isMounted) return;
+      const deferredList = [
+        '/assets/cinematic-pathway-bg.jpg',
+        '/assets/panel-02-creative.jpg',
+        '/assets/panel-03-dev.jpg',
+        '/assets/panel-04-content.jpg',
+        '/assets/panel-05-launch.jpg',
+      ];
+      deferredList.forEach((src) => {
+        const img = new Image();
+        img.src = src;
+      });
+    }, 1200);
 
     if (typeof document !== 'undefined' && 'fonts' in document) {
       document.fonts.ready.then(() => {
@@ -195,6 +201,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
 
     return () => {
       isMounted = false;
+      clearTimeout(idleTimer);
     };
   }, []);
 

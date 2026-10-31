@@ -131,19 +131,29 @@ export const Journal: React.FC<JournalProps> = ({
               </div>
             </motion.div>
           ))}
+          {journalEntries.length === 0 && (
+            <div className="py-12 px-6 rounded-3xl liquid-glass border border-white/10 text-center max-w-md mx-auto my-4 space-y-2 animate-fadeIn">
+              <h4 className="text-base font-display text-white">No Articles Published Yet</h4>
+              <p className="text-xs text-muted font-sans leading-relaxed">
+                Articles and strategic breakdowns will appear here once published from the studio database.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Mobile View All Button */}
-        <div className="flex md:hidden justify-center mt-8">
-          <Button
-            variant="glass"
-            size="md"
-            onClick={onViewAllThoughts}
-          >
-            <span>View all thoughts</span>
-            <span>→</span>
-          </Button>
-        </div>
+        {journalEntries.length > 0 && (
+          <div className="flex md:hidden justify-center mt-8">
+            <Button
+              variant="glass"
+              size="md"
+              onClick={onViewAllThoughts}
+            >
+              <span>View all thoughts</span>
+              <span>→</span>
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

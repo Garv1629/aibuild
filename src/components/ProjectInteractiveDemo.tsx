@@ -266,11 +266,9 @@ const UGC_CONCEPTS = [
     title: 'Skincare Barrier Serum',
     hook: '"Stop using 10 skincare steps. This 1 serum fixed my skin in 7 days."',
     hookType: 'Problem-Solution Hook',
-    likes: '142.8K',
-    comments: '1,842',
-    shares: '12.4K',
-    retention: '88% at 3s',
-    ctr: '4.9% CTR',
+    format: '9:16 Vertical Reel',
+    targetPlatform: 'TikTok & Reels',
+    framework: 'Before / After Friction Hook',
     image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -278,11 +276,9 @@ const UGC_CONCEPTS = [
     title: 'Minimalist MagSafe Wallet',
     hook: '"I tossed my bulky leather wallet for this. Look what happens when I tap it."',
     hookType: 'Curiosity & Demo Hook',
-    likes: '286.1K',
-    comments: '3,210',
-    shares: '34.8K',
-    retention: '92% at 3s',
-    ctr: '5.6% CTR',
+    format: '9:16 Vertical Reel',
+    targetPlatform: 'TikTok & Shorts',
+    framework: 'Feature Spotlight Hook',
     image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -290,18 +286,16 @@ const UGC_CONCEPTS = [
     title: 'Thermal Tech Hoodie',
     hook: '"The internet said this was the coziest hoodie on Earth. Let’s test the ice bowl."',
     hookType: 'Extreme Test Hook',
-    likes: '94.5K',
-    comments: '890',
-    shares: '8.2K',
-    retention: '85% at 3s',
-    ctr: '4.2% CTR',
+    format: '9:16 Vertical Reel',
+    targetPlatform: 'Instagram & TikTok',
+    framework: 'Extreme Durability Test Hook',
     image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
   },
 ];
 
 const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
   const concept = UGC_CONCEPTS[selectedIdx];
@@ -311,13 +305,13 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl liquid-glass text-xs font-mono">
         <div className="flex items-center gap-2">
           <Smartphone className="w-4 h-4 text-success" />
-          <span className="text-text-primary font-medium">UGC Video Ad &amp; Social Hook Simulator</span>
+          <span className="text-text-primary font-medium">UGC Video Ad &amp; Social Hook Architecture</span>
         </div>
 
         <div className="flex items-center gap-2 text-muted">
-          <span className="text-success font-semibold">{concept.retention}</span>
+          <span className="text-success font-semibold">{concept.format}</span>
           <span>•</span>
-          <span className="text-accent font-semibold">{concept.ctr}</span>
+          <span className="text-accent font-semibold">{concept.targetPlatform}</span>
         </div>
       </div>
 
@@ -338,10 +332,10 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
           {/* Top Bar */}
           <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
             <span className="liquid-glass-pill text-2xs font-mono px-2.5 py-0.5 rounded-full text-white">
-              9:16 UGC Format
+              {concept.format}
             </span>
             <span className="liquid-glass-pill text-2xs font-mono px-2.5 py-0.5 rounded-full text-success border-success/30">
-              High Converting
+              Creative Framework
             </span>
           </div>
 
@@ -349,36 +343,37 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
           <div className="absolute right-3 bottom-24 flex flex-col items-center gap-3.5 z-10">
             <button
               type="button"
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={() => setIsSaved(!isSaved)}
               className="flex flex-col items-center gap-1 cursor-pointer group"
+              title="Save framework blueprint"
             >
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center liquid-glass-pill transition-transform group-hover:scale-110 ${
-                  isLiked ? 'bg-error/80 text-white border-error' : 'text-white'
+                  isSaved ? 'bg-error/80 text-white border-error' : 'text-white'
                 }`}
               >
-                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
               </div>
               <span className="text-2xs font-mono text-white font-medium drop-shadow-md">
-                {isLiked ? '142.9K' : concept.likes}
+                {isSaved ? 'Saved' : 'Save'}
               </span>
             </button>
 
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1" title="9:16 Vertical Video format">
               <div className="w-10 h-10 rounded-full text-white flex items-center justify-center liquid-glass-pill">
-                <MessageCircle className="w-5 h-5" />
+                <Smartphone className="w-5 h-5" />
               </div>
               <span className="text-2xs font-mono text-white font-medium drop-shadow-md">
-                {concept.comments}
+                9:16
               </span>
             </div>
 
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1" title="Hook framework">
               <div className="w-10 h-10 rounded-full text-white flex items-center justify-center liquid-glass-pill">
                 <Share2 className="w-5 h-5" />
               </div>
               <span className="text-2xs font-mono text-white font-medium drop-shadow-md">
-                {concept.shares}
+                Hook
               </span>
             </div>
           </div>
@@ -421,7 +416,6 @@ const UgcPlayerDemo: React.FC<{ project: Project }> = () => {
               type="button"
               onClick={() => {
                 setSelectedIdx(idx);
-                setIsLiked(false);
               }}
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                 selectedIdx === idx
@@ -489,8 +483,24 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
   const chapter = EBOOK_CHAPTERS[activeChapter];
 
   const handleDownload = () => {
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 3000);
+    try {
+      const fileHeader = `==============================================================================\nAI BUILD — DIGITAL PUBLICATION EXCERPT\n${chapter.title}\nChapter ${chapter.num} • ${chapter.pages}\n==============================================================================\n\n`;
+      const fileBody = `SYNOPSIS:\n${chapter.summary}\n\nCORE PRINCIPLE & HIGHLIGHT:\n${chapter.highlight}\n\n`;
+      const fileFooter = `------------------------------------------------------------------------------\nProduced by AI Build Studio\nWeb Development • AI Videos • UGC Videos • E-books\nContact: aibuild1629@gmail.com\nWebsite: https://github.com/Garv1629\n------------------------------------------------------------------------------`;
+      const blob = new Blob([fileHeader + fileBody + fileFooter], { type: 'text/plain;charset=utf-8' });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `AI_Build_Chapter_${chapter.num}_${chapter.title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+      setDownloaded(true);
+      setTimeout(() => setDownloaded(false), 3500);
+    } catch (err) {
+      console.warn('Download error:', err);
+    }
   };
 
   return (
@@ -563,12 +573,12 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
               {downloaded ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-success" />
-                  <span>Sample PDF Prepared ✓</span>
+                  <span>Chapter Excerpt Downloaded ✓</span>
                 </>
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download Sample Chapter</span>
+                  <span>Download Chapter Excerpt</span>
                 </>
               )}
             </Button>
@@ -613,7 +623,7 @@ const EbookReaderDemo: React.FC<{ project: Project }> = () => {
               <FileText className="w-3.5 h-3.5 text-accent" />
               <span>Interactive PDF / ePub Format</span>
             </span>
-            <span>3D Cover &amp; Mockups Included</span>
+            <span>3D Digital Cover Included</span>
           </div>
         </div>
       </div>

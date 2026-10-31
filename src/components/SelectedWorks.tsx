@@ -23,7 +23,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
   onSelectProject,
   onViewAllWork,
 }) => {
-  const { data } = usePortfolio();
+  const { data, isLoading } = usePortfolio();
   const isInsideAdminPreview = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const projects = (data.projects || [])
     .filter((p) => isInsideAdminPreview || p.isPublished !== false)
@@ -264,6 +264,18 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
           })}
           </AnimatePresence>
         </motion.div>
+
+        {/* Empty State when no projects match or database has no records */}
+        {!isLoading && filteredProjects.length === 0 && (
+          <div className="col-span-12 py-12 px-6 rounded-3xl liquid-glass border border-white/10 text-center max-w-md mx-auto my-6 space-y-2 animate-fadeIn">
+            <h4 className="text-base font-display text-white">No Projects in this Category</h4>
+            <p className="text-xs text-muted font-sans leading-relaxed">
+              {activeCategory === 'All'
+                ? 'No published projects are currently available in the database.'
+                : `No published projects found for ${activeCategory}. Select another category or view all work.`}
+            </p>
+          </div>
+        )}
       </div>
     </section>
 );

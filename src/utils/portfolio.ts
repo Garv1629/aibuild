@@ -263,7 +263,7 @@ export const DEFAULT_SITE_TEXTS: SiteTexts = {
   explorationsEyebrow: 'Explorations',
   explorationsHeading: 'Visual',
   explorationsHeadingItalic: 'playground',
-  explorationsSubtext: 'A curated gallery of live AI video experiments, high-converting UGC mockups, web interactions, and digital publication concepts.',
+  explorationsSubtext: 'A curated gallery of live AI video experiments, high-converting UGC creative concepts, web interactions, and digital publication designs.',
   explorationsGithubText: 'View GitHub',
 
   journalEyebrow: 'Journal & Insights',
@@ -302,7 +302,7 @@ export const SERVICE_HIGHLIGHTS: Record<string, string> = {
   'Web Development': 'Modern Web Apps • Responsive Real Estate Portals • Animated UI Systems',
   'AI Videos': 'Cinematic Product Commercials • 4K AI Video • Visual Effects & Teasers',
   'UGC Videos': 'High-Converting 9:16 Ads • Viral 3-Second Hooks • Reels & TikTok Creatives',
-  'E-books': 'Digital Publications • Interactive PDF / ePub • 3D Book Launch Mockups',
+  'E-books': 'Digital Publications • Interactive PDF / ePub • 3D Book Launch Packaging',
 };
 
 export const SERVICES: ServiceOffering[] = [
@@ -348,7 +348,7 @@ export const SERVICES: ServiceOffering[] = [
     deliverables: [
       'High-Converting UGC Ad Creatives & Concepts',
       'Scroll-Stopping 3-Second Hooks & Dynamic Pacing',
-      'Product Reviews, Unboxings & Problem-Solution Demos',
+      'Product Reviews, Unboxings & Problem-Solution Walkthroughs',
       'Platform-Optimized 9:16 Vertical Video Formats',
       'Dynamic Captions, Trending Audio & Split Testing Assets',
     ],
@@ -365,7 +365,7 @@ export const SERVICES: ServiceOffering[] = [
     deliverables: [
       'Editorial Book Layout & Typographic Architecture',
       'Interactive PDF & ePub Multi-Device Formats',
-      'High-Impact 3D Book Covers & Launch Mockup Kits',
+      'High-Impact 3D Book Covers & Launch Packaging Kits',
       'Educational Manuals, Infographics & Frameworks',
       'Lead Magnet Architecture to Drive Audience Growth',
     ],
@@ -517,12 +517,12 @@ export const PROJECTS: Project[] = [
     span: 5,
     image:
       'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',
-    tags: ['TikTok & Reels Ads', 'Viral 3s Hooks', 'Authentic UGC Style', 'Unboxing & Demos'],
+    tags: ['TikTok & Reels Ads', 'Viral 3s Hooks', 'Authentic UGC Style', 'Unboxing & Spotlights'],
     features: [
       'Problem-agitate-solution hook variations',
       'Authentic consumer testimonial pacing',
       'Dynamic on-screen captions and sound design',
-      'High-CTR product unboxing and lifestyle demonstrations',
+      'High-CTR product unboxing and lifestyle feature spotlights',
       'Multi-variant asset batches for paid ad testing',
     ],
     workflow: 'Mobile vertical capture + CapCut Pro + AI Voice pacing',
@@ -546,7 +546,7 @@ export const PROJECTS: Project[] = [
     features: [
       'Editorial typography systems and balanced grids',
       'Interactive table of contents and clickable resources',
-      'High-impact 3D digital book covers and mockup kits',
+      'High-impact 3D digital book covers and packaging kits',
       'Infographic data design and illustrative diagrams',
       'Optimized distribution formatting for mobile and tablets',
     ],
@@ -727,61 +727,8 @@ export const STATS: BrandPrincipleStat[] = [
   },
 ];
 
-// Curated Client & Collaborator Reviews across the 4 services
-export const REVIEWS: Review[] = [
-  {
-    id: 'rev-1',
-    name: 'Marcus Vance',
-    role: 'Founder & CEO',
-    company: 'Aura Horizon Labs',
-    category: 'Web Development',
-    rating: 5,
-    content:
-      'AI Build delivered an exceptional, ultra-fluid web platform for our product launch. The GSAP micro-animations and responsive architecture blew our investors away.',
-    date: '2 weeks ago',
-    verified: true,
-    status: 'approved',
-  },
-  {
-    id: 'rev-2',
-    name: 'Elena Rostova',
-    role: 'Creative Director',
-    company: 'Luminary Studios',
-    category: 'AI Videos',
-    rating: 5,
-    content:
-      'The cinematic AI commercials produced by AI Build transformed our visual brand identity. Stunning 4K visual pacing, atmospheric depth, and lightning-fast turnaround.',
-    date: '1 month ago',
-    verified: true,
-    status: 'approved',
-  },
-  {
-    id: 'rev-3',
-    name: 'Devon Reed',
-    role: 'Head of Growth',
-    company: 'PeakViral Commerce',
-    category: 'UGC Videos',
-    rating: 5,
-    content:
-      'Our TikTok ROAS surged 3.4x within the first 10 days of testing AI Build’s viral UGC creatives. Their 3-second hook frameworks and pacing are unbeatable.',
-    date: '3 weeks ago',
-    verified: true,
-    status: 'approved',
-  },
-  {
-    id: 'rev-4',
-    name: 'Sophia Chen',
-    role: 'Managing Editor & Author',
-    company: 'NextEra Publications',
-    category: 'E-books',
-    rating: 5,
-    content:
-      'From editorial typography to 3D book mockup assets, AI Build created a digital publication package that generated over 15,000 downloads in our launch week.',
-    date: '1 month ago',
-    verified: true,
-    status: 'approved',
-  },
-];
+// Verified Client & Partner Reviews (Loaded dynamically from database)
+export const REVIEWS: Review[] = [];
 
 // Initial Media Assets Catalog for the Media Library
 export const DEFAULT_MEDIA_ASSETS: MediaAsset[] = [
@@ -860,59 +807,7 @@ export const DEFAULT_MEDIA_ASSETS: MediaAsset[] = [
 ];
 
 // Activity log for tracking recent admin actions
-export const DEFAULT_ACTIVITY_LOGS: ActivityLog[] = [
-  {
-    id: 'act-1',
-    action: 'publish',
-    target: 'project',
-    title: 'Sri Balaji Real Estate published to live portfolio',
-    timestamp: '2 hours ago',
-    details: 'Live status verified on web',
-  },
-  {
-    id: 'act-2',
-    action: 'upload',
-    target: 'media',
-    title: 'Uploaded 4K Fashion AI Commercial Reel',
-    timestamp: '5 hours ago',
-    details: 'Video added to Media Library',
-  },
-  {
-    id: 'act-3',
-    action: 'update',
-    target: 'content',
-    title: 'Updated Brand Tagline & Hero Eyebrow',
-    timestamp: '1 day ago',
-    details: 'Changes live in Split Mirror',
-  },
-  {
-    id: 'act-4',
-    action: 'publish',
-    target: 'review',
-    title: 'Approved review from Aura Horizon Labs',
-    timestamp: '2 days ago',
-    details: '5-star rating verified',
-  },
-];
+export const DEFAULT_ACTIVITY_LOGS: ActivityLog[] = [];
 
-export const DEFAULT_INQUIRIES: ClientInquiry[] = [
-  {
-    id: 'inq-1',
-    name: 'Sophia Chen',
-    email: 'sophia.chen@stratafin.io',
-    serviceType: 'Web Development',
-    ideaDescription: 'Looking to build an ultra-high performance landing page with interactive 3D asset previews and cinematic transitions for our Series A product launch.',
-    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-    status: 'new',
-  },
-  {
-    id: 'inq-2',
-    name: 'Marcus Vance',
-    email: 'm.vance@lumina-media.co',
-    serviceType: 'AI Videos',
-    ideaDescription: 'Need a series of 5 cinematic 4K generative AI teaser videos with bespoke sound design for an upcoming luxury fashion and digital wearables drop.',
-    createdAt: new Date(Date.now() - 3600000 * 28).toISOString(),
-    status: 'contacted',
-    notes: 'Sent initial discovery email and pricing breakdown.',
-  },
-];
+// Client inquiries received through the contact form
+export const DEFAULT_INQUIRIES: ClientInquiry[] = [];

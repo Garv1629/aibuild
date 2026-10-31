@@ -19,7 +19,7 @@ interface ContactFooterProps {
 export const ContactFooter: React.FC<ContactFooterProps> = ({
   onStartConversation,
 }) => {
-  const { data, setIsAdminOpen } = usePortfolio();
+  const { data } = usePortfolio();
   const contactEmail = normalizeContactEmail(data.email);
   const brandName = data.brandName;
   const brandTagline = data.brandTagline;
@@ -201,6 +201,10 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
               {data.siteTexts?.footerSubtext ||
                 'Specializing in Web Development • AI Videos • UGC Videos • E-books. Concepts transformed into reality.'}
             </p>
+          </div>
+          <div className="flex flex-col items-center md:items-end gap-1 text-2xs font-mono text-muted/80">
+            <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
+            <span>Client Privacy Protected • Inquiries Encrypted</span>
           </div>
         </div>
       </div>

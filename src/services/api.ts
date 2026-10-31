@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase.ts';
-import {
+import type {
   Project,
   JournalEntry,
   ExplorationItem,
@@ -12,15 +12,35 @@ import {
   Review,
   MediaAsset,
   ActivityLog,
-  SiteTexts,
-  BrandPrincipleStat,
-  DEFAULT_SITE_TEXTS,
-  STATS,
+  ClientInquiry,
 } from '../utils/portfolio.ts';
 
 // ==============================================================================
 // 1. DATABASE ROW <-> TYPESCRIPT INTERFACE TRANSFORMERS
 // ==============================================================================
+
+export const inquiryFromDb = (row: any): ClientInquiry => ({
+  id: row.id,
+  name: row.name || 'Client',
+  email: row.email || '',
+  serviceType: row.service_type || 'Web Development',
+  ideaDescription: row.idea_description || '',
+  status: row.status || 'new',
+  notes: row.notes || undefined,
+  createdAt: row.created_at || new Date().toISOString(),
+});
+
+export const inquiryToDb = (i: ClientInquiry): Record<string, any> => ({
+  id: (i.id && i.id.trim()) || `inq-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+  name: i.name,
+  email: i.email || null,
+  service_type: i.serviceType,
+  idea_description: i.ideaDescription,
+  status: i.status || 'new',
+  notes: i.notes || null,
+  created_at: i.createdAt || new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+});
 
 export const projectFromDb = (row: any): Project => ({
   id: row.id,
@@ -170,7 +190,7 @@ export const serviceToDb = (s: ServiceOffering, order = 0): Record<string, any> 
 
 export const reviewFromDb = (row: any): Review => ({
   id: row.id,
-  name: row.name || 'Anonymous Client',
+  name: row.name || 'Client',
   role: row.role || 'Executive',
   company: row.company || undefined,
   category: row.category || 'Web Development',
@@ -190,7 +210,7 @@ export const reviewToDb = (r: Review): Record<string, any> => ({
   category: r.category,
   rating: r.rating,
   content: r.content,
-  date: r.date,
+  date: r.date || new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
   avatar: r.avatar || null,
   verified: r.verified ?? false,
   status: r.status || 'pending',
@@ -242,240 +262,382 @@ export const activityLogToDb = (a: ActivityLog): Record<string, any> => ({
 });
 
 // ==============================================================================
-// 2. DATA ACCESS LAYER (API METHODS)
+// 2. DATA ACCESS LAYER (OFFICIAL SUPABASE SDK CLIENT)
 // ==============================================================================
 
 export const api = {
   // ----------------------------------------------------------------------------
   // Projects
   // ----------------------------------------------------------------------------
-  async fetchProjects(options?: { publishedOnly?: boolean; token?: string }): Promise<{ data: Project[] | null; error: string | null }> {
+  async fetchProjects(options?: { publishedOnly?: boolean }): Promise<{ data: Project[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const query = options?.publishedOnly
-      ? 'is_published=eq.true&order=display_order.asc'
-      : 'order=display_order.asc';
-    const { data, error } = await supabase.from('projects').select('*', query, options?.token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch projects' };
-    return { data: data.map(projectFromDb), error: null };
+    try {
+      let query = supabase.from('projects').select('*').order('display_order', { ascending: true });
+      if (options?.publishedOnly) {
+        query = query.eq('is_published', true);
+      }
+      const { data, error } = await query;
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch projects' };
+      return { data: data.map(projectFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch projects' };
+    }
   },
 
-  async upsertProject(project: Project, token?: string): Promise<{ data: Project | null; error: string | null }> {
+  async upsertProject(project: Project): Promise<{ data: Project | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const row = projectToDb(project);
-    const { data, error } = await supabase.from('projects').upsert(row, 'id', token);
-    if (error) return { data: null, error: error.message };
-    const saved = Array.isArray(data) && data[0] ? projectFromDb(data[0]) : project;
-    return { data: saved, error: null };
+    try {
+      const row = projectToDb(project);
+      const { data, error } = await supabase.from('projects').upsert(row, { onConflict: 'id' }).select();
+      if (error) return { data: null, error: error.message };
+      const saved = Array.isArray(data) && data[0] ? projectFromDb(data[0]) : project;
+      return { data: saved, error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to upsert project' };
+    }
   },
 
-  async deleteProject(id: string, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async deleteProject(id: string): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const { error } = await supabase.from('projects').delete(id, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete project' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Journal
   // ----------------------------------------------------------------------------
-  async fetchJournal(options?: { publishedOnly?: boolean; token?: string }): Promise<{ data: JournalEntry[] | null; error: string | null }> {
+  async fetchJournal(options?: { publishedOnly?: boolean }): Promise<{ data: JournalEntry[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const query = options?.publishedOnly
-      ? 'is_published=eq.true&order=display_order.asc'
-      : 'order=display_order.asc';
-    const { data, error } = await supabase.from('journal_entries').select('*', query, options?.token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch journal' };
-    return { data: data.map(journalFromDb), error: null };
+    try {
+      let query = supabase.from('journal_entries').select('*').order('display_order', { ascending: true });
+      if (options?.publishedOnly) {
+        query = query.eq('is_published', true);
+      }
+      const { data, error } = await query;
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch journal' };
+      return { data: data.map(journalFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch journal' };
+    }
   },
 
-  async upsertJournalEntry(entry: JournalEntry, token?: string): Promise<{ data: JournalEntry | null; error: string | null }> {
+  async upsertJournalEntry(entry: JournalEntry): Promise<{ data: JournalEntry | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const row = journalToDb(entry);
-    const { data, error } = await supabase.from('journal_entries').upsert(row, 'id', token);
-    if (error) return { data: null, error: error.message };
-    const saved = Array.isArray(data) && data[0] ? journalFromDb(data[0]) : entry;
-    return { data: saved, error: null };
+    try {
+      const row = journalToDb(entry);
+      const { data, error } = await supabase.from('journal_entries').upsert(row, { onConflict: 'id' }).select();
+      if (error) return { data: null, error: error.message };
+      const saved = Array.isArray(data) && data[0] ? journalFromDb(data[0]) : entry;
+      return { data: saved, error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to upsert journal entry' };
+    }
   },
 
-  async deleteJournalEntry(id: string, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async deleteJournalEntry(id: string): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const { error } = await supabase.from('journal_entries').delete(id, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const { error } = await supabase.from('journal_entries').delete().eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete journal entry' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Explorations
   // ----------------------------------------------------------------------------
-  async fetchExplorations(options?: { publishedOnly?: boolean; token?: string }): Promise<{ data: ExplorationItem[] | null; error: string | null }> {
+  async fetchExplorations(options?: { publishedOnly?: boolean }): Promise<{ data: ExplorationItem[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const query = options?.publishedOnly
-      ? 'is_published=eq.true&order=display_order.asc'
-      : 'order=display_order.asc';
-    const { data, error } = await supabase.from('explorations').select('*', query, options?.token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch explorations' };
-    return { data: data.map(explorationFromDb), error: null };
+    try {
+      let query = supabase.from('explorations').select('*').order('display_order', { ascending: true });
+      if (options?.publishedOnly) {
+        query = query.eq('is_published', true);
+      }
+      const { data, error } = await query;
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch explorations' };
+      return { data: data.map(explorationFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch explorations' };
+    }
   },
 
-  async upsertExploration(item: ExplorationItem, token?: string): Promise<{ data: ExplorationItem | null; error: string | null }> {
+  async upsertExploration(item: ExplorationItem): Promise<{ data: ExplorationItem | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const row = explorationToDb(item);
-    const { data, error } = await supabase.from('explorations').upsert(row, 'id', token);
-    if (error) return { data: null, error: error.message };
-    const saved = Array.isArray(data) && data[0] ? explorationFromDb(data[0]) : item;
-    return { data: saved, error: null };
+    try {
+      const row = explorationToDb(item);
+      const { data, error } = await supabase.from('explorations').upsert(row, { onConflict: 'id' }).select();
+      if (error) return { data: null, error: error.message };
+      const saved = Array.isArray(data) && data[0] ? explorationFromDb(data[0]) : item;
+      return { data: saved, error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to upsert exploration' };
+    }
   },
 
-  async deleteExploration(id: string, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async deleteExploration(id: string): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const { error } = await supabase.from('explorations').delete(id, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const { error } = await supabase.from('explorations').delete().eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete exploration' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Services
   // ----------------------------------------------------------------------------
-  async fetchServices(token?: string): Promise<{ data: ServiceOffering[] | null; error: string | null }> {
+  async fetchServices(): Promise<{ data: ServiceOffering[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const { data, error } = await supabase.from('services').select('*', 'order=display_order.asc', token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch services' };
-    return { data: data.map(serviceFromDb), error: null };
+    try {
+      const { data, error } = await supabase.from('services').select('*').order('display_order', { ascending: true });
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch services' };
+      return { data: data.map(serviceFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch services' };
+    }
   },
 
-  async upsertService(service: ServiceOffering, order = 0, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async upsertService(service: ServiceOffering, order = 0): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const row = serviceToDb(service, order);
-    const { error } = await supabase.from('services').upsert(row, 'id', token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const row = serviceToDb(service, order);
+      const { error } = await supabase.from('services').upsert(row, { onConflict: 'id' });
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to upsert service' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Reviews
   // ----------------------------------------------------------------------------
-  async fetchReviews(options?: { approvedOnly?: boolean; token?: string }): Promise<{ data: Review[] | null; error: string | null }> {
+  async fetchReviews(options?: { approvedOnly?: boolean }): Promise<{ data: Review[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const query = options?.approvedOnly
-      ? 'status=eq.approved&order=created_at.desc'
-      : 'order=created_at.desc';
-    const { data, error } = await supabase.from('reviews').select('*', query, options?.token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch reviews' };
-    return { data: data.map(reviewFromDb), error: null };
+    try {
+      let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
+      if (options?.approvedOnly) {
+        query = query.eq('status', 'approved');
+      }
+      const { data, error } = await query;
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch reviews' };
+      return { data: data.map(reviewFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch reviews' };
+    }
   },
 
-  async submitPublicReview(review: Omit<Review, 'id' | 'date'> & { id?: string }): Promise<{ success: boolean; error: string | null }> {
+  async submitPublicReview(review: Omit<Review, 'id' | 'date'> & { id?: string; date?: string }): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const id = review.id || `rev-${Date.now()}`;
-    const row = {
-      id,
-      name: review.name,
-      role: review.role,
-      company: review.company || null,
-      category: review.category,
-      rating: review.rating,
-      content: review.content,
-      date: 'Just now',
-      avatar: review.avatar || null,
-      verified: false,
-      status: 'pending',
-    };
-    const { error } = await supabase.from('reviews').insert(row);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const id = review.id || `rev-${Date.now()}`;
+      const row = {
+        id,
+        name: review.name,
+        role: review.role,
+        company: review.company || null,
+        category: review.category,
+        rating: review.rating,
+        content: review.content,
+        date: review.date || new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        avatar: review.avatar || null,
+        verified: false,
+        status: 'pending',
+      };
+      const { error } = await supabase.from('reviews').insert(row);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to submit review' };
+    }
   },
 
-  async updateReview(id: string, updates: Partial<Review>, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async updateReview(id: string, updates: Partial<Review>): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const rowUpdates: Record<string, any> = {};
-    if (updates.status !== undefined) rowUpdates.status = updates.status;
-    if (updates.verified !== undefined) rowUpdates.verified = updates.verified;
-    if (updates.content !== undefined) rowUpdates.content = updates.content;
-    if (updates.rating !== undefined) rowUpdates.rating = updates.rating;
-    if (updates.name !== undefined) rowUpdates.name = updates.name;
-    if (updates.role !== undefined) rowUpdates.role = updates.role;
-    if (updates.company !== undefined) rowUpdates.company = updates.company;
+    try {
+      const rowUpdates: Record<string, any> = {};
+      if (updates.status !== undefined) rowUpdates.status = updates.status;
+      if (updates.verified !== undefined) rowUpdates.verified = updates.verified;
+      if (updates.content !== undefined) rowUpdates.content = updates.content;
+      if (updates.rating !== undefined) rowUpdates.rating = updates.rating;
+      if (updates.name !== undefined) rowUpdates.name = updates.name;
+      if (updates.role !== undefined) rowUpdates.role = updates.role;
+      if (updates.company !== undefined) rowUpdates.company = updates.company;
 
-    const { error } = await supabase.from('reviews').update(id, rowUpdates, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+      const { error } = await supabase.from('reviews').update(rowUpdates).eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to update review' };
+    }
   },
 
-  async deleteReview(id: string, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async deleteReview(id: string): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const { error } = await supabase.from('reviews').delete(id, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const { error } = await supabase.from('reviews').delete().eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete review' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Site Content & Brand Settings
   // ----------------------------------------------------------------------------
-  async fetchSiteContent(token?: string): Promise<{ data: Record<string, any> | null; error: string | null }> {
+  async fetchSiteContent(): Promise<{ data: Record<string, any> | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const { data, error } = await supabase.from('site_content').select('*', '', token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch site content' };
-    const map: Record<string, any> = {};
-    for (const item of data) {
-      if (item.key && item.content) {
-        map[item.key] = item.content;
+    try {
+      const { data, error } = await supabase.from('site_content').select('*');
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch site content' };
+      const map: Record<string, any> = {};
+      for (const item of data) {
+        if (item.key && item.content) {
+          map[item.key] = item.content;
+        }
       }
+      return { data: map, error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch site content' };
     }
-    return { data: map, error: null };
   },
 
-  async upsertSiteContent(key: string, content: any, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async upsertSiteContent(key: string, content: any): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const row = {
-      key,
-      content,
-      updated_at: new Date().toISOString(),
-    };
-    const { error } = await supabase.from('site_content').upsert(row, 'key', token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const row = {
+        key,
+        content,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await supabase.from('site_content').upsert(row, { onConflict: 'key' });
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to upsert site content' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Media Assets
   // ----------------------------------------------------------------------------
-  async fetchMediaAssets(token?: string): Promise<{ data: MediaAsset[] | null; error: string | null }> {
+  async fetchMediaAssets(): Promise<{ data: MediaAsset[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const { data, error } = await supabase.from('media_assets').select('*', 'order=created_at.desc', token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch media assets' };
-    return { data: data.map(mediaAssetFromDb), error: null };
+    try {
+      const { data, error } = await supabase.from('media_assets').select('*').order('created_at', { ascending: false });
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch media assets' };
+      return { data: data.map(mediaAssetFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch media assets' };
+    }
   },
 
-  async upsertMediaAsset(asset: MediaAsset, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async upsertMediaAsset(asset: MediaAsset): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const row = mediaAssetToDb(asset);
-    const { error } = await supabase.from('media_assets').upsert(row, 'id', token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const row = mediaAssetToDb(asset);
+      const { error } = await supabase.from('media_assets').upsert(row, { onConflict: 'id' });
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to upsert media asset' };
+    }
   },
 
-  async deleteMediaAsset(id: string, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async deleteMediaAsset(id: string): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const { error } = await supabase.from('media_assets').delete(id, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const { error } = await supabase.from('media_assets').delete().eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete media asset' };
+    }
   },
 
   // ----------------------------------------------------------------------------
   // Activity Logs
   // ----------------------------------------------------------------------------
-  async fetchActivityLogs(token?: string): Promise<{ data: ActivityLog[] | null; error: string | null }> {
+  async fetchActivityLogs(): Promise<{ data: ActivityLog[] | null; error: string | null }> {
     if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
-    const { data, error } = await supabase.from('activity_logs').select('*', 'order=timestamp.desc&limit=30', token);
-    if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch activity logs' };
-    return { data: data.map(activityLogFromDb), error: null };
+    try {
+      const { data, error } = await supabase.from('activity_logs').select('*').order('timestamp', { ascending: false }).limit(30);
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch activity logs' };
+      return { data: data.map(activityLogFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch activity logs' };
+    }
   },
 
-  async insertActivityLog(log: ActivityLog, token?: string): Promise<{ success: boolean; error: string | null }> {
+  async insertActivityLog(log: ActivityLog): Promise<{ success: boolean; error: string | null }> {
     if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
-    const row = activityLogToDb(log);
-    const { error } = await supabase.from('activity_logs').insert(row, token);
-    if (error) return { success: false, error: error.message };
-    return { success: true, error: null };
+    try {
+      const row = activityLogToDb(log);
+      const { error } = await supabase.from('activity_logs').insert(row);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to insert activity log' };
+    }
+  },
+
+  // ----------------------------------------------------------------------------
+  // Client Inquiries / Leads (Dedicated Table with Public Insert & Admin Management)
+  // ----------------------------------------------------------------------------
+  async fetchInquiries(): Promise<{ data: ClientInquiry[] | null; error: string | null }> {
+    if (!isSupabaseConfigured) return { data: null, error: 'Supabase is not configured' };
+    try {
+      const { data, error } = await supabase.from('inquiries').select('*').order('created_at', { ascending: false });
+      if (error || !Array.isArray(data)) return { data: null, error: error?.message || 'Failed to fetch inquiries' };
+      return { data: data.map(inquiryFromDb), error: null };
+    } catch (err: any) {
+      return { data: null, error: err?.message || 'Failed to fetch inquiries' };
+    }
+  },
+
+  async submitPublicInquiry(inquiry: ClientInquiry): Promise<{ success: boolean; error: string | null }> {
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
+    try {
+      const row = inquiryToDb(inquiry);
+      const { error } = await supabase.from('inquiries').insert(row);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to submit inquiry' };
+    }
+  },
+
+  async updateInquiryStatus(id: string, status: ClientInquiry['status'], notes?: string): Promise<{ success: boolean; error: string | null }> {
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
+    try {
+      const updates: Record<string, any> = { status, updated_at: new Date().toISOString() };
+      if (notes !== undefined) updates.notes = notes;
+      const { error } = await supabase.from('inquiries').update(updates).eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to update inquiry status' };
+    }
+  },
+
+  async deleteInquiry(id: string): Promise<{ success: boolean; error: string | null }> {
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase is not configured' };
+    try {
+      const { error } = await supabase.from('inquiries').delete().eq('id', id);
+      if (error) return { success: false, error: error.message };
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Failed to delete inquiry' };
+    }
   },
 };

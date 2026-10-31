@@ -27,13 +27,6 @@ import { useAuth } from '../../context/AuthContext.tsx';
 import { JournalEntry, PROJECT_CATEGORIES } from '../../utils/portfolio.ts';
 import { uploadMediaFile } from '../../services/storage.ts';
 
-const SAMPLE_JOURNAL_IMAGES = [
-  'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
-];
-
 export const JournalManager: React.FC = () => {
   const { data, addJournalEntry, updateJournalEntry, deleteJournalEntry, reorderJournal, togglePublishJournal, addMediaAsset } = usePortfolio();
   const { session } = useAuth();
@@ -59,7 +52,6 @@ export const JournalManager: React.FC = () => {
       const res = await uploadMediaFile(file, {
         title: `${formData.title || 'Article'} Cover`,
         tags: ['Journal Cover', formData.category || 'Editorial'],
-        authToken: session?.token,
       });
       addMediaAsset(res.asset);
       setFormData((prev) => ({ ...prev, image: res.asset.url }));
@@ -87,7 +79,7 @@ export const JournalManager: React.FC = () => {
       slug: `editorial-insight-${Date.now().toString(36)}`,
       readTime: '4 min read',
       date: 'Oct 2026',
-      image: SAMPLE_JOURNAL_IMAGES[0],
+      image: '',
       excerpt: 'Exploring modern workflows, digital product design, and creative generation frameworks.',
       category: 'Web Development',
       isPublished: true,

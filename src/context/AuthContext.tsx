@@ -5,183 +5,191 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../services/supabase.ts';
+import {
+  OWNER_UUID,
+  CONFIGURED_ADMIN_EMAIL as DEFAULT_ADMIN_EMAIL,
+  isAuthorizedAdmin as verifyIsAuthorizedAdmin,
+  AuthUser,
+  AdminUser,
+  AdminSession,
+  AuthContextType,
+} from './authTypes.ts';
 
-export interface AdminUser {
-  id: string;
-  email: string;
-  role: 'admin';
-}
+export { OWNER_UUID };
+export type { AuthUser, AdminUser, AdminSession, AuthContextType };
 
-export interface AdminSession {
-  token: string;
-  expiresAt: number;
-  provider: 'supabase' | 'local';
-}
+export const CONFIGURED_ADMIN_EMAIL = (
+  (typeof import.meta !== 'undefined' && (import.meta.env as any)?.VITE_ADMIN_EMAIL) ||
+  DEFAULT_ADMIN_EMAIL
+).trim().toLowerCase();
 
-interface AuthContextType {
-  user: AdminUser | null;
-  session: AdminSession | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-}
-
-const AUTH_STORAGE_KEY = 'ai_build_admin_auth_v1';
-
-// Default Admin credentials from environment or secure defaults
-const getEnv = (key: string, fallback: string): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return (import.meta.env as any)[key] || fallback;
-  }
-  return fallback;
+export const isAuthorizedAdmin = (u: { id?: string; email?: string } | null | undefined): boolean => {
+  return verifyIsAuthorizedAdmin(u);
 };
 
-const DEFAULT_ADMIN_EMAIL = getEnv('VITE_ADMIN_EMAIL', 'aibuild1629@gmail.com').toLowerCase();
-const DEFAULT_ADMIN_PASSWORD = getEnv('VITE_ADMIN_PASSWORD', 'YourSecureAdminPassword2026!');
+const mapSupabaseSession = (
+  currentSession: { user?: { id: string; email?: string } | null; access_token?: string; expires_at?: number } | null | undefined
+): { authUser: AuthUser | null; authSession: AdminSession | null } => {
+  if (!currentSession || !currentSession.user || !currentSession.user.id || !currentSession.access_token) {
+    return { authUser: null, authSession: null };
+  }
+
+  const expiresAt = currentSession.expires_at
+    ? currentSession.expires_at * 1000
+    : Date.now() + 3600 * 1000;
+
+  if (expiresAt <= Date.now()) {
+    return { authUser: null, authSession: null };
+  }
+
+  const isOwner = verifyIsAuthorizedAdmin(currentSession.user);
+  const authUser: AuthUser = {
+    id: currentSession.user.id,
+    email: currentSession.user.email || '',
+    role: isOwner ? 'admin' : 'user',
+    isAdmin: isOwner,
+  };
+
+  const authSession: AdminSession = {
+    token: currentSession.access_token,
+    expiresAt,
+  };
+
+  return { authUser, authSession };
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AdminUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<AdminSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Restore session from localStorage/sessionStorage on mount
+  // Initialize and synchronize with real Supabase Auth session
   useEffect(() => {
-    try {
-      let saved = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.session && parsed.session.expiresAt > Date.now()) {
-          setUser(parsed.user);
-          setSession(parsed.session);
-        } else {
-          // Session expired
-          localStorage.removeItem(AUTH_STORAGE_KEY);
-          sessionStorage.removeItem(AUTH_STORAGE_KEY);
-        }
+    let isMounted = true;
+
+    if (!isSupabaseConfigured) {
+      if (isMounted) {
+        setUser(null);
+        setSession(null);
+        setIsLoading(false);
       }
-    } catch (e) {
-      console.warn('Failed to restore auth session:', e);
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    // Subscribe to auth state changes (INITIAL_SESSION, sign-in, token refresh, sign-out)
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (!isMounted) return;
+
+      if (currentSession && currentSession.user) {
+        const { authUser, authSession } = mapSupabaseSession(currentSession);
+        setUser(authUser);
+        setSession(authSession);
+      } else {
+        setUser(null);
+        setSession(null);
+      }
+      setIsLoading(false);
+    });
+
+    // Safety timeout: ensure loading state never hangs even if offline or network delays occur
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }, 1200);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const login = async (
     emailInput: string,
-    passwordInput: string,
-    rememberMe = true
+    passwordInput: string
   ): Promise<{ success: boolean; error?: string }> => {
-    setIsLoading(true);
     const cleanEmail = emailInput.trim().toLowerCase();
     const cleanPassword = passwordInput.trim();
 
     if (!cleanEmail || !cleanPassword) {
-      setIsLoading(false);
       return { success: false, error: 'Please enter both administrator email and password.' };
     }
 
-    // 1. If Supabase is configured, authenticate with Supabase Auth
-    if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: cleanPassword,
-        });
+    if (!isSupabaseConfigured) {
+      return {
+        success: false,
+        error: 'Supabase authentication is not configured. Real administrator credentials must be provisioned in your Supabase project dashboard (Auth -> Users).',
+      };
+    }
 
-        if (!error && data?.session) {
-          const authUser: AdminUser = {
-            id: data.user?.id || 'admin-supabase',
-            email: cleanEmail,
-            role: 'admin',
-          };
-          const authSession: AdminSession = {
-            token: data.session.access_token,
-            expiresAt: Date.now() + (data.session.expires_in || 3600) * 1000,
-            provider: 'supabase',
-          };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: cleanPassword,
+      });
 
+      if (error) {
+        return {
+          success: false,
+          error: error.message || 'Invalid administrator credentials. Access restricted to authorized personnel.',
+        };
+      }
+
+      if (data?.session && data?.user) {
+        const isOwner = verifyIsAuthorizedAdmin(data.user);
+
+        if (!isOwner) {
+          // Reject non-owner account immediately from administrative session
+          await supabase.auth.signOut().catch(() => {});
+          setUser(null);
+          setSession(null);
+          return {
+            success: false,
+            error: 'Access denied. This account does not possess studio administrator authorization.',
+          };
+        }
+
+        const { authUser, authSession } = mapSupabaseSession(data.session);
+        if (authUser && authSession) {
           setUser(authUser);
           setSession(authSession);
-
-          const payload = JSON.stringify({ user: authUser, session: authSession });
-          if (rememberMe) {
-            localStorage.setItem(AUTH_STORAGE_KEY, payload);
-          } else {
-            sessionStorage.setItem(AUTH_STORAGE_KEY, payload);
-          }
-
           setIsLoading(false);
           return { success: true };
         }
-      } catch (err: any) {
-        console.warn('Supabase auth failed, evaluating administrator fallback:', err);
-      }
-    }
-
-    // 2. Secure Local Fallback Authentication
-    // Verify against configured administrator credentials
-    const matchesEmail =
-      cleanEmail === DEFAULT_ADMIN_EMAIL ||
-      cleanEmail === 'aibuild1629@gmail.com' ||
-      cleanEmail === 'admin@aibuild.studio';
-    const matchesPassword = cleanPassword === DEFAULT_ADMIN_PASSWORD;
-
-    if (matchesEmail && matchesPassword) {
-      const authUser: AdminUser = {
-        id: 'admin-local-primary',
-        email: cleanEmail,
-        role: 'admin',
-      };
-      const durationMs = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-      const authSession: AdminSession = {
-        token: `session_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
-        expiresAt: Date.now() + durationMs,
-        provider: 'local',
-      };
-
-      setUser(authUser);
-      setSession(authSession);
-
-      const payload = JSON.stringify({ user: authUser, session: authSession });
-      if (rememberMe) {
-        localStorage.setItem(AUTH_STORAGE_KEY, payload);
-      } else {
-        sessionStorage.setItem(AUTH_STORAGE_KEY, payload);
       }
 
-      setIsLoading(false);
-      return { success: true };
+      return { success: false, error: 'Failed to retrieve active session from authentication provider.' };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'An unexpected authentication error occurred while connecting to Supabase.',
+      };
     }
-
-    setIsLoading(false);
-    return {
-      success: false,
-      error: 'Invalid administrator credentials. Access is restricted to authorized personnel only.',
-    };
   };
 
   const logout = async () => {
-    if (session?.provider === 'supabase' && session.token) {
-      await supabase.auth.signOut(session.token).catch(() => {});
-    }
-
-    setUser(null);
-    setSession(null);
     try {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    } catch (e) {}
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Supabase signOut error:', err);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setIsLoading(false);
+    }
   };
+
+  const isSessionValid = Boolean(user && session && session.expiresAt > Date.now());
 
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
-        isAuthenticated: Boolean(user && session && session.expiresAt > Date.now()),
+        isAuthenticated: isSessionValid,
         isLoading,
         login,
         logout,

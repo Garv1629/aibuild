@@ -36,14 +36,6 @@ import { useAuth } from '../../context/AuthContext.tsx';
 import { Project, PROJECT_CATEGORIES, ProjectVideo } from '../../utils/portfolio.ts';
 import { uploadMediaFile } from '../../services/storage.ts';
 
-const SAMPLE_IMAGES = [
-  { label: 'Real Estate / Web UI', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'AI Video / Cinema', url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'UGC Creator / Studio', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Digital Books / Publishing', url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80' },
-  { label: 'Creative Tech / Cyber', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80' },
-];
-
 export const ProjectsManager: React.FC = () => {
   const { data, addProject, updateProject, deleteProject, reorderProjects, togglePublishProject, addMediaAsset } = usePortfolio();
   const { session } = useAuth();
@@ -108,7 +100,6 @@ export const ProjectsManager: React.FC = () => {
       const res = await uploadMediaFile(file, {
         title: `${formData.title || 'Project'} Cover`,
         tags: ['Project Cover', formData.category || 'Portfolio'],
-        authToken: session?.token,
       });
       addMediaAsset(res.asset);
       setFormData((prev) => ({ ...prev, image: res.asset.url }));
@@ -133,7 +124,6 @@ export const ProjectsManager: React.FC = () => {
       const res = await uploadMediaFile(file, {
         title: `${formData.title || 'Project'} Reel`,
         tags: ['Project Video', formData.category || 'Portfolio'],
-        authToken: session?.token,
       });
       addMediaAsset(res.asset);
       setFormData((prev) => ({
@@ -165,7 +155,6 @@ export const ProjectsManager: React.FC = () => {
         const res = await uploadMediaFile(file, {
           title: `${formData.title || 'Project'} Gallery ${i + 1}`,
           tags: ['Gallery Image', formData.category || 'Portfolio'],
-          authToken: session?.token,
         });
         addMediaAsset(res.asset);
         uploadedUrls.push(res.asset.url);
@@ -200,7 +189,7 @@ export const ProjectsManager: React.FC = () => {
       description: 'Enter a compelling summary of this project and client impact.',
       year: new Date().getFullYear().toString(),
       span: 7,
-      image: SAMPLE_IMAGES[0].url,
+      image: '',
       tags: ['Modern UI', 'Creative Direction'],
       features: ['High performance code', 'Responsive design architecture'],
       galleryImages: [],
@@ -244,9 +233,11 @@ export const ProjectsManager: React.FC = () => {
     setSaveError(null);
     setSaveSuccess(null);
 
-    // Fallback for cover image if left blank
-    const fallbackImage = SAMPLE_IMAGES.find((s) => s.label.toLowerCase().includes(formData.category?.toLowerCase() || ''))?.url || SAMPLE_IMAGES[0].url;
-    const finalImage = formData.image?.trim() || fallbackImage;
+    if (!formData.image?.trim()) {
+      setSaveError('Please upload or provide a project cover image.');
+      return;
+    }
+    const finalImage = formData.image.trim();
 
     const finalPublished = typeof publishState === 'boolean' ? publishState : (formData.isPublished ?? true);
     const payload: Project = {
@@ -515,7 +506,7 @@ export const ProjectsManager: React.FC = () => {
                         className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 hover:text-sky-200 border border-sky-400/20 flex items-center gap-1"
                       >
                         <Globe className="w-2.5 h-2.5" />
-                        <span>Live Demo</span>
+                        <span>Live Site</span>
                       </a>
                     )}
                   </div>
@@ -699,7 +690,7 @@ export const ProjectsManager: React.FC = () => {
 
                 {/* Demo Type */}
                 <div>
-                  <label className="block text-xs font-mono text-white/80 mb-1.5">Interactive Demo Viewer</label>
+                  <label className="block text-xs font-mono text-white/80 mb-1.5">Interactive Showcase Viewer</label>
                   <select
                     value={formData.demoType || 'interactive-device'}
                     onChange={(e) => setFormData({ ...formData, demoType: e.target.value as any })}
@@ -718,7 +709,7 @@ export const ProjectsManager: React.FC = () => {
                 <div>
                   <label className="block text-xs font-mono text-white/80 mb-1.5 flex items-center gap-1.5">
                     <Globe className="w-3 h-3 text-sky-400" />
-                    <span>Live Demo / Production URL</span>
+                    <span>Live Production URL</span>
                   </label>
                   <input
                     type="url"
@@ -801,7 +792,7 @@ export const ProjectsManager: React.FC = () => {
                           alt="Cover preview"
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = SAMPLE_IMAGES[0].url;
+                            (e.target as HTMLImageElement).style.display = 'none';
                           }}
                         />
                       </div>
