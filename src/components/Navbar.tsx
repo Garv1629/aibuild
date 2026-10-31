@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowRight, Sparkles, FolderGit2, Compass, BookOpen, MessageSquare } from 'lucide-react';
+import { Menu, X, ArrowRight, Sparkles, FolderGit2, Compass, BookOpen, MessageSquare, Lock } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Button } from './Button.tsx';
 
@@ -223,16 +224,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               </Button>
 
               <div className="flex items-center justify-between text-2xs font-mono text-muted px-1">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Available for Q2 Projects</span>
-                </span>
+                <Link
+                  to="/admin/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-1.5 text-cyan-300 hover:text-white"
+                >
+                  <Lock className="w-3 h-3 text-cyan-400" />
+                  <span>Admin Login</span>
+                </Link>
                 {data.githubUrl && (
                   <a
                     href={data.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sky-300 hover:text-white underline underline-offset-4"
+                    className="text-muted hover:text-white underline underline-offset-4"
                   >
                     GitHub ↗
                   </a>

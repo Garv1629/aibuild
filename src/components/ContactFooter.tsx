@@ -4,9 +4,10 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import Hls from 'hls.js';
-import { ArrowUpRight, Github, Mail, Sliders } from 'lucide-react';
+import { ArrowUpRight, Github, Mail, Sliders, Lock } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { normalizeContactEmail } from '../utils/portfolio.ts';
 import { Button, buttonVariants } from './Button.tsx';
@@ -202,8 +203,19 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
                 'Specializing in Web Development • AI Videos • UGC Videos • E-books. Concepts transformed into reality.'}
             </p>
           </div>
-          <div className="flex flex-col items-center md:items-end gap-1 text-2xs font-mono text-muted/80">
-            <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
+          <div className="flex flex-col items-center md:items-end gap-1.5 text-2xs font-mono text-muted/80">
+            <div className="flex items-center gap-2.5">
+              <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
+              <span className="text-white/20">•</span>
+              <Link
+                to="/admin/login"
+                className="text-muted hover:text-cyan-400 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Studio Administrator Login"
+              >
+                <Lock className="w-3 h-3 text-cyan-400/80" />
+                <span>Admin Login</span>
+              </Link>
+            </div>
             <span>Client Privacy Protected • Inquiries Encrypted</span>
           </div>
         </div>
