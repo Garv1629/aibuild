@@ -96,11 +96,10 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                   )}
                   <span className="relative z-10">{category}</span>
                   <span
-                    className={`relative z-10 text-2xs px-2 py-0.5 rounded-full font-mono transition-colors ${
-                      isActive
+                    className={`relative z-10 text-2xs px-2 py-0.5 rounded-full font-mono transition-colors ${isActive
                         ? 'bg-accent/30 text-accent border border-accent/40'
                         : 'bg-white/10 text-secondary group-hover:bg-white/15 group-hover:text-white'
-                    }`}
+                      }`}
                   >
                     {count}
                   </span>
@@ -110,22 +109,13 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
           </div>
         </div>
 
-        {/* Bento Grid: 12-column grid */}
+        {/* Projects Grid: Clean Responsive 2-Column Grid with Premium Rounded Cards */}
         <motion.div
           layout
-          className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5 md:gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6"
         >
           <AnimatePresence mode="popLayout">
             {filteredProjects.map((project, idx) => {
-              const colSpanClass =
-                activeCategory === 'All'
-                  ? project.span === 7
-                    ? 'md:col-span-7'
-                    : 'md:col-span-5'
-                  : filteredProjects.length === 1
-                  ? 'md:col-span-12'
-                  : 'md:col-span-6';
-
               return (
                 <motion.article
                   key={project.id}
@@ -143,7 +133,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     transition: { duration: 0.25, ease: 'easeOut' },
                   }}
                   onClick={() => onSelectProject(project)}
-                  className={`group relative liquid-glass-card rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer min-h-[280px] xs:min-h-[320px] sm:min-h-[380px] md:min-h-[460px] flex flex-col justify-end p-3.5 xs:p-5 sm:p-6 md:p-8 ${colSpanClass}`}
+                  className="group relative liquid-glass-card rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer min-h-[300px] xs:min-h-[340px] sm:min-h-[380px] md:min-h-[440px] flex flex-col justify-end p-4 xs:p-5 sm:p-6 md:p-8"
                   tabIndex={0}
                   role="article"
                   aria-label={`Project: ${project.title}`}
@@ -154,114 +144,83 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     }
                   }}
                 >
-                {/* Background image with object-cover group-hover:scale-105 */}
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
-                />
+                  {/* Background image with object-cover group-hover:scale-105 */}
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
 
-                {/* Halftone overlay */}
-                <div
-                  className="halftone-overlay absolute inset-0 opacity-15 mix-blend-multiply pointer-events-none"
-                  aria-hidden="true"
-                />
+                  {/* Halftone overlay */}
+                  <div
+                    className="halftone-overlay absolute inset-0 opacity-15 mix-blend-multiply pointer-events-none"
+                    aria-hidden="true"
+                  />
 
-                {/* Base subtle dark gradient vignette */}
-                <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 md:group-hover:opacity-30 pointer-events-none"
-                  aria-hidden="true"
-                />
+                  {/* Base subtle dark gradient vignette */}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 md:group-hover:opacity-30 pointer-events-none"
+                    aria-hidden="true"
+                  />
 
-                {/* Liquid Glass Status pill in top left */}
-                <div className="absolute top-3.5 xs:top-4 sm:top-6 left-3.5 xs:left-4 sm:left-6 z-10 flex items-center gap-2">
-                  <span className="liquid-glass-pill text-2xs sm:text-xs font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-white flex items-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45)]">
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        project.status === 'In Progress'
-                          ? 'bg-warning animate-pulse'
-                          : 'bg-success'
-                      }`}
-                    />
-                    {project.status}
-                  </span>
+                  {/* Draft Badge if in Admin Preview */}
                   {project.isPublished === false && (
-                    <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-amber-500/90 text-black font-semibold shadow-md">
-                      DRAFT (HIDDEN)
-                    </span>
-                  )}
-                </div>
-
-                {/* Normal card meta - Apple visionOS Docked Liquid Glass Shelf */}
-                <div className="relative z-10 liquid-glass liquid-glass-gloss rounded-xl sm:rounded-2xl p-3.5 xs:p-4 sm:p-5 transition-all duration-300 md:group-hover:opacity-15 flex flex-col gap-0.5 xs:gap-1 shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xs sm:text-xs text-accent uppercase tracking-[0.12em] font-medium font-mono">
-                      {project.category}
-                    </span>
-                    <span className="text-2xs sm:text-xs font-mono text-muted">{project.year}</span>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl md:text-3xl text-text-primary font-medium tracking-tight">
-                    {project.title}
-                  </h3>
-
-                  {/* Mobile tag pills - visible on mobile/touch screens without requiring desktop hover */}
-                  <div className="flex md:hidden flex-wrap gap-1.5 mt-2">
-                    {project.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs tracking-normal px-2.5 py-0.5 rounded-full liquid-glass-pill text-secondary font-mono max-w-full break-words"
-                      >
-                        {tag}
+                    <div className="absolute top-3.5 xs:top-4 sm:top-6 left-3.5 xs:left-4 sm:left-6 z-10 flex items-center gap-2">
+                      <span className="text-2xs font-mono px-2.5 py-1 rounded-full bg-amber-500/90 text-black font-semibold shadow-md">
+                        DRAFT (HIDDEN)
                       </span>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* Normal card meta - Apple visionOS Docked Liquid Glass Shelf */}
+                  <div className="relative z-10 liquid-glass liquid-glass-gloss rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-300 md:group-hover:opacity-15 flex flex-col gap-1 shadow-2xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xs sm:text-xs text-sky-400 uppercase tracking-[0.12em] font-medium font-mono">
+                        {project.category}
+                      </span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl text-text-primary font-medium tracking-tight">
+                      {project.title}
+                    </h3>
+                    {project.description && (
+                      <p className="text-xs sm:text-sm text-white/70 line-clamp-2 mt-1 leading-relaxed">
+                        {project.description}
+                      </p>
+                    )}
                   </div>
-                </div>
 
-                {/* Liquid Glass Hover overlay: visionOS frosted backdrop (desktop only) */}
-                <div className="hidden md:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-2xl flex-col justify-between p-5 sm:p-6 md:p-8 z-20 pointer-events-none border border-white/20 rounded-2xl sm:rounded-3xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-xs text-accent uppercase tracking-[0.15em] font-mono font-medium">
-                      {project.category}
-                    </span>
-                    <span className="text-xs font-mono text-muted">{project.status}</span>
-                  </div>
-
-                  <div className="flex flex-col gap-3.5 sm:gap-4">
-                    <p
-                      className="text-sm sm:text-base text-text-primary/95 max-w-md line-clamp-3 leading-relaxed"
-                      title={project.description}
-                    >
-                      {project.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {project.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-xs tracking-normal px-2.5 sm:px-3 py-1 rounded-full liquid-glass-pill text-secondary font-mono max-w-full break-words"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                  {/* Liquid Glass Hover overlay: visionOS frosted backdrop (desktop only) */}
+                  <div className="hidden md:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-2xl flex-col justify-between p-6 md:p-8 z-20 pointer-events-none border border-white/20 rounded-2xl sm:rounded-3xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)]">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs text-sky-400 uppercase tracking-[0.15em] font-mono font-medium">
+                        {project.category}
+                      </span>
                     </div>
 
-                    {/* Hover label: visionOS liquid glass pill */}
-                    <div className="mt-1 sm:mt-2 inline-flex self-start">
-                      <div className={buttonVariants({ variant: 'glass', size: 'sm' })}>
-                        <span>View —</span>
-                        <span className="font-display italic text-sm sm:text-base tracking-tight">
-                          {project.title}
-                        </span>
-                        <span className="text-xs">↗</span>
+                    <div className="flex flex-col gap-3.5 sm:gap-4">
+                      {project.description && (
+                        <p
+                          className="text-sm sm:text-base text-text-primary/95 max-w-md line-clamp-3 leading-relaxed"
+                          title={project.description}
+                        >
+                          {project.description}
+                        </p>
+                      )}
+
+                      {/* Hover label: visionOS liquid glass pill */}
+                      <div className="mt-1 sm:mt-2 inline-flex self-start">
+                        <div className={buttonVariants({ variant: 'glass', size: 'sm' })}>
+                          <span>View Project</span>
+                          <span className="text-xs">↗</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.article>
-            );
-          })}
+                </motion.article>
+              );
+            })}
           </AnimatePresence>
         </motion.div>
 
@@ -278,6 +237,5 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
         )}
       </div>
     </section>
-);
+  );
 };
-

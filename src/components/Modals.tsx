@@ -5,9 +5,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles, Share2, Check, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles, Share2, Check, Loader2, Globe, ExternalLink } from 'lucide-react';
 import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
-import { ProjectInteractiveDemo } from './ProjectInteractiveDemo.tsx';
 import { Button } from './Button.tsx';
 import { EmailContactPill } from './EmailContactPill.tsx';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
@@ -23,7 +22,6 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   onStartConversation,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'showcase' | 'workflow'>('overview');
   const [copied, setCopied] = useState(false);
   const [activeMedia, setActiveMedia] = useState<{ url: string; type: 'image' | 'video'; title?: string }>({
     url: '',
@@ -37,7 +35,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
       try {
         await navigator.share({
           title: `AI Build — ${project.title}`,
-          text: project.description,
+          text: project.description || '',
           url: shareUrl,
         });
         return;
@@ -55,8 +53,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
       if (e.key === 'Escape') onClose();
     };
     if (project) {
-      setActiveTab('overview');
-      setActiveMedia({ url: project.image, type: 'image', title: 'Main Cover' });
+      setActiveMedia({ url: project.image, type: 'image', title: 'Cover Photo' });
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
@@ -65,6 +62,10 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [project, onClose]);
+
+  const hasGalleryMedia =
+    (project?.galleryImages && project.galleryImages.length > 0) ||
+    (project?.videoList && project.videoList.length > 0);
 
   return (
     <AnimatePresence>
@@ -114,273 +115,149 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               </Button>
             </div>
 
+            {/* Category Pill */}
             <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3 font-mono text-xs pr-8">
-              <span className="liquid-glass-pill px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-text-primary flex items-center gap-1.5">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    project.status === 'In Progress'
-                      ? 'bg-warning animate-pulse'
-                      : 'bg-success'
-                  }`}
-                />
-                {project.status}
-              </span>
-              <span className="text-muted">•</span>
-              <span className="text-muted uppercase tracking-wider">
+              <span className="liquid-glass-pill px-3 py-1 rounded-full text-sky-400 font-mono uppercase tracking-wider text-2xs sm:text-xs">
                 {project.category}
               </span>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl md:text-5xl font-display text-text-primary mb-4 sm:mb-6 pr-8 leading-tight">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-display text-text-primary mb-4 sm:mb-6 pr-8 leading-tight">
               {project.title}
             </h3>
 
-            {/* Modal Navigation Tabs - Liquid Glass Segmented Pill */}
-            <div
-              role="tablist"
-              className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl liquid-glass mb-4 sm:mb-6 overflow-x-auto scrollbar-none touch-pan-x"
-            >
-              <Button
-                variant="pill"
-                size="sm"
-                active={activeTab === 'overview'}
-                role="tab"
-                aria-selected={activeTab === 'overview'}
-                onClick={() => setActiveTab('overview')}
-                className="flex-1 min-w-[85px] sm:min-w-[100px] text-center whitespace-nowrap"
-              >
-                Overview
-              </Button>
+            {/* Static Project Detail Section */}
+            <div className="space-y-6">
+              {/* Main Media Viewport */}
+              <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden border border-stroke relative bg-black">
+                {activeMedia.type === 'video' ? (
+                  <video
+                    key={activeMedia.url}
+                    src={activeMedia.url}
+                    autoPlay
+                    controls
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    key={activeMedia.url}
+                    src={activeMedia.url || project.image}
+                    alt={project.title}
+                    className="w-full h-full object-cover transition-opacity duration-300"
+                  />
+                )}
+                <div className="halftone-overlay absolute inset-0 opacity-20 pointer-events-none" />
+              </div>
 
-              <Button
-                variant="pill"
-                size="sm"
-                active={activeTab === 'showcase'}
-                role="tab"
-                aria-selected={activeTab === 'showcase'}
-                onClick={() => setActiveTab('showcase')}
-                className="flex-1 min-w-[130px] sm:min-w-[140px] whitespace-nowrap"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                <span>Interactive Showcase</span>
-              </Button>
+              {/* Media Switcher Bar (Multiple Images and Videos) */}
+              {hasGalleryMedia && (
+                <div className="space-y-2 p-3 rounded-2xl liquid-glass border border-white/10">
+                  <div className="flex items-center justify-between text-xs font-mono text-muted px-1">
+                    <span>Media Gallery</span>
+                    <span className="text-accent">Click to preview</span>
+                  </div>
 
-              <Button
-                variant="pill"
-                size="sm"
-                active={activeTab === 'workflow'}
-                role="tab"
-                aria-selected={activeTab === 'workflow'}
-                onClick={() => setActiveTab('workflow')}
-                className="flex-1 min-w-[90px] sm:min-w-[100px] text-center whitespace-nowrap"
-              >
-                Workflow
-              </Button>
-            </div>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {/* Main Cover */}
+                    <button
+                      type="button"
+                      aria-label="View Cover Image"
+                      onClick={() => setActiveMedia({ url: project.image, type: 'image', title: 'Cover Photo' })}
+                      className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
+                        activeMedia.url === project.image && activeMedia.type === 'image'
+                          ? 'border-accent ring-2 ring-accent/50 scale-105'
+                          : 'border-white/20 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={project.image} alt="Cover" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-black/80 text-white">Cover</span>
+                    </button>
 
-            {/* Tab 1: Overview */}
-            {activeTab === 'overview' && (
-              <div className="space-y-6">
-                <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden border border-stroke relative bg-black">
-                  {activeMedia.type === 'video' ? (
-                    <video
-                      key={activeMedia.url}
-                      src={activeMedia.url}
-                      autoPlay
-                      controls
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      key={activeMedia.url}
-                      src={activeMedia.url || project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-opacity duration-300"
-                    />
-                  )}
-                  <div className="halftone-overlay absolute inset-0 opacity-20 pointer-events-none" />
-                </div>
-
-                {/* Media Switcher Bar (if project has gallery images or video list) */}
-                {((project.galleryImages && project.galleryImages.length > 0) ||
-                  (project.videoList && project.videoList.length > 0) ||
-                  project.video) && (
-                  <div className="space-y-2 p-3 rounded-2xl liquid-glass border border-white/10">
-                    <div className="flex items-center justify-between text-xs font-mono text-muted px-1">
-                      <span>Project Media Gallery &amp; Video Clips</span>
-                      <span className="text-accent">Click to preview</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                      {/* Main Cover */}
+                    {/* Additional Gallery Images */}
+                    {project.galleryImages?.map((imgUrl, i) => (
                       <button
+                        key={`img-${i}`}
                         type="button"
-                        aria-label="View Cover Image"
-                        onClick={() => setActiveMedia({ url: project.image, type: 'image', title: 'Cover' })}
+                        aria-label={`View Gallery Image ${i + 1}`}
+                        onClick={() => setActiveMedia({ url: imgUrl, type: 'image', title: `Photo ${i + 1}` })}
                         className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
-                          activeMedia.url === project.image && activeMedia.type === 'image'
+                          activeMedia.url === imgUrl && activeMedia.type === 'image'
                             ? 'border-accent ring-2 ring-accent/50 scale-105'
                             : 'border-white/20 opacity-70 hover:opacity-100'
                         }`}
                       >
-                        <img src={project.image} alt="Cover" className="w-full h-full object-cover" />
-                        <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-black/80 text-white">Cover</span>
+                        <img src={imgUrl} alt={`gallery-${i}`} className="w-full h-full object-cover" />
+                        <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-black/80 text-white">Photo {i + 1}</span>
                       </button>
+                    ))}
 
-                      {/* Additional Gallery Images */}
-                      {project.galleryImages?.map((imgUrl, i) => (
-                        <button
-                          key={`img-${i}`}
-                          type="button"
-                          aria-label={`View Gallery Image ${i + 1}`}
-                          onClick={() => setActiveMedia({ url: imgUrl, type: 'image', title: `Gallery ${i + 1}` })}
-                          className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer transition-all ${
-                            activeMedia.url === imgUrl && activeMedia.type === 'image'
-                              ? 'border-accent ring-2 ring-accent/50 scale-105'
-                              : 'border-white/20 opacity-70 hover:opacity-100'
-                          }`}
-                        >
-                          <img src={imgUrl} alt={`gallery-${i}`} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-black/80 text-white">Img {i + 1}</span>
-                        </button>
-                      ))}
-
-                      {/* Video clips */}
-                      {project.video && !project.videoList?.some(v => v.url === project.video) && (
-                        <button
-                          type="button"
-                          aria-label="Play Project Video Reel"
-                          onClick={() => setActiveMedia({ url: project.video!, type: 'video', title: 'Main Reel' })}
-                          className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
-                            activeMedia.url === project.video && activeMedia.type === 'video'
-                              ? 'border-accent ring-2 ring-accent/50 scale-105'
-                              : 'border-white/20 opacity-70 hover:opacity-100'
-                          }`}
-                        >
-                          <Play className="w-5 h-5 text-accent" />
-                          <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-accent/80 text-white">Video</span>
-                        </button>
-                      )}
-
-                      {project.videoList?.map((vid, i) => (
-                        <button
-                          key={`vid-${i}`}
-                          type="button"
-                          aria-label={`Play Video: ${vid.title || `Reel ${i + 1}`}`}
-                          onClick={() => setActiveMedia({ url: vid.url, type: 'video', title: vid.title })}
-                          className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
-                            activeMedia.url === vid.url && activeMedia.type === 'video'
-                              ? 'border-accent ring-2 ring-accent/50 scale-105'
-                              : 'border-white/20 opacity-70 hover:opacity-100'
-                          }`}
-                        >
-                          <Play className="w-5 h-5 text-accent" />
-                          <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-accent/80 text-white truncate max-w-[80px]">
-                            {vid.title || `Reel ${i + 1}`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    {/* Videos */}
+                    {project.videoList?.map((vid, i) => (
+                      <button
+                        key={`vid-${i}`}
+                        type="button"
+                        aria-label={`Play Video: ${vid.title || `Video ${i + 1}`}`}
+                        onClick={() => setActiveMedia({ url: vid.url, type: 'video', title: vid.title })}
+                        className={`relative aspect-video w-20 sm:w-24 rounded-lg overflow-hidden border shrink-0 cursor-pointer bg-neutral-900 transition-all flex items-center justify-center ${
+                          activeMedia.url === vid.url && activeMedia.type === 'video'
+                            ? 'border-accent ring-2 ring-accent/50 scale-105'
+                            : 'border-white/20 opacity-70 hover:opacity-100'
+                        }`}
+                      >
+                        <Play className="w-5 h-5 text-accent" />
+                        <span className="absolute bottom-1 left-1 text-2xs font-mono px-1 py-0.2 rounded bg-accent/80 text-white truncate max-w-[80px]">
+                          {vid.title || `Video ${i + 1}`}
+                        </span>
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
+              {/* Description */}
+              {project.description && (
                 <div className="space-y-4">
-                  <p className="text-sm sm:text-base text-muted leading-relaxed">
+                  <p className="text-sm sm:text-base text-muted leading-relaxed whitespace-pre-line">
                     {project.description}
                   </p>
                 </div>
+              )}
+            </div>
 
-                {/* Key Features */}
-                <div className="space-y-3 p-5 rounded-2xl liquid-glass-subtle">
-                  <span className="text-xs font-mono text-muted uppercase tracking-wider block mb-2">
-                    Key Features &amp; Capabilities
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {project.features.map((feat) => (
-                      <div
-                        key={feat}
-                        className="flex items-start gap-2 text-xs sm:text-sm text-text-primary"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Interactive Showcase */}
-            {activeTab === 'showcase' && (
-              <ProjectInteractiveDemo project={project} />
-            )}
-
-            {/* Tab 3: Workflow & Tech */}
-            {activeTab === 'workflow' && (
-              <div className="space-y-6">
-                <div className="p-5 rounded-2xl liquid-glass-subtle space-y-4">
-                  <span className="text-xs font-mono text-muted uppercase tracking-wider block">
-                    Execution Pipeline: {project.workflow}
-                  </span>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3.5 rounded-xl liquid-glass-card space-y-1.5">
-                      <div className="font-mono text-accent font-semibold">01. Conception</div>
-                      <p className="text-muted leading-relaxed">
-                        Prompt engineering, requirement synthesis, and architecture framing.
-                      </p>
-                    </div>
-
-                    <div className="p-3.5 rounded-xl liquid-glass-card space-y-1.5">
-                      <div className="font-mono text-accent font-semibold">02. Development</div>
-                      <p className="text-muted leading-relaxed">
-                        Vibe coding, rapid prototyping, component assembly, and micro-interactions.
-                      </p>
-                    </div>
-
-                    <div className="p-3.5 rounded-xl liquid-glass-card space-y-1.5">
-                      <div className="font-mono text-accent font-semibold">03. Production</div>
-                      <p className="text-muted leading-relaxed">
-                        Performance audits, responsiveness verification, and dark mode contrast calibration.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5 rounded-2xl liquid-glass-subtle space-y-3">
-                  <span className="text-xs font-mono text-muted uppercase tracking-wider block">
-                    Technologies &amp; Tools Used
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs font-mono tracking-normal px-3 py-1 rounded-full liquid-glass-pill text-text-primary max-w-full break-words"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
+            {/* Bottom Actions */}
             <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-stroke/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-              <span className="text-xs font-mono text-muted">
-                Workflow: {project.workflow}
-              </span>
+              {project.projectUrl ? (
+                <a
+                  href={project.projectUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-mono text-sky-400 hover:text-sky-300 flex items-center gap-1.5 transition-colors"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Visit Live Project</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <div />
+              )}
 
               <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-                {activeTab !== 'showcase' && (
-                  <Button
-                    variant="ghost"
-                    size="md"
-                    onClick={() => setActiveTab('showcase')}
-                    className="flex-1 sm:flex-none text-center"
+                {project.projectUrl && (
+                  <a
+                    href={project.projectUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 sm:flex-none"
                   >
-                    View Showcase →
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      className="w-full text-center"
+                    >
+                      <span>Open Link ↗</span>
+                    </Button>
+                  </a>
                 )}
 
                 <Button

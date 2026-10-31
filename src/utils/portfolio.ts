@@ -44,24 +44,13 @@ export interface Project {
   id: string;
   title: string;
   category: string;
-  status: 'In Progress' | 'Prototype' | 'Creative Production' | 'Workflow Automation';
-  description: string;
-  year: string;
-  span: 7 | 5;
+  description?: string;
   image: string;
   galleryImages?: string[];
-  tags: string[];
-  features: string[];
-  workflow: string;
-  demoType?: 'interactive-device' | 'video-reel' | 'decision-tool' | 'motion-preview' | 'ugc-player' | 'ebook-reader';
-  videoUrl?: string;
-  video?: string;
   videoList?: ProjectVideo[];
+  projectUrl?: string;
   isPublished?: boolean;
   order?: number;
-  demoUrl?: string;
-  githubUrl?: string;
-  clientUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -447,35 +436,21 @@ export function filterProjects(projects: Project[], category: string): Project[]
   );
 }
 
-// 4 Featured Projects mapped into the exact 7/5/5/7 Bento Grid, spotlighting each of the 4 services:
-// 1. Web Development (span: 7)
-// 2. AI Videos (span: 5)
-// 3. UGC Videos (span: 5)
-// 4. E-books (span: 7)
+// 4 Featured Projects spotlighting each of the 4 services:
 export const PROJECTS: Project[] = [
   {
     id: 'sri-balaji-real-estate',
     title: 'Sri Balaji Real Estate',
     category: 'Web Development',
-    status: 'In Progress',
     description:
       'A modern real estate website concept designed to showcase property listings through a responsive interface, contemporary visual design, smooth animations, and user-friendly navigation.',
-    year: '2026',
-    span: 7,
     image:
       'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    tags: ['Responsive UI', 'Property Showcase', 'Vibe Coding', 'Animated Elements'],
-    features: [
-      'Responsive website architecture and navigation',
-      'Modern UI and visual hierarchy',
-      'Animated interface elements and filtering',
-      'Property-focused presentation layout',
-      'AI-assisted and vibe-coded development workflow',
+    galleryImages: [
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
     ],
-    workflow: 'Vite + React + GSAP + Tailwind CSS development workflow',
-    demoType: 'interactive-device',
-    demoUrl: 'https://sribalajirealestate.in',
-    githubUrl: 'https://github.com/Garv1629/real-estate-web',
+    projectUrl: 'https://sribalajirealestate.in',
     isPublished: true,
     order: 1,
     createdAt: '2026-10-15T08:00:00.000Z',
@@ -484,24 +459,16 @@ export const PROJECTS: Project[] = [
     id: 'cinematic-ai-studio',
     title: 'AI Video & Advertising Studio',
     category: 'AI Videos',
-    status: 'Creative Production',
     description:
       'A collection of AI-assisted creative experiments exploring product commercials, cinematic 3D product visuals, promotional scripts, and short-form video storytelling.',
-    year: '2026',
-    span: 5,
     image:
       'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    tags: ['Product Commercials', 'AI Video Generation', 'Cinematic B-Roll', 'Storyboards'],
-    features: [
-      'Fashion and luxury apparel commercial concepts',
-      'Food and beverages slow-motion advertising',
-      'Beauty and skincare promotional visuals',
-      'Technology and AI product video experiments',
-      'Prompt-driven camera motion and color grading',
+    videoList: [
+      {
+        title: 'Commercial Showcase Reel',
+        url: 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8',
+      },
     ],
-    workflow: 'Runway Gen-3 + Luma Dream Machine + Premiere Pro editing',
-    demoType: 'video-reel',
-    videoUrl: 'https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8',
     isPublished: true,
     order: 2,
     createdAt: '2026-10-18T12:00:00.000Z',
@@ -510,23 +477,10 @@ export const PROJECTS: Project[] = [
     id: 'ugc-viral-creative-lab',
     title: 'UGC Video Campaign Lab',
     category: 'UGC Videos',
-    status: 'Creative Production',
     description:
       'Authentic user-generated content style ad creatives engineered for viral distribution on TikTok, Instagram Reels, and YouTube Shorts with proven 3-second hook structures.',
-    year: '2026',
-    span: 5,
     image:
       'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',
-    tags: ['TikTok & Reels Ads', 'Viral 3s Hooks', 'Authentic UGC Style', 'Unboxing & Spotlights'],
-    features: [
-      'Problem-agitate-solution hook variations',
-      'Authentic consumer testimonial pacing',
-      'Dynamic on-screen captions and sound design',
-      'High-CTR product unboxing and lifestyle feature spotlights',
-      'Multi-variant asset batches for paid ad testing',
-    ],
-    workflow: 'Mobile vertical capture + CapCut Pro + AI Voice pacing',
-    demoType: 'ugc-player',
     isPublished: true,
     order: 3,
     createdAt: '2026-10-20T14:30:00.000Z',
@@ -535,23 +489,10 @@ export const PROJECTS: Project[] = [
     id: 'digital-mastery-ebooks',
     title: 'Digital Publications & E-books',
     category: 'E-books',
-    status: 'Prototype',
     description:
       'Bespoke digital book publishing, interactive PDF & ePub guides, high-converting lead magnets, and launch-ready 3D visual mockups for modern educators and brands.',
-    year: '2026',
-    span: 7,
     image:
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
-    tags: ['Interactive PDF/ePub', 'Editorial Layout', '3D Book Covers', 'Lead Magnets'],
-    features: [
-      'Editorial typography systems and balanced grids',
-      'Interactive table of contents and clickable resources',
-      'High-impact 3D digital book covers and packaging kits',
-      'Infographic data design and illustrative diagrams',
-      'Optimized distribution formatting for mobile and tablets',
-    ],
-    workflow: 'Adobe InDesign + Figma + Interactive PDF compilation',
-    demoType: 'ebook-reader',
     isPublished: true,
     order: 4,
     createdAt: '2026-10-22T09:15:00.000Z',

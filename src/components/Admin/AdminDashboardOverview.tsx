@@ -485,7 +485,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
                     {p.isPublished !== false ? 'Published' : 'Draft'}
                   </span>
                   <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white/60">
-                    {p.span} Col
+                    #{p.order ?? 1}
                   </span>
                 </div>
               </div>

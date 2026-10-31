@@ -171,19 +171,21 @@ test('brand information matches prompt specification', () => {
 test('data structures satisfy all original design specs with AI Build content', () => {
   assert.equal(ROLES.length, 4);
   assert.equal(PROJECTS.length, 4);
-  assert.deepEqual(
-    PROJECTS.map((p) => p.span),
-    [7, 5, 5, 7]
-  );
+  PROJECTS.forEach((p) => {
+    assert.ok(p.title);
+    assert.ok(p.category);
+    assert.ok(p.image);
+  });
   assert.equal(JOURNAL_ENTRIES.length, 4);
   assert.equal(EXPLORATIONS.length, 6);
   assert.equal(STATS.length, 3);
 });
 
-test('projects adhere strictly to verified non-fabricated statuses', () => {
-  const allowed = ['In Progress', 'Prototype', 'Creative Production', 'Workflow Automation'];
+test('projects adhere strictly to valid service categories and required fields', () => {
   PROJECTS.forEach((p) => {
-    assert.ok(allowed.includes(p.status));
+    assert.ok(p.title.length > 0);
+    assert.ok(PROJECT_CATEGORIES.includes(p.category as any));
+    assert.ok(p.image.length > 0);
   });
 });
 
