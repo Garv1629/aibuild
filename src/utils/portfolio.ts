@@ -693,81 +693,8 @@ export const STATS: BrandPrincipleStat[] = [
 // Verified Client & Partner Reviews (Loaded dynamically from database)
 export const REVIEWS: Review[] = [];
 
-// Initial Media Assets Catalog for the Media Library
-export const DEFAULT_MEDIA_ASSETS: MediaAsset[] = [
-  {
-    id: 'media-real-estate-hero',
-    title: 'Real Estate Modern Architecture UI',
-    fileName: 'real-estate-hero.jpg',
-    url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    type: 'image',
-    mimeType: 'image/jpeg',
-    sizeBytes: 345000,
-    storageProvider: 'local',
-    createdAt: '2026-10-20T10:00:00.000Z',
-    tags: ['Web Development', 'Architecture', 'UI'],
-  },
-  {
-    id: 'media-ai-cinema-studio',
-    title: 'Cinematic AI Studio Lighting',
-    fileName: 'ai-studio-lighting.jpg',
-    url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    type: 'image',
-    mimeType: 'image/jpeg',
-    sizeBytes: 420000,
-    storageProvider: 'local',
-    createdAt: '2026-10-21T11:30:00.000Z',
-    tags: ['AI Videos', 'Cinematography', 'Product Ads'],
-  },
-  {
-    id: 'media-ugc-creator-recording',
-    title: 'UGC Creator Mobile Recording Studio',
-    fileName: 'ugc-creator-studio.jpg',
-    url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',
-    type: 'image',
-    mimeType: 'image/jpeg',
-    sizeBytes: 310000,
-    storageProvider: 'local',
-    createdAt: '2026-10-22T14:15:00.000Z',
-    tags: ['UGC Videos', 'TikTok', 'Vertical Video'],
-  },
-  {
-    id: 'media-ebook-publishing',
-    title: 'Digital Publications Editorial Spread',
-    fileName: 'ebook-editorial-spread.jpg',
-    url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
-    type: 'image',
-    mimeType: 'image/jpeg',
-    sizeBytes: 285000,
-    storageProvider: 'local',
-    createdAt: '2026-10-23T09:45:00.000Z',
-    tags: ['E-books', 'Editorial', 'Typography'],
-  },
-  {
-    id: 'media-digital-screens-video',
-    title: 'Digital UI Holographic Motion Graphic',
-    fileName: 'digital-screens-motion.mp4',
-    url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-charts-and-data-31912-large.mp4',
-    type: 'video',
-    mimeType: 'video/mp4',
-    sizeBytes: 4850000,
-    storageProvider: 'local',
-    createdAt: '2026-10-24T16:00:00.000Z',
-    tags: ['Web Development', 'Motion Video', 'Animation'],
-  },
-  {
-    id: 'media-ai-fashion-reel',
-    title: 'Fashion Commercial AI Model Reel',
-    fileName: 'ai-fashion-model-reel.mp4',
-    url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-a-bright-fashion-outfit-42533-large.mp4',
-    type: 'video',
-    mimeType: 'video/mp4',
-    sizeBytes: 5200000,
-    storageProvider: 'local',
-    createdAt: '2026-10-25T12:00:00.000Z',
-    tags: ['AI Videos', 'Fashion', '4K Teaser'],
-  },
-];
+// Initial Media Assets Catalog for the Media Library (Loaded dynamically from database)
+export const DEFAULT_MEDIA_ASSETS: MediaAsset[] = [];
 
 // Activity log for tracking recent admin actions
 export const DEFAULT_ACTIVITY_LOGS: ActivityLog[] = [];

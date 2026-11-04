@@ -257,10 +257,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const next: PortfolioData = { ...prev };
 
         if (projectsRes.status === 'fulfilled' && Array.isArray(projectsRes.value.data)) {
-          const dbProjects = projectsRes.value.data;
-          const dbIds = new Set(dbProjects.map((p: Project) => p.id));
-          const baseline = PROJECTS.filter((p) => !dbIds.has(p.id));
-          next.projects = [...dbProjects, ...baseline].sort((a, b) => (a.order || 0) - (b.order || 0));
+          next.projects = [...projectsRes.value.data].sort((a, b) => (a.order || 0) - (b.order || 0));
         }
         if (journalRes.status === 'fulfilled' && Array.isArray(journalRes.value.data)) {
           next.journalEntries = journalRes.value.data;
@@ -378,7 +375,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (typeof window !== 'undefined') {
       try {
         broadcastRef.current?.postMessage({ type: 'REVALIDATE', timestamp: Date.now() });
-      } catch (e) {}
+      } catch (e) { }
     }
   }, []);
 
@@ -418,7 +415,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
 
     if (isSupabaseConfigured) {
-      api.insertActivityLog(newEntry).catch(() => {});
+      api.insertActivityLog(newEntry).catch(() => { });
     }
   }, []);
 
@@ -450,7 +447,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         roles: data.roles,
       };
       const res = await api.upsertSiteContent('brand_settings', merged);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -467,7 +464,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.upsertSiteContent('site_texts', merged);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -495,7 +492,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.upsertProject(newProject);
-      if (res.error && !isRlsError(res.error)) {
+      if (res.error) {
         return { success: false, error: toApiError(res.error) };
       }
     }
@@ -523,7 +520,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetProject) {
       const res = await api.upsertProject(targetProject);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -540,7 +537,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.deleteProject(id);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -568,9 +565,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         await Promise.all(reindexed.map((p) => api.upsertProject(p)));
       } catch (err: any) {
-        if (!isRlsError(err?.message)) {
-          return { success: false, error: err?.message || 'Failed to persist project ordering' };
-        }
+        return { success: false, error: err?.message || 'Failed to persist project ordering' };
       }
     }
     notifyContentUpdated();
@@ -605,7 +600,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetProject) {
       const res = await api.upsertProject(targetProject);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -631,7 +626,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.upsertJournalEntry(newEntry);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true, entry: newEntry };
@@ -657,7 +652,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetEntry) {
       const res = await api.upsertJournalEntry(targetEntry);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -674,7 +669,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.deleteJournalEntry(id);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -702,9 +697,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         await Promise.all(reindexed.map((j) => api.upsertJournalEntry(j)));
       } catch (err: any) {
-        if (!isRlsError(err?.message)) {
-          return { success: false, error: err?.message || 'Failed to reorder journal' };
-        }
+        return { success: false, error: err?.message || 'Failed to reorder journal' };
       }
     }
     notifyContentUpdated();
@@ -739,7 +732,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetEntry) {
       const res = await api.upsertJournalEntry(targetEntry);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -764,7 +757,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.upsertExploration(newItem);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true, item: newItem };
@@ -790,7 +783,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetItem) {
       const res = await api.upsertExploration(targetItem);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -807,7 +800,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.deleteExploration(id);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -835,9 +828,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         await Promise.all(reindexed.map((exp) => api.upsertExploration(exp)));
       } catch (err: any) {
-        if (!isRlsError(err?.message)) {
-          return { success: false, error: err?.message || 'Failed to reorder explorations' };
-        }
+        return { success: false, error: err?.message || 'Failed to reorder explorations' };
       }
     }
     notifyContentUpdated();
@@ -872,7 +863,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetItem) {
       const res = await api.upsertExploration(targetItem);
-      if (res.error && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (res.error) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -904,7 +895,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetService) {
       const res = await api.upsertService(targetService, orderIndex);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -926,7 +917,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && nextStats.length > 0) {
       const res = await api.upsertSiteContent('stats', nextStats);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -956,7 +947,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.submitPublicReview(review);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -972,7 +963,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.updateReview(id, updated);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -991,7 +982,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.updateReview(id, { status: approve ? 'approved' : 'pending', verified: approve });
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -1008,7 +999,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.deleteReview(id);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -1041,9 +1032,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isSupabaseConfigured) {
       try {
         const res = await api.submitPublicInquiry(inquiry);
-        if (!res.success && !isRlsError(res.error)) {
+        if (!res.success) {
           // Fallback to site_content if inquiries table is pending migration
-          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => {});
+          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => { });
         }
       } catch (err) {
         console.warn('Could not persist inquiry to cloud:', err);
@@ -1074,8 +1065,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isSupabaseConfigured) {
       try {
         const res = await api.updateInquiryStatus(id, status, notes);
-        if (!res.success && !isRlsError(res.error)) {
-          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => {});
+        if (!res.success) {
+          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => { });
         }
       } catch (err) {
         console.warn('Could not persist inquiry update to cloud:', err);
@@ -1101,8 +1092,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isSupabaseConfigured) {
       try {
         const res = await api.deleteInquiry(id);
-        if (!res.success && !isRlsError(res.error)) {
-          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => {});
+        if (!res.success) {
+          await api.upsertSiteContent('client_inquiries', nextInquiries).catch(() => { });
         }
       } catch (err) {
         console.warn('Could not persist inquiry deletion to cloud:', err);
@@ -1125,7 +1116,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured) {
       const res = await api.upsertMediaAsset(asset);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
@@ -1151,7 +1142,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (isSupabaseConfigured && targetAsset) {
       const res = await api.upsertMediaAsset(targetAsset);
-      if (!res.success && !isRlsError(res.error)) return { success: false, error: toApiError(res.error) };
+      if (!res.success) return { success: false, error: toApiError(res.error) };
     }
     notifyContentUpdated();
     return { success: true };
