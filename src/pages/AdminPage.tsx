@@ -158,6 +158,12 @@ export const AdminPage: React.FC = () => {
   });
 
   const [mobileViewMode, setMobileViewMode] = useState<'editor' | 'preview'>('editor');
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHasMounted(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -786,7 +792,9 @@ export const AdminPage: React.FC = () => {
             className={`h-full overflow-y-auto p-4 sm:p-6 min-w-0 ${
               !isDesktop && isSplitPreviewOpen && mobileViewMode === 'preview' ? 'hidden' : 'block'
             } ${
-              isDraggingSplit ? 'transition-none select-none pointer-events-none' : 'transition-[width] duration-150'
+              hasMounted && !isDraggingSplit ? 'transition-[width] duration-150' : 'transition-none'
+            } ${
+              isDraggingSplit ? 'select-none pointer-events-none' : ''
             } ${
               isDesktop && isSplitPreviewOpen ? 'border-r border-white/10' : ''
             }`}

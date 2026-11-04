@@ -19,6 +19,7 @@ export const AdminLoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isNavigatingRef = React.useRef(false);
 
   // Safely resolve the intended destination, preventing redirect loops back to /admin/login
   const getSafeDestination = (): string => {
@@ -36,29 +37,31 @@ export const AdminLoginPage: React.FC = () => {
     return '/admin';
   };
 
-  // If already authenticated and verified as owner, redirect to /admin
+  // If already authenticated and verified as owner, redirect to /admin cleanly
   React.useEffect(() => {
-    // Do not interfere if user is actively submitting the login form
-    if (isSubmitting) return;
+    if (isSubmitting || isNavigatingRef.current) return;
 
     if (!isLoading && isAuthenticated) {
       if (user?.isAdmin) {
+        isNavigatingRef.current = true;
         navigate(getSafeDestination(), { replace: true });
       } else {
         setError('Access denied. Your signed-in account is not authorized to access the studio admin workspace.');
       }
     }
-  }, [isAuthenticated, user?.isAdmin, isLoading, isSubmitting, navigate, location]);
+  }, [isAuthenticated, user?.isAdmin, isLoading, isSubmitting, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || isNavigatingRef.current) return;
     setError(null);
     setIsSubmitting(true);
 
     try {
       const result = await login(email, password);
       if (result.success) {
-        // Direct transition to the Admin Dashboard without intermediate redirects
+        isNavigatingRef.current = true;
+        // Direct seamless transition to the Admin Dashboard without intermediate redirects
         navigate(getSafeDestination(), { replace: true });
         return;
       } else {

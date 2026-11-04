@@ -206,6 +206,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Broadcast channel for multi-tab live sync
   const broadcastRef = useRef<BroadcastChannel | null>(null);
+  const isAuthRef = useRef(Boolean(isAuthenticated && user?.isAdmin));
 
   // ----------------------------------------------------------------------------
   // Cross-Tab and Cross-Device Revalidation
@@ -224,7 +225,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       setIsCloudConnected(true);
 
-      const isAdminUser = Boolean(isAuthenticated && user?.isAdmin);
+      const isAdminUser = isAuthRef.current;
 
       // Fetch all tables in parallel with role-appropriate filters
       const [
@@ -310,7 +311,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setIsSyncing(false);
       setIsLoading(false);
     }
-  }, [isAuthenticated, user?.isAdmin]);
+  }, []);
+
+  // Revalidate content once when user transitions to admin without remounting revalidate
+  useEffect(() => {
+    const wasAdmin = isAuthRef.current;
+    const isNowAdmin = Boolean(isAuthenticated && user?.isAdmin);
+    isAuthRef.current = isNowAdmin;
+    if (!wasAdmin && isNowAdmin) {
+      revalidate();
+    }
+  }, [isAuthenticated, user?.isAdmin, revalidate]);
 
   // Initial mount load and check
   useEffect(() => {

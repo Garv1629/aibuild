@@ -76,7 +76,7 @@ console.log('4. Staging files for commit...');
 git(['add', 'src/', 'public/', 'serve.mjs', 'test_runner.cjs', 'clean.js']);
 
 console.log('5. Committing changes...');
-git(['commit', '-m', 'feat: Fix build import in Modals and ensure multi-port preview server']);
+git(['commit', '-m', 'feat: Fix login screen flickering with synchronous session hydration and stable transitions']);
 
 console.log('6. Pushing to origin main...');
 const pushRes = git(['push', 'origin', 'main']);

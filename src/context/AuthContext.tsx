@@ -58,12 +58,42 @@ const mapSupabaseSession = (
   return { authUser, authSession };
 };
 
+const getInitialSession = (): {
+  authUser: AuthUser | null;
+  authSession: AdminSession | null;
+  isLoading: boolean;
+} => {
+  if (typeof window === 'undefined' || !isSupabaseConfigured) {
+    return { authUser: null, authSession: null, isLoading: false };
+  }
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const currentSession = parsed.currentSession || parsed;
+          if (currentSession?.user && currentSession?.access_token) {
+            const mapped = mapSupabaseSession(currentSession);
+            if (mapped.authUser && mapped.authSession) {
+              return { authUser: mapped.authUser, authSession: mapped.authSession, isLoading: false };
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {}
+  return { authUser: null, authSession: null, isLoading: false };
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [session, setSession] = useState<AdminSession | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [initial] = useState(getInitialSession);
+  const [user, setUser] = useState<AuthUser | null>(initial.authUser);
+  const [session, setSession] = useState<AdminSession | null>(initial.authSession);
+  const [isLoading, setIsLoading] = useState<boolean>(initial.isLoading);
 
   // Initialize and synchronize with real Supabase Auth session
   useEffect(() => {
@@ -77,6 +107,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return;
     }
+
+    // Immediately resolve active session without artificial delay
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!isMounted) return;
+      if (currentSession && currentSession.user) {
+        const { authUser, authSession } = mapSupabaseSession(currentSession);
+        setUser(authUser);
+        setSession(authSession);
+      } else if (!user) {
+        setUser(null);
+        setSession(null);
+      }
+      setIsLoading(false);
+    }).catch(() => {
+      if (isMounted) setIsLoading(false);
+    });
 
     // Subscribe to auth state changes (INITIAL_SESSION, sign-in, token refresh, sign-out)
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, currentSession) => {
@@ -93,16 +139,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     });
 
-    // Safety timeout: ensure loading state never hangs even if offline or network delays occur
-    const safetyTimer = setTimeout(() => {
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    }, 1200);
-
     return () => {
       isMounted = false;
-      clearTimeout(safetyTimer);
       authListener?.subscription?.unsubscribe();
     };
   }, []);
