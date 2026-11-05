@@ -1,0 +1,12 @@
+# ==============================================================================
+# AI BUILD — PRODUCTION ROBOTS DIRECTIVES
+# ==============================================================================
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/login
+Disallow: /login
+
+# Canonical XML Sitemap
+Sitemap: https://aibuildd.vercel.app/sitemap.xml
