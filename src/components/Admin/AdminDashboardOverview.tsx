@@ -262,7 +262,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
 
       {/* Quick Actions Launchpad */}
       <div className="liquid-glass rounded-3xl p-5 sm:p-6 border border-white/10 space-y-4">
-        <h3 className="text-xs font-mono uppercase tracking-wider text-sky-300 flex items-center gap-2">
+        <h3 className="text-xs font-mono tracking-wider text-sky-300 flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-sky-400" />
           <span>Quick Management Shortcuts</span>
         </h3>
@@ -341,7 +341,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquareText className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-xs font-mono uppercase tracking-wider text-emerald-300">
+            <h3 className="text-xs font-mono tracking-wider text-emerald-300">
               Recent Client Inquiries
             </h3>
             {newInquiries > 0 && (
@@ -384,7 +384,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
                     {item.status.replace('_', ' ')}
                   </span>
                 </div>
-                <p className="text-[11px] text-white/70 line-clamp-2 leading-relaxed font-mono">
+                <p className="text-xs text-white/70 line-clamp-2 leading-relaxed font-mono">
                   &quot;{item.ideaDescription}&quot;
                 </p>
                 <div className="flex items-center justify-between text-[10px] font-mono text-white/40 pt-1 border-t border-white/5">
@@ -402,7 +402,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
         {/* Recent Activity Log */}
         <div className="liquid-glass rounded-3xl p-5 border border-white/10 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-sky-300 flex items-center gap-2">
+            <h3 className="text-xs font-mono tracking-wider text-sky-300 flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" />
               <span>Recent Changes & Activity Log</span>
             </h3>
@@ -442,7 +442,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
         {/* Featured Projects Summary */}
         <div className="liquid-glass rounded-3xl p-5 border border-white/10 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-sky-300 flex items-center gap-2">
+            <h3 className="text-xs font-mono tracking-wider text-sky-300 flex items-center gap-2">
               <FolderKanban className="w-3.5 h-3.5" />
               <span>Current Featured Projects</span>
             </h3>
@@ -469,9 +469,9 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
                     <img src={p.image} alt={p.title} className="w-9 h-9 rounded-lg object-cover shrink-0" />
                   )}
                   <div className="min-w-0">
-                    <h5 className="text-xs text-white group-hover:text-sky-300 truncate font-medium">
+                    <h4 className="text-xs text-white group-hover:text-sky-300 truncate font-medium">
                       {p.title}
-                    </h5>
+                    </h4>
                     <span className="text-[10px] font-mono text-white/50">{p.category}</span>
                   </div>
                 </div>

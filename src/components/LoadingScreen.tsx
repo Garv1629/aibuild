@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'motion/react';
 import { Check, X, ArrowRight, AlertTriangle, RotateCw } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Button } from './Button.tsx';

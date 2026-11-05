@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { JournalEntry } from '../utils/portfolio.ts';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Button, buttonVariants } from './Button.tsx';

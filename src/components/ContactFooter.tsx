@@ -125,7 +125,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
         <div className="w-full overflow-hidden mb-10 sm:mb-16 md:mb-20 py-2.5 sm:py-4 border-t border-b border-stroke/70 select-none">
           <div
             ref={marqueeRef}
-            className="flex whitespace-nowrap text-2xs sm:text-xs md:text-sm font-mono tracking-[0.25em] sm:tracking-[0.35em] text-muted uppercase"
+            className="flex whitespace-nowrap text-xs md:text-sm font-mono tracking-[0.25em] sm:tracking-[0.35em] text-muted uppercase"
           >
             <span className="shrink-0">{marqueeText}</span>
             <span className="shrink-0">{marqueeText}</span>
@@ -203,7 +203,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
                 'Specializing in Web Development • AI Videos • UGC Videos • E-books. Concepts transformed into reality.'}
             </p>
           </div>
-          <div className="flex flex-col items-center md:items-end gap-1.5 text-2xs font-mono text-muted/80">
+          <div className="flex flex-col items-center md:items-end gap-1.5 text-xs font-mono text-muted/80">
             <div className="flex items-center gap-2.5">
               <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
               <span className="text-white/20">•</span>

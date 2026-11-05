@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Star, Plus, CheckCircle2, Quote, Sparkles, MessageSquareQuote } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { Review } from '../utils/portfolio.ts';

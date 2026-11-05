@@ -527,7 +527,7 @@ export const AdminPage: React.FC = () => {
         >
           <div className="space-y-4 overflow-y-auto pr-1">
             <div className="space-y-1">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-white/40 px-3">
+              <span className="text-xs font-mono uppercase tracking-wider text-white/40 px-3">
                 Workspace
               </span>
 
@@ -743,7 +743,7 @@ export const AdminPage: React.FC = () => {
           {/* Bottom Sidebar Status & Session */}
           <div className="pt-3 border-t border-white/10 space-y-2">
             <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
-              <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
+              <div className="flex items-center justify-between text-xs font-mono text-white/70">
                 <span className="flex items-center gap-1.5 truncate max-w-[130px]" title={user?.email || ''}>
                   <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${user?.isAdmin ? 'text-sky-400' : 'text-amber-400'}`} />
                   <span className="truncate">{user?.email || 'No Active Account'}</span>

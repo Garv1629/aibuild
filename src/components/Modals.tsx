@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, Send, ArrowRight, Play, Film, Image as ImageIcon, Star, Sparkles, Share2, Check, Loader2, Globe, ExternalLink } from 'lucide-react';
 import { Project, JournalEntry, ExplorationItem, SERVICES, Review } from '../utils/portfolio.ts';
 import { Button } from './Button.tsx';

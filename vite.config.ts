@@ -5,7 +5,6 @@ import fs from 'fs';
 import { defineConfig } from 'vite';
 
 try {
-  const ogSrc = 'C:\\Users\\GARV\\.gemini\\antigravity-ide\\brain\\c7511b11-17ce-4348-ba3a-ce7cbfa13590\\ai_build_og_preview_1793391730336.jpg';
   const destPublicJpg = path.resolve('public', 'og-image.jpg');
   const destPublicPng = path.resolve('public', 'og-image.png');
   const destDistJpg = path.resolve('dist', 'og-image.jpg');
@@ -17,22 +16,12 @@ try {
   const sitemapPublic = path.resolve('public', 'sitemap.xml');
   const sitemapDist = path.resolve('dist', 'sitemap.xml');
 
-  if (fs.existsSync(ogSrc)) {
-    fs.copyFileSync(ogSrc, destPublicJpg);
-    fs.copyFileSync(ogSrc, destPublicPng);
-    if (fs.existsSync(path.resolve('dist'))) {
-      fs.copyFileSync(ogSrc, destDistJpg);
-      fs.copyFileSync(ogSrc, destDistPng);
-    }
-  }
-  if (fs.existsSync(favPublic) && fs.existsSync(path.resolve('dist'))) {
-    fs.copyFileSync(favPublic, favDist);
-  }
-  if (fs.existsSync(robotsPublic) && fs.existsSync(path.resolve('dist'))) {
-    fs.copyFileSync(robotsPublic, robotsDist);
-  }
-  if (fs.existsSync(sitemapPublic) && fs.existsSync(path.resolve('dist'))) {
-    fs.copyFileSync(sitemapPublic, sitemapDist);
+  if (fs.existsSync(path.resolve('dist'))) {
+    if (fs.existsSync(destPublicJpg)) fs.copyFileSync(destPublicJpg, destDistJpg);
+    if (fs.existsSync(destPublicPng)) fs.copyFileSync(destPublicPng, destDistPng);
+    if (fs.existsSync(favPublic)) fs.copyFileSync(favPublic, favDist);
+    if (fs.existsSync(robotsPublic)) fs.copyFileSync(robotsPublic, robotsDist);
+    if (fs.existsSync(sitemapPublic)) fs.copyFileSync(sitemapPublic, sitemapDist);
   }
 } catch (e) {}
 

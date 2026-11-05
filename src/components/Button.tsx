@@ -7,14 +7,17 @@ import React, { forwardRef } from 'react';
 
 /**
  * AI Build Design System - Button Component
- * Consolidated 5-variant button system satisfying usability audit requirements:
- * 1. 'primary'   - High-contrast solid CTA (e.g., 'See Works')
- * 2. 'secondary' (alias 'glass') - Signature Apple visionOS liquid glass action button (e.g., 'Reach out', 'Start Conversation', 'Leave a Review', 'Say hi')
- * 3. 'outline'   (alias 'pill')  - Filter / category / navigation tab pills (supports active & inactive states)
- * 4. 'ghost'     - Subtle outline / low-emphasis utility button (e.g., 'Skip intro', 'Open Live Demo', 'Admin Studio')
- * 5. 'icon'      - Circular action button for dialog close, arrows, and media controls
+ * Consolidated 3-variant core button system:
+ * 1. 'primary' - High-contrast solid CTA (e.g., 'See Works')
+ * 2. 'glass'   - Signature Apple visionOS liquid glass action button (e.g., 'Reach out', 'Start Conversation', 'Leave a Review', 'Say hi')
+ * 3. 'ghost'   - Subtle translucent/outline button (e.g., 'Skip intro', 'Open Live Demo', 'Admin Studio')
+ *
+ * Backwards-compatible aliases:
+ * - 'secondary' -> 'glass'
+ * - 'outline' / 'pill' -> pill styling with active/inactive states
+ * - 'icon' -> circular glass button
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'icon' | 'glass' | 'pill';
+export type ButtonVariant = 'primary' | 'glass' | 'ghost' | 'secondary' | 'outline' | 'pill' | 'icon';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonVariantOptions {
@@ -25,7 +28,7 @@ export interface ButtonVariantOptions {
 }
 
 export function buttonVariants({
-  variant = 'secondary',
+  variant = 'glass',
   size = 'md',
   active = false,
   className = '',
@@ -38,7 +41,7 @@ export function buttonVariants({
   let sizeClasses = '';
 
   const normalizedVariant =
-    variant === 'glass' ? 'secondary' : variant === 'pill' ? 'outline' : variant;
+    variant === 'secondary' ? 'glass' : variant === 'pill' ? 'outline' : variant;
 
   switch (normalizedVariant) {
     case 'primary':
@@ -49,7 +52,7 @@ export function buttonVariants({
       else sizeClasses = 'text-xs sm:text-sm px-4 xs:px-6 sm:px-8 py-2.5 xs:py-3 sm:py-3.5 gap-2 min-h-[42px] sm:min-h-0';
       break;
 
-    case 'secondary':
+    case 'glass':
       variantClasses = 'liquid-glass-button text-white rounded-full';
       if (size === 'sm') sizeClasses = 'text-xs sm:text-sm px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 gap-1 shrink-0';
       else if (size === 'lg') sizeClasses = 'text-xs sm:text-sm md:text-base px-6 sm:px-9 py-3 sm:py-4 gap-2.5 sm:gap-3 min-h-[46px]';
@@ -64,7 +67,7 @@ export function buttonVariants({
         variantClasses =
           'liquid-glass-pill text-muted hover:text-white hover:border-white/30 rounded-full';
       }
-      if (size === 'sm') sizeClasses = 'text-2xs sm:text-xs px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 gap-1.5 shrink-0';
+      if (size === 'sm') sizeClasses = 'text-xs px-2.5 xs:px-3 sm:px-3.5 py-1 sm:py-1.5 gap-1.5 shrink-0';
       else if (size === 'lg') sizeClasses = 'text-xs sm:text-sm font-mono px-4 sm:px-5 py-2 sm:py-2.5 gap-2';
       else sizeClasses = 'text-xs font-mono px-3.5 sm:px-4 py-1.5 sm:py-2 gap-2 shrink-0';
       break;

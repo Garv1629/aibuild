@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useRef, useMemo } from 'react';
-import { motion, useMotionValue, useTransform, useReducedMotion, MotionValue } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useReducedMotion, MotionValue } from 'motion/react';
 import { usePortfolio } from '../context/PortfolioContext.tsx';
 import { BrandPrincipleStat } from '../utils/portfolio.ts';
 
@@ -256,7 +256,7 @@ export const Stats: React.FC = () => {
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
             <div className="flex items-center gap-3 mb-2 sm:mb-3">
               <span className="w-8 h-px bg-stroke" aria-hidden="true" />
-              <span className="text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
+              <span className="text-xs text-muted tracking-wider font-medium font-mono">
                 Foundational Pillars
               </span>
               <span className="w-8 h-px bg-stroke" aria-hidden="true" />
@@ -299,7 +299,7 @@ export const Stats: React.FC = () => {
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12 md:mb-16">
             <div className="flex items-center gap-3 mb-2 sm:mb-3">
               <span className="w-8 h-px bg-stroke" aria-hidden="true" />
-              <span className="text-xs text-muted uppercase tracking-[0.25em] sm:tracking-[0.3em] font-medium font-mono">
+              <span className="text-xs text-muted tracking-wider font-medium font-mono">
                 Foundational Pillars
               </span>
               <span className="w-8 h-px bg-stroke" aria-hidden="true" />
@@ -327,7 +327,7 @@ export const Stats: React.FC = () => {
                   <div className="w-8 h-8 rounded-full border border-sky-400/50 bg-[#07090e] flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.45)]">
                     <div className="w-2 h-2 rounded-full bg-gradient-to-tr from-sky-400 to-cyan-200" />
                   </div>
-                  <span className="text-2xs font-mono text-accent tracking-widest mt-1">
+                  <span className="text-xs font-mono text-accent tracking-widest mt-1">
                     0{idx + 1}
                   </span>
                 </div>
